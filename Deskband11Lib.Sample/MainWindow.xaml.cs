@@ -11,16 +11,16 @@ namespace Deskband11Lib.Sample;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
-    private readonly TaskbarContentHost _taskbarContentHost;
+    public TaskbarContentHost TaskbarContentHost { get; }
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _taskbarContentHost ??= new TaskbarContentHost(this, (FrameworkElement)Content, new() { PreferredWidth = 2800 });
+        TaskbarContentHost ??= new TaskbarContentHost(this, (FrameworkElement)Content, new() { PreferredWidth = 2800 });
     }
 
-    public async Task PrepareTaskbarContentAsync() => await _taskbarContentHost.AttachWhenLayoutReadyAsync();
+    public async Task PrepareTaskbarContentAsync() => await TaskbarContentHost.AttachWhenLayoutReadyAsync();
 
-    private void OnWindowClosed(object sender, WindowEventArgs e) => _taskbarContentHost?.Dispose();
+    private void OnWindowClosed(object sender, WindowEventArgs e) => TaskbarContentHost?.Dispose();
 }

@@ -5,11 +5,14 @@ namespace Deskband11Lib.Internal;
 
 internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindowLocator, TaskbarContentHostOptions options, TaskbarButtonReader taskbarButtonReader)
 {
+    private static double? s_lastScaleFactor;
+
     public async Task RefreshTaskbarButtonMeasurementAsync(double scaleFactor)
     {
         if (!options.TrackTaskbarButtons) return;
         if (!taskbarWindowLocator.TryRefresh()) return;
         if (!TryGetWindowRectangle(taskbarWindowLocator.TaskbarWindow, out var taskbarRectangle)) return;
+        scaleFactor = NormalizeScaleFactor(scaleFactor);
 
         var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
         var leftBoundary = taskbarRectangle.left + (int)Math.Ceiling(options.StartAreaWidth * scaleFactor);
@@ -22,6 +25,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
     {
         if (!taskbarWindowLocator.TryRefresh()) return default;
         if (!TryGetWindowRectangle(taskbarWindowLocator.TaskbarWindow, out var taskbarRectangle)) return default;
+        scaleFactor = NormalizeScaleFactor(scaleFactor);
 
         var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
         var leftBoundary = taskbarRectangle.left + (int)Math.Ceiling(options.StartAreaWidth * scaleFactor);
@@ -41,6 +45,14 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         var y = rowRectangle.top - taskbarRectangle.top;
 
         return new TaskbarLayoutSnapshot(x, y, width, height, availableWidth, scaleFactor, true);
+    }
+
+    private static double NormalizeScaleFactor(double scaleFactor)
+    {
+        if (!double.IsFinite(scaleFactor) || scaleFactor <= 0) return s_lastScaleFactor ?? 1.0;
+
+        s_lastScaleFactor = scaleFactor;
+        return scaleFactor;
     }
 
     private static bool TryGetWindowRectangle(HWND window, out RECT rectangle)

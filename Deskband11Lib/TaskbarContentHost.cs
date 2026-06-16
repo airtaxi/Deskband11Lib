@@ -11,11 +11,13 @@ namespace Deskband11Lib;
 
 public sealed partial class TaskbarContentHost : IDisposable
 {
+    private static double? s_lastScaleFactor;
     private readonly Window _window;
     private readonly FrameworkElement _contentElement;
     private readonly TaskbarContentHostOptions _options;
     private readonly TaskbarWindowLocator _taskbarWindowLocator = new();
     private readonly TaskbarButtonReader _taskbarButtonReader = new();
+    private readonly ExplorerRestartMonitorService _explorerRestartMonitorService = new();
     private readonly DispatcherQueueTimer _layoutRefreshTimer;
     private readonly TaskbarLayoutCalculator _taskbarLayoutCalculator;
     private HWND _windowHandle;
@@ -35,7 +37,10 @@ public sealed partial class TaskbarContentHost : IDisposable
         _layoutRefreshTimer.Interval = _options.LayoutRefreshInterval;
         _layoutRefreshTimer.Tick += OnLayoutRefreshTimerTick;
         _contentElement.SizeChanged += OnContentElementSizeChanged;
+        _explorerRestartMonitorService.TaskbarWindowRecreated += OnExplorerRestartMonitorServiceTaskbarWindowRecreated;
     }
+
+    public event EventHandler? TaskbarWindowRecreated;
 
     public bool IsAttached { get; private set; }
 
@@ -85,6 +90,7 @@ public sealed partial class TaskbarContentHost : IDisposable
         PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
 
         IsAttached = true;
+        _explorerRestartMonitorService.Start();
         if (deferInitialLayout) CollapseWindowRegion();
     }
 
@@ -93,6 +99,7 @@ public sealed partial class TaskbarContentHost : IDisposable
         if (!IsAttached) return;
 
         _layoutRefreshTimer.Stop();
+        _explorerRestartMonitorService.Stop();
         _ = PInvoke.SetWindowRgn(_windowHandle, HRGN.Null, true);
         PInvoke.SetParent(_windowHandle, _originalParentWindow);
         _ = PInvoke.SetWindowLong(_windowHandle, WINDOW_LONG_PTR_INDEX.GWL_STYLE, (int)_originalWindowStyle);
@@ -104,7 +111,7 @@ public sealed partial class TaskbarContentHost : IDisposable
         ThrowIfDisposed();
         if (!IsAttached) return;
 
-        var scaleFactor = PInvoke.GetDpiForWindow(_windowHandle) / 96.0;
+        var scaleFactor = GetScaleFactor();
         var snapshot = _taskbarLayoutCalculator.Calculate(GetRequestedWidth(), GetRequestedHeight(), scaleFactor);
         if (!snapshot.IsValid)
         {
@@ -135,8 +142,14 @@ public sealed partial class TaskbarContentHost : IDisposable
         if (_isDisposed) return;
 
         _contentElement.SizeChanged -= OnContentElementSizeChanged;
+        _explorerRestartMonitorService.TaskbarWindowRecreated -= OnExplorerRestartMonitorServiceTaskbarWindowRecreated;
+        TaskbarWindowRecreated = null;
+
         Detach();
+
+        _explorerRestartMonitorService.Dispose();
         _taskbarButtonReader.Dispose();
+
         _isDisposed = true;
     }
 
@@ -158,13 +171,31 @@ public sealed partial class TaskbarContentHost : IDisposable
 
     private async Task RefreshTaskbarButtonMeasurementAsync()
     {
-        var scaleFactor = PInvoke.GetDpiForWindow(_windowHandle) / 96.0;
+        var scaleFactor = GetScaleFactor();
         await _taskbarLayoutCalculator.RefreshTaskbarButtonMeasurementAsync(scaleFactor);
+    }
+
+    private double GetScaleFactor()
+    {
+        var dpi = _windowHandle.IsNull ? 0 : PInvoke.GetDpiForWindow(_windowHandle);
+        if (dpi == 0 && !_taskbarWindowLocator.TaskbarWindow.IsNull) dpi = PInvoke.GetDpiForWindow(_taskbarWindowLocator.TaskbarWindow);
+        if (dpi == 0) return s_lastScaleFactor ?? 1.0;
+
+        var scaleFactor = dpi / 96.0;
+        s_lastScaleFactor = scaleFactor;
+        return scaleFactor;
     }
 
     private void OnContentElementSizeChanged(object sender, SizeChangedEventArgs e) => RefreshLayout();
 
     private void OnLayoutRefreshTimerTick(DispatcherQueueTimer sender, object e) => RefreshLayout();
+
+    private void OnExplorerRestartMonitorServiceTaskbarWindowRecreated(object? sender, EventArgs e)
+    {
+        if (_isDisposed || !IsAttached) return;
+
+        _window.DispatcherQueue.TryEnqueue(() => TaskbarWindowRecreated?.Invoke(this, EventArgs.Empty));
+    }
 
     private void ThrowIfDisposed()
     {
