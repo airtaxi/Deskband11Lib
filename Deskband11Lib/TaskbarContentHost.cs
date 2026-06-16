@@ -23,6 +23,12 @@ public sealed partial class TaskbarContentHost : IDisposable
     private HWND _windowHandle;
     private HWND _originalParentWindow;
     private WINDOW_STYLE _originalWindowStyle;
+    private bool _originalExtendsContentIntoTitleBar;
+    private bool _originalPresenterHasBorder;
+    private bool _originalPresenterHasTitleBar;
+    private bool _originalPresenterIsResizable;
+    private bool _originalPresenterIsMaximizable;
+    private bool _originalPresenterIsMinimizable;
     private bool _isDisposed;
 
     public TaskbarContentHost(Window window, FrameworkElement contentElement) : this(window, contentElement, new TaskbarContentHostOptions()) { }
@@ -69,9 +75,17 @@ public sealed partial class TaskbarContentHost : IDisposable
     {
         if (IsAttached) return;
 
+        _originalExtendsContentIntoTitleBar = _window.ExtendsContentIntoTitleBar;
         _window.ExtendsContentIntoTitleBar = true;
+
         if (_window.AppWindow.Presenter is OverlappedPresenter presenter)
         {
+            _originalPresenterHasBorder = presenter.HasBorder;
+            _originalPresenterHasTitleBar = presenter.HasTitleBar;
+            _originalPresenterIsResizable = presenter.IsResizable;
+            _originalPresenterIsMaximizable = presenter.IsMaximizable;
+            _originalPresenterIsMinimizable = presenter.IsMinimizable;
+
             presenter.SetBorderAndTitleBar(false, false);
             presenter.IsResizable = false;
             presenter.IsMaximizable = false;
@@ -98,11 +112,27 @@ public sealed partial class TaskbarContentHost : IDisposable
     {
         if (!IsAttached) return;
 
+        // Stop background work.
         _layoutRefreshTimer.Stop();
         _explorerRestartMonitorService.Stop();
+
+        // Restore native window state.
         _ = PInvoke.SetWindowRgn(_windowHandle, HRGN.Null, true);
-        PInvoke.SetParent(_windowHandle, _originalParentWindow);
         _ = PInvoke.SetWindowLong(_windowHandle, WINDOW_LONG_PTR_INDEX.GWL_STYLE, (int)_originalWindowStyle);
+        PInvoke.SetParent(_windowHandle, _originalParentWindow);
+
+        // Restore managed window state.
+        _window.ExtendsContentIntoTitleBar = _originalExtendsContentIntoTitleBar;
+
+        // Restore presenter state.
+        if (_window.AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.SetBorderAndTitleBar(_originalPresenterHasBorder, _originalPresenterHasTitleBar);
+            presenter.IsResizable = _originalPresenterIsResizable;
+            presenter.IsMaximizable = _originalPresenterIsMaximizable;
+            presenter.IsMinimizable = _originalPresenterIsMinimizable;
+        }
+
         IsAttached = false;
     }
 
