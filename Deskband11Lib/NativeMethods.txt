@@ -1,0 +1,16 @@
+CreateRectRgn
+FindWindow
+FindWindowEx
+GetParent
+GetWindowLong
+GetWindowRect
+GetDpiForWindow
+SetParent
+SetWindowLong
+SetWindowPos
+SetWindowRgn
+HWND
+RECT
+WINDOW_LONG_PTR_INDEX
+WINDOW_STYLE
+SET_WINDOW_POS_FLAGS
