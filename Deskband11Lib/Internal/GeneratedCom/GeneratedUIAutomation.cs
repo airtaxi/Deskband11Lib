@@ -101,7 +101,8 @@ internal partial interface IGeneratedUIAutomationElement
 
     void GetCachedChildren();
 
-    void GetCurrentProcessIdentifier();
+    [PreserveSig]
+    int GetCurrentProcessIdentifier(out int processIdentifier);
 
     [PreserveSig]
     int GetCurrentControlType(out int controlType);

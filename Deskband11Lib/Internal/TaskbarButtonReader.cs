@@ -101,6 +101,8 @@ internal sealed partial class TaskbarButtonReader : IDisposable
     private static unsafe bool TryReadTaskbarButtonsRightEdge(HWND taskbarWindow, RECT searchRectangle, out int rightEdge)
     {
         rightEdge = 0;
+        if (!TryGetWindowProcessIdentifier(taskbarWindow, out var taskbarProcessIdentifier)) return false;
+
         IGeneratedUIAutomation? automation = null;
         IGeneratedUIAutomationCondition? trueCondition = null;
         IGeneratedUIAutomationElement? taskbarElement = null;
@@ -126,7 +128,7 @@ internal sealed partial class TaskbarButtonReader : IDisposable
                 var taskButtonElement = taskButtonElements.GetElement(index);
                 try
                 {
-                    if (!IsVisibleTaskbarButton(taskButtonElement)) continue;
+                    if (!IsVisibleTaskbarButton(taskButtonElement, taskbarProcessIdentifier)) continue;
                     if (!TryGetBoundingRectangle(taskButtonElement, out var boundingRectangle)) continue;
                     if (!IsInsideSearchRectangle(searchRectangle, boundingRectangle)) continue;
 
@@ -149,10 +151,21 @@ internal sealed partial class TaskbarButtonReader : IDisposable
         }
     }
 
-    private static bool IsVisibleTaskbarButton(IGeneratedUIAutomationElement element)
+    private static bool IsVisibleTaskbarButton(IGeneratedUIAutomationElement element, int taskbarProcessIdentifier)
     {
+        if (element.GetCurrentProcessIdentifier(out var processIdentifier) < 0 || processIdentifier != taskbarProcessIdentifier) return false;
         if (element.GetCurrentControlType(out var controlType) < 0 || controlType != ButtonControlTypeIdentifier) return false;
         if (element.GetCurrentIsOffscreen(out var isOffscreen) < 0 || isOffscreen != 0) return false;
+        return true;
+    }
+
+    private static bool TryGetWindowProcessIdentifier(HWND windowHandle, out int processIdentifier)
+    {
+        processIdentifier = 0;
+        var threadIdentifier = PInvoke.GetWindowThreadProcessId(windowHandle, out var nativeProcessIdentifier);
+        if (threadIdentifier == 0 || nativeProcessIdentifier == 0 || nativeProcessIdentifier > int.MaxValue) return false;
+
+        processIdentifier = (int)nativeProcessIdentifier;
         return true;
     }
 

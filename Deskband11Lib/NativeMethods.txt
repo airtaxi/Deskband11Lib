@@ -4,6 +4,7 @@ FindWindowEx
 GetParent
 GetWindowLong
 GetWindowRect
+GetWindowThreadProcessId
 GetDpiForWindow
 SetParent
 SetWindowLong
