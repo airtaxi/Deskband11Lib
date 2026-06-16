@@ -5,7 +5,7 @@
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-English | [한국어](README.ko.md)
+🌐 English | [한국어](README.ko.md)
 
 Deskband11Lib is a WinUI 3 library for building rich, always-visible taskbar companions on Windows 11. It lets your app place real WinUI content directly inside the taskbar, making compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools feel like a native part of the desktop.
 

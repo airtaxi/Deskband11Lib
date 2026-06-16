@@ -5,7 +5,7 @@
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[English](README.md) | 한국어
+🌐 [English](README.md) | 한국어
 
 Deskband11Lib는 Windows 11 작업 표시줄 안에 WinUI 3 기반 콘텐츠를 자연스럽게 배치할 수 있게 해주는 라이브러리입니다. 작은 대시보드, 빠른 제어 패널, 상태 표시기, 미디어 위젯, 런처, 생산성 도구처럼 항상 보여야 하는 기능을 데스크톱의 일부처럼 만들 수 있습니다.
 
