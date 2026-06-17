@@ -1,7 +1,15 @@
-﻿namespace Deskband11Lib;
+﻿using Microsoft.UI.Xaml.Media.Animation;
+
+namespace Deskband11Lib;
 
 public sealed class TaskbarContentHostOptions
 {
+    public bool AnimateLayoutChanges { get; set; } = true;
+
+    public double LayoutAnimationDuration { get; set; } = 500;
+
+    public EasingFunctionBase? LayoutAnimationEasing { get; set; } = new CubicEase { EasingMode = EasingMode.EaseOut };
+
     public bool TrackTaskbarButtons { get; set; } = true;
 
     public bool TrackNotificationArea { get; set; } = true;

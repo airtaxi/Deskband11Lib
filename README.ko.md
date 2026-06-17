@@ -35,7 +35,10 @@ var window = new MainWindow();
 var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
 {
     PreferredWidth = 360,
-    PreferredHeight = 48
+    PreferredHeight = 48,
+    AnimateLayoutChanges = true,
+    LayoutAnimationDuration = 500,
+    LayoutAnimationEasing = new CubicEase { EasingMode = EasingMode.EaseOut }
 });
 
 await host.AttachWhenLayoutReadyAsync();
@@ -74,6 +77,9 @@ Deskband11Lib는 WinUI 앱에 작업 표시줄 크기의 표시 영역을 제공
 
 - `PreferredWidth`: 콘텐츠가 원하는 너비입니다. effective pixel 단위입니다.
 - `PreferredHeight`: 콘텐츠가 원하는 높이입니다. effective pixel 단위입니다.
+- `AnimateLayoutChanges`: 작업 표시줄 호스트의 위치와 크기 변경을 애니메이션합니다. 기본값은 `true`입니다.
+- `LayoutAnimationDuration`: 레이아웃 애니메이션 시간입니다. ms 단위이며 기본값은 `500`입니다.
+- `LayoutAnimationEasing`: 레이아웃 애니메이션에 사용할 WinUI easing 함수입니다. 기본값은 `EaseOut` 모드의 `CubicEase`입니다.
 - `StartAreaWidth`: 시작 버튼 영역으로 예약할 너비입니다.
 - `Placement`: 알림 영역 앞 또는 작업 표시줄 버튼 뒤쪽 중 배치 위치를 선택합니다.
 - `TrackTaskbarButtons`: UI Automation 기반 작업 표시줄 버튼 측정을 사용할지 정합니다.

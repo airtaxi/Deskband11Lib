@@ -35,7 +35,10 @@ var window = new MainWindow();
 var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
 {
     PreferredWidth = 360,
-    PreferredHeight = 48
+    PreferredHeight = 48,
+    AnimateLayoutChanges = true,
+    LayoutAnimationDuration = 500,
+    LayoutAnimationEasing = new CubicEase { EasingMode = EasingMode.EaseOut }
 });
 
 await host.AttachWhenLayoutReadyAsync();
@@ -74,6 +77,9 @@ Applications should handle `TaskbarWindowRecreated`, release the old host/window
 
 - `PreferredWidth`: Desired content width in effective pixels.
 - `PreferredHeight`: Desired content height in effective pixels.
+- `AnimateLayoutChanges`: Animates taskbar host position and size changes. Defaults to `true`.
+- `LayoutAnimationDuration`: Layout animation duration in milliseconds. Defaults to `500`.
+- `LayoutAnimationEasing`: WinUI easing function used for layout animation. Defaults to `CubicEase` with `EaseOut`.
 - `StartAreaWidth`: Reserved width for the Start button area.
 - `Placement`: Places content before the notification area or after taskbar buttons.
 - `TrackTaskbarButtons`: Enables UI Automation based taskbar button measurement.
