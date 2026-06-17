@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.Versioning;
 using Deskband11Lib.Core.Internal;
 using Windows.Win32;

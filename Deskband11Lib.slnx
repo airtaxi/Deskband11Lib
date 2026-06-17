@@ -20,4 +20,6 @@
   <Project Path="Deskband11Lib.Core/Deskband11Lib.Core.csproj" />
   <Project Path="Deskband11Lib.Wpf/Deskband11Lib.Wpf.csproj" />
   <Project Path="Deskband11Lib.WinUI/Deskband11Lib.WinUI.csproj" />
+  <Project Path="Deskband11Lib.Uno.Skia/Deskband11Lib.Uno.Skia.csproj" />
+  <Project Path="Deskband11Lib.Uno.Skia.Sample/Deskband11Lib.Uno.Skia.Sample.csproj" />
 </Solution>

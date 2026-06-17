@@ -1,11 +1,13 @@
+﻿using Deskband11Lib.Core.Internal.GeneratedCom;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Deskband11Lib.Core.Internal.GeneratedCom;
+using System.Runtime.Versioning;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace Deskband11Lib.Core.Internal;
 
+[SupportedOSPlatform("windows10.0.22000.0")]
 internal sealed partial class TaskbarButtonReader : IDisposable
 {
     private const uint ClassContextInProcServer = 0x1;

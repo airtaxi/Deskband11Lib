@@ -1,8 +1,10 @@
-﻿using Windows.Win32;
+﻿using System.Runtime.Versioning;
+using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace Deskband11Lib.Core.Internal;
 
+[SupportedOSPlatform("windows10.0.22000.0")]
 internal sealed partial class ExplorerRestartMonitorService : IDisposable
 {
     private const string TaskbarClassName = "Shell_TrayWnd";

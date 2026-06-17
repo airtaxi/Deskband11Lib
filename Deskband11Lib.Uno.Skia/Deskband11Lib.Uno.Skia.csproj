@@ -1,25 +1,24 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Uno.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
-    <RootNamespace>Deskband11Lib.Core</RootNamespace>
-    <PackageId>Deskband11Lib.Core</PackageId>
-    <Title>Deskband11Lib.Core</Title>
+    <TargetFramework>net10.0-desktop</TargetFramework>
+    <RootNamespace>Deskband11Lib.Uno.Skia</RootNamespace>
+    <PackageId>Deskband11Lib.Uno.Skia</PackageId>
+    <Title>Deskband11Lib.Uno.Skia</Title>
     <Version>1.1.0</Version>
     <Authors>airtaxi</Authors>
     <Company>airtaxi</Company>
     <Copyright>Copyright (c) 2026 airtaxi</Copyright>
-    <Description>Core taskbar hosting engine shared by Deskband11Lib UI framework facades.</Description>
-    <PackageTags>windows11;taskbar;deskband;widget;desktop;cswin32</PackageTags>
+    <Description>Uno Platform Skia Desktop facade for hosting rich application content inside the Windows 11 taskbar.</Description>
+    <PackageTags>uno;unoplatform;skia;windows11;taskbar;deskband;widget;desktop</PackageTags>
     <PackageProjectUrl>https://github.com/airtaxi/Deskband11Lib</PackageProjectUrl>
     <RepositoryUrl>https://github.com/airtaxi/Deskband11Lib</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <UnoFeatures>SkiaRenderer</UnoFeatures>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <IsAotCompatible>true</IsAotCompatible>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -30,11 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.296">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+    <ProjectReference Include="..\Deskband11Lib.Core\Deskband11Lib.Core.csproj" />
   </ItemGroup>
 
   <Target Name="CopyPackageReadme" BeforeTargets="GenerateNuspec;Pack" Inputs="..\README.md" Outputs="README.md">

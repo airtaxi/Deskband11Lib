@@ -2,6 +2,7 @@
 
 [![NuGet WinUI](https://img.shields.io/nuget/v/Deskband11Lib.WinUI.svg)](https://www.nuget.org/packages/Deskband11Lib.WinUI)
 [![NuGet WPF](https://img.shields.io/nuget/v/Deskband11Lib.Wpf.svg)](https://www.nuget.org/packages/Deskband11Lib.Wpf)
+[![NuGet Uno Skia](https://img.shields.io/nuget/v/Deskband11Lib.Uno.Skia.svg)](https://www.nuget.org/packages/Deskband11Lib.Uno.Skia)
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -20,6 +21,7 @@ Deskband11Lib comes in multiple NuGet packages, one for each supported UI framew
 | `Deskband11Lib.Core`  | Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting engine. Independent of any UI framework. |
 | `Deskband11Lib.WinUI` | WinUI 3 facade. Build taskbar widgets with the same WinUI controls, styling, and composition features used by your app.                                               |
 | `Deskband11Lib.Wpf`   | WPF facade. Bring WPF-based content into the Windows 11 taskbar with the same simple API.                                                                             |
+| `Deskband11Lib.Uno.Skia` | Uno Platform Skia Desktop facade. Bring Uno Platform cross-platform apps into the Windows 11 taskbar with the same simple API.                                     |
 
 ## Highlights
 
@@ -41,6 +43,9 @@ dotnet add package Deskband11Lib.WinUI
 
 # WPF
 dotnet add package Deskband11Lib.Wpf
+
+# Uno Platform Skia Desktop
+dotnet add package Deskband11Lib.Uno.Skia
 ```
 
 The `Deskband11Lib.Core` package is pulled in automatically as a transitive dependency.
@@ -83,6 +88,25 @@ var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOpt
 
 await host.AttachWhenLayoutReadyAsync();
 window.Show();
+```
+
+### Uno Platform Skia Desktop
+
+The Uno Skia API is identical to WinUI. The only difference is the facade namespace. The app must use the `Uno.Sdk` with the `net10.0-desktop` target framework and the Skia Win32 host.
+
+```csharp
+using Deskband11Lib.Core;
+using Deskband11Lib.Uno.Skia;
+
+var window = new MainWindow();
+var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
+{
+    PreferredWidth = 360,
+    PreferredHeight = 48
+});
+
+await host.AttachWhenLayoutReadyAsync();
+window.Activate();
 ```
 
 ### Explorer Restart
@@ -147,6 +171,7 @@ The snippets above show the core API shape, but a real taskbar companion should 
 
 - `Deskband11Lib.WinUI.Sample` for WinUI 3 and Windows App SDK apps.
 - `Deskband11Lib.Wpf.Sample` for WPF apps, including the transparent borderless host window setup.
+- `Deskband11Lib.Uno.Skia.Sample` for Uno Platform Skia Desktop apps.
 
 ## Requirements
 
@@ -154,6 +179,7 @@ The snippets above show the core API shape, but a real taskbar companion should 
 - The target framework must be compatible with your chosen UI framework.
 - WinUI 3 requires Windows App SDK.
 - WPF requires `UseWPF=true` in the project file.
+- Uno Platform Skia Desktop requires the `Uno.Sdk` and `net10.0-desktop` target framework.
 
 ## Project Development
 
