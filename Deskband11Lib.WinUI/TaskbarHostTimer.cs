@@ -1,9 +1,9 @@
-using Deskband11Lib.Core;
+﻿using Deskband11Lib.Core;
 using Microsoft.UI.Dispatching;
 
 namespace Deskband11Lib.WinUI;
 
-internal sealed class TaskbarHostTimer : ITaskbarHostTimer
+internal sealed partial class TaskbarHostTimer : ITaskbarHostTimer
 {
     private readonly DispatcherQueueTimer _timer;
     private readonly Action _tick;
