@@ -50,7 +50,7 @@
                 MinHeight="32"
                 Padding="8,0"
                 VerticalAlignment="Center"
-                Background="Transparent"
+                Background="#01808080"
                 BorderBrush="Transparent"
                 Click="OnCloseButtonClicked"
                 ToolTip="Close sample">
