@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
+    <RootNamespace>Deskband11Lib.WinUI</RootNamespace>
+    <PackageId>Deskband11Lib.WinUI</PackageId>
+    <Title>Deskband11Lib.WinUI</Title>
+    <Version>1.1.0</Version>
+    <Authors>airtaxi</Authors>
+    <Company>airtaxi</Company>
+    <Copyright>Copyright (c) 2026 airtaxi</Copyright>
+    <Description>WinUI 3 facade for hosting rich application content inside the Windows 11 taskbar.</Description>
+    <PackageTags>winui;winui3;windowsappsdk;windows11;taskbar;deskband;widget;desktop;nativeaot;cswin32</PackageTags>
+    <PackageProjectUrl>https://github.com/airtaxi/Deskband11Lib</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/airtaxi/Deskband11Lib</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <IsAotCompatible>true</IsAotCompatible>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Deskband11Lib.Core\Deskband11Lib.Core.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyPackageReadme" BeforeTargets="GenerateNuspec;Pack" Inputs="..\README.md" Outputs="README.md">
+    <Copy SourceFiles="..\README.md" DestinationFiles="README.md" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

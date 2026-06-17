@@ -1,13 +1,23 @@
 <Solution>
   <Configurations>
     <Platform Name="Any CPU" />
+    <Platform Name="ARM64" />
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="Deskband11Lib.Sample/Deskband11Lib.Sample.csproj">
+  <Project Path="Deskband11Lib.WinUI.Sample/Deskband11Lib.WinUI.Sample.csproj">
     <Platform Solution="*|Any CPU" Project="x86" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>
-  <Project Path="Deskband11Lib/Deskband11Lib.csproj" />
+  <Project Path="Deskband11Lib.Wpf.Sample/Deskband11Lib.Wpf.Sample.csproj">
+    <Platform Solution="*|Any CPU" Project="x86" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="Deskband11Lib.Core/Deskband11Lib.Core.csproj" />
+  <Project Path="Deskband11Lib.Wpf/Deskband11Lib.Wpf.csproj" />
+  <Project Path="Deskband11Lib.WinUI/Deskband11Lib.WinUI.csproj" />
 </Solution>

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish the current package to NuGet.org.
+        description: Publish the current packages to NuGet.org.
         required: true
         default: false
         type: boolean
@@ -13,7 +13,9 @@ on:
       - master
     paths:
       - .github/workflows/pack-and-publish.yml
-      - Deskband11Lib/Deskband11Lib.csproj
+      - Deskband11Lib.Core/**
+      - Deskband11Lib.WinUI/**
+      - Deskband11Lib.Wpf/**
       - README.md
       - LICENSE
 
@@ -41,11 +43,41 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          $projectPath = "Deskband11Lib/Deskband11Lib.csproj"
-          [xml]$currentProject = Get-Content -LiteralPath $projectPath -Raw
-          $currentVersion = ($currentProject.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
-          if ([string]::IsNullOrWhiteSpace($currentVersion)) { throw "Current Version was not found in $projectPath." }
+          $packageProjects = @(
+            @{ Id = "Deskband11Lib.Core"; Path = "Deskband11Lib.Core/Deskband11Lib.Core.csproj" },
+            @{ Id = "Deskband11Lib.WinUI"; Path = "Deskband11Lib.WinUI/Deskband11Lib.WinUI.csproj" },
+            @{ Id = "Deskband11Lib.Wpf"; Path = "Deskband11Lib.Wpf/Deskband11Lib.Wpf.csproj" }
+          )
 
+          function Get-ProjectVersion([string]$projectPath) {
+            [xml]$project = Get-Content -LiteralPath $projectPath -Raw
+            $version = ($project.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+            if ([string]::IsNullOrWhiteSpace($version)) { throw "Version was not found in $projectPath." }
+            return $version
+          }
+
+          function Get-PreviousProjectVersion([string]$previousCommit, [string]$projectPath) {
+            $previousProjectText = & git show "$previousCommit`:$projectPath" 2>$null
+            if ($LASTEXITCODE -ne 0) { return $null }
+
+            $previousProjectXml = ($previousProjectText -join "`n") -replace "^\uFEFF", ""
+            [xml]$previousProject = $previousProjectXml
+            $previousVersion = ($previousProject.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+            if ([string]::IsNullOrWhiteSpace($previousVersion)) { throw "Previous Version was not found in $projectPath." }
+            return $previousVersion
+          }
+
+          $currentVersions = @{}
+          foreach ($packageProject in $packageProjects) {
+            $currentVersions[$packageProject.Id] = Get-ProjectVersion $packageProject.Path
+          }
+
+          $distinctCurrentVersions = @($currentVersions.Values | Sort-Object -Unique)
+          if ($distinctCurrentVersions.Count -ne 1) {
+            throw "Package versions must match. Current versions: $($currentVersions.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" } | Sort-Object | Join-String -Separator ', ')"
+          }
+
+          $currentVersion = $distinctCurrentVersions[0]
           $eventName = "${{ github.event_name }}"
           if ($eventName -eq "workflow_dispatch") {
             $shouldPublish = "${{ inputs.publish }}" -eq "true"
@@ -74,28 +106,34 @@ jobs:
             exit 0
           }
 
-          $previousProjectText = & git show "$previousCommit`:$projectPath"
-          if ($LASTEXITCODE -ne 0) { throw "Previous project file was not found at $previousCommit`:$projectPath." }
+          $facadeProjects = @($packageProjects | Where-Object { $_.Id -in @("Deskband11Lib.WinUI", "Deskband11Lib.Wpf") })
+          $shouldPublish = $false
+          $previousVersions = @()
 
-          $previousProjectXml = ($previousProjectText -join "`n") -replace "^\uFEFF", ""
-          [xml]$previousProject = $previousProjectXml
-          $previousVersion = ($previousProject.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
-          if ([string]::IsNullOrWhiteSpace($previousVersion)) { throw "Previous Version was not found in $projectPath." }
+          foreach ($packageProject in $facadeProjects) {
+            $previousVersion = Get-PreviousProjectVersion $previousCommit $packageProject.Path
+            if ($null -eq $previousVersion) {
+              $shouldPublish = $true
+              $previousVersions += "$($packageProject.Id)=<new>"
+              continue
+            }
 
-          $currentSemanticVersion = [System.Management.Automation.SemanticVersion]::Parse($currentVersion)
-          $previousSemanticVersion = [System.Management.Automation.SemanticVersion]::Parse($previousVersion)
-          $shouldPublish = $currentSemanticVersion -gt $previousSemanticVersion
+            $previousVersions += "$($packageProject.Id)=$previousVersion"
+            $currentSemanticVersion = [System.Management.Automation.SemanticVersion]::Parse($currentVersions[$packageProject.Id])
+            $previousSemanticVersion = [System.Management.Automation.SemanticVersion]::Parse($previousVersion)
+            if ($currentSemanticVersion -gt $previousSemanticVersion) { $shouldPublish = $true }
+          }
 
           "run=$($shouldPublish.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           "publish=$($shouldPublish.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           "current=$currentVersion" >> $env:GITHUB_OUTPUT
-          "previous=$previousVersion" >> $env:GITHUB_OUTPUT
+          "previous=$($previousVersions -join ', ')" >> $env:GITHUB_OUTPUT
 
           if ($shouldPublish) {
-            "Version increased from $previousVersion to $currentVersion. NuGet publishing will continue."
+            "Facade package version changed or package is new. NuGet publishing will continue. Current=$currentVersion Previous=$($previousVersions -join ', ')"
           }
           else {
-            "Version did not increase. Previous=$previousVersion Current=$currentVersion. NuGet publishing is skipped."
+            "Facade package versions did not increase. NuGet publishing is skipped. Current=$currentVersion Previous=$($previousVersions -join ', ')"
           }
 
       - name: Setup .NET
@@ -108,22 +146,33 @@ jobs:
         if: steps.version.outputs.run == 'true'
         run: dotnet test Deskband11Lib.slnx -c Release
 
-      - name: Pack
+      - name: Pack Core
         if: steps.version.outputs.run == 'true'
-        run: dotnet pack Deskband11Lib/Deskband11Lib.csproj -c Release /p:ContinuousIntegrationBuild=true --output artifacts/packages
+        run: dotnet pack Deskband11Lib.Core/Deskband11Lib.Core.csproj -c Release /p:ContinuousIntegrationBuild=true --output artifacts/packages
 
-      - name: Validate package
+      - name: Pack WinUI
+        if: steps.version.outputs.run == 'true'
+        run: dotnet pack Deskband11Lib.WinUI/Deskband11Lib.WinUI.csproj -c Release /p:ContinuousIntegrationBuild=true --output artifacts/packages
+
+      - name: Pack WPF
+        if: steps.version.outputs.run == 'true'
+        run: dotnet pack Deskband11Lib.Wpf/Deskband11Lib.Wpf.csproj -c Release /p:ContinuousIntegrationBuild=true --output artifacts/packages
+
+      - name: Validate packages
         if: steps.version.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          package_path="artifacts/packages/Deskband11Lib.${{ steps.version.outputs.current }}.nupkg"
-          if [ ! -f "$package_path" ]; then
-            echo "Missing expected package: $package_path" >&2
-            exit 1
-          fi
 
-      - name: Publish package to NuGet.org
+          for package_id in Deskband11Lib.Core Deskband11Lib.WinUI Deskband11Lib.Wpf; do
+            package_path="artifacts/packages/${package_id}.${{ steps.version.outputs.current }}.nupkg"
+            if [ ! -f "$package_path" ]; then
+              echo "Missing expected package: $package_path" >&2
+              exit 1
+            fi
+          done
+
+      - name: Publish packages to NuGet.org
         if: steps.version.outputs.publish == 'true'
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
@@ -136,7 +185,9 @@ jobs:
             exit 1
           fi
 
-          dotnet nuget push "artifacts/packages/Deskband11Lib.${{ steps.version.outputs.current }}.nupkg" \
-            --api-key "$NUGET_API_KEY" \
-            --source "https://api.nuget.org/v3/index.json" \
-            --skip-duplicate
+          for package_id in Deskband11Lib.Core Deskband11Lib.WinUI Deskband11Lib.Wpf; do
+            dotnet nuget push "artifacts/packages/${package_id}.${{ steps.version.outputs.current }}.nupkg" \
+              --api-key "$NUGET_API_KEY" \
+              --source "https://api.nuget.org/v3/index.json" \
+              --skip-duplicate
+          done

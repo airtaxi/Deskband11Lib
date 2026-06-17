@@ -64,7 +64,9 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
-Deskband11Lib/README.md
+Deskband11Lib.Core/README.md
+Deskband11Lib.WinUI/README.md
+Deskband11Lib.Wpf/README.md
 
 # Tye
 .tye/

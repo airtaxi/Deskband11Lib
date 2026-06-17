@@ -1,36 +1,60 @@
 # Deskband11Lib
 
-[![NuGet](https://img.shields.io/nuget/v/Deskband11Lib.svg)](https://www.nuget.org/packages/Deskband11Lib)
-[![NuGet downloads](https://img.shields.io/nuget/dt/Deskband11Lib.svg)](https://www.nuget.org/packages/Deskband11Lib)
+[![NuGet WinUI](https://img.shields.io/nuget/v/Deskband11Lib.WinUI.svg)](https://www.nuget.org/packages/Deskband11Lib.WinUI)
+[![NuGet WPF](https://img.shields.io/nuget/v/Deskband11Lib.Wpf.svg)](https://www.nuget.org/packages/Deskband11Lib.Wpf)
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-🌐 English | [한국어](README.ko.md)
+English | [한국어](README.ko.md)
 
-Deskband11Lib is a WinUI 3 library for building rich, always-visible taskbar companions on Windows 11. It lets your app place real WinUI content directly inside the taskbar, making compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools feel like a native part of the desktop.
+Deskband11Lib is a library for building rich, always-visible taskbar companions on Windows 11. It lets your app place real UI content directly inside the taskbar, making compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools feel like a native part of the desktop.
 
 ![Deskband11Lib screenshot](.github/screenshot.png)
 
+## Packages
+
+Deskband11Lib comes in multiple NuGet packages, one for each supported UI framework. A shared `Deskband11Lib.Core` package holds the taskbar hosting engine. Future frameworks such as Avalonia can be added as additional facade packages.
+
+| Package | Description |
+| --- | --- |
+| `Deskband11Lib.Core` | Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting engine. Independent of any UI framework. |
+| `Deskband11Lib.WinUI` | WinUI 3 facade. Build taskbar widgets with the same WinUI controls, styling, and composition features used by your app. |
+| `Deskband11Lib.Wpf` | WPF facade. Bring WPF-based content into the Windows 11 taskbar with the same simple API. |
+
 ## Highlights
 
-- Build taskbar-resident widgets with the same WinUI 3 controls, styling, and composition features used by your app.
+- Build taskbar-resident widgets using your framework's native controls and styling.
 - Show live information where users can see it at a glance without opening a full window.
 - Add compact controls for actions such as timers, media playback, account switching, build status, device monitoring, or quick launch workflows.
 - Automatically fit content into the available taskbar space without overlapping pinned apps or the notification area.
+- Built-in easing functions (Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle) for smooth layout animations.
 - Recover cleanly when Explorer restarts by letting the application rebuild its hosted window.
-- Support Windows App SDK apps and NativeAOT publishing.
+- WinUI facade supports Windows App SDK apps and NativeAOT publishing.
 
 ## Install
 
+Choose the package that matches your UI framework:
+
 ```powershell
-dotnet add package Deskband11Lib
+# WinUI 3
+dotnet add package Deskband11Lib.WinUI
+
+# WPF
+dotnet add package Deskband11Lib.Wpf
 ```
 
+The `Deskband11Lib.Core` package is pulled in automatically as a transitive dependency.
+
 ## Basic Usage
+
+### WinUI 3
 
 Create a WinUI window, create a `TaskbarContentHost`, attach it after the initial taskbar layout is ready, then activate the window.
 
 ```csharp
+using Deskband11Lib.Core;
+using Deskband11Lib.WinUI;
+
 var window = new MainWindow();
 var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
 {
@@ -38,14 +62,35 @@ var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOpt
     PreferredHeight = 48,
     AnimateLayoutChanges = true,
     LayoutAnimationDuration = 500,
-    LayoutAnimationEasing = new CubicEase { EasingMode = EasingMode.EaseOut }
+    LayoutAnimationEasing = EasingFunctions.CircleOut
 });
 
 await host.AttachWhenLayoutReadyAsync();
 window.Activate();
 ```
 
-When Explorer restarts, the taskbar destroys the hosted child window. The safest recovery strategy is to let the application create a new WinUI window and attach that new window to the recreated taskbar.
+### WPF
+
+The WPF API is identical. The only difference is the UI framework namespace used for `Window` and `FrameworkElement`.
+
+```csharp
+using Deskband11Lib.Core;
+using Deskband11Lib.Wpf;
+
+var window = new MainWindow();
+var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
+{
+    PreferredWidth = 360,
+    PreferredHeight = 48
+});
+
+await host.AttachWhenLayoutReadyAsync();
+window.Show();
+```
+
+### Explorer Restart
+
+When Explorer restarts, the taskbar destroys the hosted child window. Handle `TaskbarWindowRecreated` to replace the window:
 
 ```csharp
 host.TaskbarWindowRecreated += async (_, _) =>
@@ -56,50 +101,62 @@ host.TaskbarWindowRecreated += async (_, _) =>
 
 ## How It Works
 
-Deskband11Lib gives your WinUI app a taskbar-sized surface and keeps that surface aligned with the real taskbar layout. Internally, it uses regular Win32 window parenting:
+Deskband11Lib gives your app a taskbar-sized surface and keeps that surface aligned with the real taskbar layout. Internally, it uses regular Win32 window parenting:
 
 - Finds the primary taskbar window, `Shell_TrayWnd`.
-- Creates or receives a normal WinUI `Window` from the application.
-- Changes the WinUI window style from popup-style top-level window to child window.
-- Calls `SetParent` to place the WinUI window under the taskbar.
+- Creates or receives a normal framework `Window` from the application.
+- Changes the window style from popup-style top-level window to child window.
+- Calls `SetParent` to place the window under the taskbar.
 - Calculates the available rectangle between the taskbar buttons and the notification area.
 - Moves and clips the hosted window to that rectangle with `SetWindowPos` and `SetWindowRgn`.
 
-Taskbar button width is not reliable from the taskbar child HWND hierarchy alone on current Windows 11 builds. Deskband11Lib therefore uses UI Automation to inspect the taskbar's visible button rectangles. The UI Automation scan runs off the UI thread and is cached so layout refreshes do not block the hosted WinUI content.
-
-## Explorer Restart Handling
-
-Explorer owns the taskbar. When Explorer crashes or restarts, the old taskbar window and any child windows under it are destroyed. Reusing the old WinUI `Window` after that point can be unstable, so Deskband11Lib reports taskbar recreation instead of automatically reattaching the old window.
-
-Applications should handle `TaskbarWindowRecreated`, release the old host/window, create a fresh window, and call `AttachWhenLayoutReadyAsync()` again.
+Taskbar button width is not reliable from the taskbar child HWND hierarchy alone on current Windows 11 builds. Deskband11Lib therefore uses UI Automation to inspect the taskbar's visible button rectangles. The UI Automation scan runs off the UI thread and is cached so layout refreshes do not block the hosted content.
 
 ## Options
 
-- `PreferredWidth`: Desired content width in effective pixels.
-- `PreferredHeight`: Desired content height in effective pixels.
-- `AnimateLayoutChanges`: Animates taskbar host position and size changes. Defaults to `true`.
-- `LayoutAnimationDuration`: Layout animation duration in milliseconds. Defaults to `500`.
-- `LayoutAnimationEasing`: WinUI easing function used for layout animation. Defaults to `CubicEase` with `EaseOut`.
-- `StartAreaWidth`: Reserved width for the Start button area.
-- `Placement`: Places content before the notification area or after taskbar buttons.
-- `TrackTaskbarButtons`: Enables UI Automation based taskbar button measurement.
-- `TrackNotificationArea`: Keeps content away from the notification area.
-- `LayoutRefreshInterval`: Refresh interval for ongoing taskbar layout updates.
+All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are shared across all facades.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `PreferredWidth` | `360` | Desired content width in effective pixels. |
+| `PreferredHeight` | `48` | Desired content height in effective pixels. |
+| `AnimateLayoutChanges` | `true` | Animates taskbar host position and size changes. |
+| `LayoutAnimationDuration` | `500` | Layout animation duration in milliseconds. |
+| `LayoutAnimationEasing` | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
+| `StartAreaWidth` | `60` | Reserved width for the Start button area. |
+| `Placement` | `BeforeNotificationArea` | Places content before the notification area or after taskbar buttons. |
+| `TrackTaskbarButtons` | `true` | Enables UI Automation based taskbar button measurement. |
+| `TrackNotificationArea` | `true` | Keeps content away from the notification area. |
+| `LayoutRefreshInterval` | `500 ms` | Refresh interval for ongoing taskbar layout updates. |
+
+## Built-in Easing Functions
+
+`Deskband11Lib.Core.EasingFunctions` provides these easing functions for `LayoutAnimationEasing`:
+
+- `EasingFunctions.Linear`
+- `EasingFunctions.SineIn` / `SineOut` / `SineInOut`
+- `EasingFunctions.QuadraticIn` / `QuadraticOut` / `QuadraticInOut`
+- `EasingFunctions.CubicIn` / `CubicOut` / `CubicInOut`
+- `EasingFunctions.QuarticIn` / `QuarticOut` / `QuarticInOut`
+- `EasingFunctions.QuinticIn` / `QuinticOut` / `QuinticInOut`
+- `EasingFunctions.ExponentialIn` / `ExponentialOut` / `ExponentialInOut`
+- `EasingFunctions.CircleIn` / `CircleOut` / `CircleInOut`
+
+You can also pass any `Func<double, double>` delegate for custom easing.
 
 ## Requirements
 
 - Windows 11.
-- WinUI 3 / Windows App SDK.
-- A Windows target framework compatible with Windows App SDK.
-
-The sample project targets `net10.0-windows10.0.26100.0` and supports NativeAOT publishing.
+- The target framework must be compatible with your chosen UI framework.
+- WinUI 3 requires Windows App SDK.
+- WPF requires `UseWPF=true` in the project file.
 
 ## Project Development
 
 ```powershell
 dotnet restore
 dotnet build Deskband11Lib.slnx -c Debug
-dotnet publish Deskband11Lib.Sample\Deskband11Lib.Sample.csproj -c Release -r win-x64
+dotnet publish Deskband11Lib.WinUI.Sample\Deskband11Lib.WinUI.Sample.csproj -c Release -r win-x64
 ```
 
 ## Acknowledgements
