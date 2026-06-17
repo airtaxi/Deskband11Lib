@@ -5,7 +5,7 @@
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-English | [한국어](README.ko.md)
+🌐 English | [한국어](README.ko.md)
 
 Deskband11Lib is a library for building rich, always-visible taskbar companions on Windows 11. It lets your app place real UI content directly inside the taskbar, making compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools feel like a native part of the desktop.
 
@@ -15,11 +15,11 @@ Deskband11Lib is a library for building rich, always-visible taskbar companions 
 
 Deskband11Lib comes in multiple NuGet packages, one for each supported UI framework. A shared `Deskband11Lib.Core` package holds the taskbar hosting engine. Future frameworks such as Avalonia can be added as additional facade packages.
 
-| Package | Description |
-| --- | --- |
-| `Deskband11Lib.Core` | Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting engine. Independent of any UI framework. |
-| `Deskband11Lib.WinUI` | WinUI 3 facade. Build taskbar widgets with the same WinUI controls, styling, and composition features used by your app. |
-| `Deskband11Lib.Wpf` | WPF facade. Bring WPF-based content into the Windows 11 taskbar with the same simple API. |
+| Package               | Description                                                                                                                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Deskband11Lib.Core`  | Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting engine. Independent of any UI framework. |
+| `Deskband11Lib.WinUI` | WinUI 3 facade. Build taskbar widgets with the same WinUI controls, styling, and composition features used by your app.                                               |
+| `Deskband11Lib.Wpf`   | WPF facade. Bring WPF-based content into the Windows 11 taskbar with the same simple API.                                                                             |
 
 ## Highlights
 
@@ -59,10 +59,7 @@ var window = new MainWindow();
 var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
 {
     PreferredWidth = 360,
-    PreferredHeight = 48,
-    AnimateLayoutChanges = true,
-    LayoutAnimationDuration = 500,
-    LayoutAnimationEasing = EasingFunctions.CircleOut
+    PreferredHeight = 48
 });
 
 await host.AttachWhenLayoutReadyAsync();
@@ -116,18 +113,18 @@ Taskbar button width is not reliable from the taskbar child HWND hierarchy alone
 
 All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are shared across all facades.
 
-| Option | Default | Description |
-| --- | --- | --- |
-| `PreferredWidth` | `360` | Desired content width in effective pixels. |
-| `PreferredHeight` | `48` | Desired content height in effective pixels. |
-| `AnimateLayoutChanges` | `true` | Animates taskbar host position and size changes. |
-| `LayoutAnimationDuration` | `500` | Layout animation duration in milliseconds. |
-| `LayoutAnimationEasing` | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
-| `StartAreaWidth` | `60` | Reserved width for the Start button area. |
-| `Placement` | `BeforeNotificationArea` | Places content before the notification area or after taskbar buttons. |
-| `TrackTaskbarButtons` | `true` | Enables UI Automation based taskbar button measurement. |
-| `TrackNotificationArea` | `true` | Keeps content away from the notification area. |
-| `LayoutRefreshInterval` | `500 ms` | Refresh interval for ongoing taskbar layout updates. |
+| Option                    | Default                     | Description                                                                                                                                              |
+| ------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PreferredWidth`          | `360`                       | Desired content width in effective pixels.                                                                                                               |
+| `PreferredHeight`         | `48`                        | Desired content height in effective pixels.                                                                                                              |
+| `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
+| `LayoutAnimationDuration` | `500`                       | Layout animation duration in milliseconds.                                                                                                               |
+| `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
+| `StartAreaWidth`          | `60`                        | Reserved width for the Start button area.                                                                                                                |
+| `Placement`               | `BeforeNotificationArea`    | Places content before the notification area or after taskbar buttons.                                                                                    |
+| `TrackTaskbarButtons`     | `true`                      | Enables UI Automation based taskbar button measurement.                                                                                                  |
+| `TrackNotificationArea`   | `true`                      | Keeps content away from the notification area.                                                                                                           |
+| `LayoutRefreshInterval`   | `500 ms`                    | Refresh interval for ongoing taskbar layout updates.                                                                                                     |
 
 ## Built-in Easing Functions
 
@@ -143,6 +140,13 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 - `EasingFunctions.CircleIn` / `CircleOut` / `CircleInOut`
 
 You can also pass any `Func<double, double>` delegate for custom easing.
+
+## Sample Projects
+
+The snippets above show the core API shape, but a real taskbar companion should follow the sample projects for window lifetime, startup ordering, Explorer restart recovery, and framework-specific hosting details. Start from the sample that matches your UI stack:
+
+- `Deskband11Lib.WinUI.Sample` for WinUI 3 and Windows App SDK apps.
+- `Deskband11Lib.Wpf.Sample` for WPF apps, including the transparent borderless host window setup.
 
 ## Requirements
 

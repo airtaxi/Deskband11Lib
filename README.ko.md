@@ -5,7 +5,7 @@
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[English](README.md) | 한국어
+🌐 [English](README.md) | 한국어
 
 Deskband11Lib는 Windows 11 작업 표시줄 안에 UI 콘텐츠를 자연스럽게 배치할 수 있게 해주는 라이브러리입니다. 작은 대시보드, 빠른 제어 패널, 상태 표시기, 미디어 위젯, 런처, 생산성 도구처럼 항상 보여야 하는 기능을 데스크톱의 일부처럼 만들 수 있습니다.
 
@@ -143,6 +143,13 @@ Deskband11Lib는 앱에 작업 표시줄 크기의 표시 영역을 제공하고
 - `EasingFunctions.CircleIn` / `CircleOut` / `CircleInOut`
 
 직접 작성한 `Func<double, double>` delegate를 전달할 수도 있습니다.
+
+## 샘플 프로젝트
+
+위의 코드 조각은 핵심 API 형태를 보여주기 위한 최소 예제입니다. 실제 작업 표시줄 companion 앱을 만들 때는 창 수명주기, 시작 순서, Explorer 재시작 복구, 프레임워크별 호스팅 세부 처리가 중요하므로 샘플 프로젝트를 먼저 참고하는 것을 권장합니다.
+
+- `Deskband11Lib.WinUI.Sample`: WinUI 3 및 Windows App SDK 앱용 샘플입니다.
+- `Deskband11Lib.Wpf.Sample`: WPF 앱용 샘플이며, 투명한 borderless host 창 설정을 포함합니다.
 
 ## 요구 사항
 
