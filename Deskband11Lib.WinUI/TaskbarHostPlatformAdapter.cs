@@ -1,4 +1,4 @@
-using Deskband11Lib.Core;
+﻿using Deskband11Lib.Core;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 
@@ -6,12 +6,13 @@ namespace Deskband11Lib.WinUI;
 
 internal sealed class TaskbarHostPlatformAdapter(Window window, FrameworkElement contentElement, TaskbarContentHostOptions options) : ITaskbarHostPlatformAdapter
 {
-    private bool _originalExtendsContentIntoTitleBar;
+    private AppWindowPresenterKind _originalPresenter;
     private bool _originalPresenterHasBorder;
     private bool _originalPresenterHasTitleBar;
     private bool _originalPresenterIsResizable;
     private bool _originalPresenterIsMaximizable;
     private bool _originalPresenterIsMinimizable;
+    private bool _originalExtendsContentIntoTitleBar;
     private bool _hasPreparedWindow;
 
     public nint WindowHandle => WinRT.Interop.WindowNative.GetWindowHandle(window);
@@ -45,6 +46,9 @@ internal sealed class TaskbarHostPlatformAdapter(Window window, FrameworkElement
         _originalExtendsContentIntoTitleBar = window.ExtendsContentIntoTitleBar;
         window.ExtendsContentIntoTitleBar = true;
 
+        _originalPresenter = window.AppWindow.Presenter.Kind;
+        window.AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
+
         if (window.AppWindow.Presenter is OverlappedPresenter presenter)
         {
             _originalPresenterHasBorder = presenter.HasBorder;
@@ -68,7 +72,7 @@ internal sealed class TaskbarHostPlatformAdapter(Window window, FrameworkElement
 
         window.ExtendsContentIntoTitleBar = _originalExtendsContentIntoTitleBar;
 
-        if (window.AppWindow.Presenter is OverlappedPresenter presenter)
+        if (_originalPresenter == AppWindowPresenterKind.Overlapped && window.AppWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.SetBorderAndTitleBar(_originalPresenterHasBorder, _originalPresenterHasTitleBar);
             presenter.IsResizable = _originalPresenterIsResizable;
