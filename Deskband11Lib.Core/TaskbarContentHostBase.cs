@@ -141,10 +141,12 @@ public class TaskbarContentHostBase : IDisposable
 
         _originalParentWindow = PInvoke.GetParent(_windowHandle);
         _originalWindowStyle = (WINDOW_STYLE)PInvoke.GetWindowLong(_windowHandle, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
-        var childWindowStyle = (_originalWindowStyle & ~WINDOW_STYLE.WS_POPUP) | WINDOW_STYLE.WS_CHILD;
+        var childWindowStyle = _originalWindowStyle & ~(WINDOW_STYLE.WS_POPUP | WINDOW_STYLE.WS_CAPTION | WINDOW_STYLE.WS_THICKFRAME | WINDOW_STYLE.WS_SYSMENU | WINDOW_STYLE.WS_MINIMIZEBOX | WINDOW_STYLE.WS_MAXIMIZEBOX);
+        childWindowStyle |= WINDOW_STYLE.WS_CHILD;
 
         _ = PInvoke.SetWindowLong(_windowHandle, WINDOW_LONG_PTR_INDEX.GWL_STYLE, (int)childWindowStyle);
         PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
+        PInvoke.SetWindowPos(_windowHandle, HWND.Null, 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
 
         IsAttached = true;
         _explorerRestartMonitorService.Start();
