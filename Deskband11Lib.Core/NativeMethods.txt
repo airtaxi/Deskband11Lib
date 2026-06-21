@@ -2,12 +2,10 @@ CreateRectRgn
 FindWindow
 FindWindowEx
 GetParent
-GetWindowLong
 GetWindowRect
 GetWindowThreadProcessId
 GetDpiForWindow
 SetParent
-SetWindowLong
 SetWindowPos
 SetWindowRgn
 HWND

@@ -75,7 +75,7 @@ public class TaskbarContentHostBase : IDisposable
         _explorerRestartMonitorService.Stop();
 
         _ = PInvoke.SetWindowRgn(_windowHandle, HRGN.Null, true);
-        _ = PInvoke.SetWindowLong(_windowHandle, WINDOW_LONG_PTR_INDEX.GWL_STYLE, (int)_originalWindowStyle);
+        NativeWindowMethods.SetWindowStyle(_windowHandle, _originalWindowStyle);
         PInvoke.SetParent(_windowHandle, _originalParentWindow);
         _platformAdapter.RestoreWindowAfterChildHosting();
 
@@ -87,6 +87,8 @@ public class TaskbarContentHostBase : IDisposable
     {
         ThrowIfDisposed();
         if (!IsAttached) return;
+
+        ApplyHostedWindowStyle();
 
         var scaleFactor = GetScaleFactor();
         var snapshot = _taskbarLayoutCalculator.Calculate(_platformAdapter.RequestedWidth, _platformAdapter.RequestedHeight, scaleFactor);
@@ -140,18 +142,26 @@ public class TaskbarContentHostBase : IDisposable
         if (!_taskbarWindowLocator.TryRefresh()) throw new InvalidOperationException("The Windows taskbar window could not be found.");
 
         _originalParentWindow = PInvoke.GetParent(_windowHandle);
-        _originalWindowStyle = (WINDOW_STYLE)PInvoke.GetWindowLong(_windowHandle, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
-        var childWindowStyle = _originalWindowStyle & ~(WINDOW_STYLE.WS_POPUP | WINDOW_STYLE.WS_CAPTION | WINDOW_STYLE.WS_THICKFRAME | WINDOW_STYLE.WS_SYSMENU | WINDOW_STYLE.WS_MINIMIZEBOX | WINDOW_STYLE.WS_MAXIMIZEBOX);
-        childWindowStyle |= WINDOW_STYLE.WS_CHILD;
-
-        _ = PInvoke.SetWindowLong(_windowHandle, WINDOW_LONG_PTR_INDEX.GWL_STYLE, (int)childWindowStyle);
+        _originalWindowStyle = NativeWindowMethods.GetWindowStyle(_windowHandle);
         PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
-        PInvoke.SetWindowPos(_windowHandle, HWND.Null, 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
+        ApplyHostedWindowStyle();
 
         IsAttached = true;
         _explorerRestartMonitorService.Start();
         if (deferInitialLayout) CollapseWindowRegion();
     }
+
+    private void ApplyHostedWindowStyle()
+    {
+        var currentWindowStyle = NativeWindowMethods.GetWindowStyle(_windowHandle);
+        var hostedWindowStyle = currentWindowStyle & ~(WINDOW_STYLE.WS_POPUP | WINDOW_STYLE.WS_CAPTION | WINDOW_STYLE.WS_THICKFRAME | WINDOW_STYLE.WS_SYSMENU | WINDOW_STYLE.WS_MINIMIZEBOX | WINDOW_STYLE.WS_MAXIMIZEBOX);
+        hostedWindowStyle |= WINDOW_STYLE.WS_CHILD;
+        if (currentWindowStyle != hostedWindowStyle) NativeWindowMethods.SetWindowStyle(_windowHandle, hostedWindowStyle);
+
+        RefreshWindowFrame();
+    }
+
+    private void RefreshWindowFrame() => PInvoke.SetWindowPos(_windowHandle, HWND.Null, 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
 
     private void ApplyOrAnimateLayoutSnapshot(TaskbarLayoutSnapshot snapshot)
     {
@@ -196,6 +206,7 @@ public class TaskbarContentHostBase : IDisposable
 
         _ = PInvoke.SetWindowRgn(_windowHandle, HRGN.Null, true);
         PInvoke.SetWindowPos(_windowHandle, HWND.Null, RoundDevicePixel(snapshot.X), RoundDevicePixel(snapshot.Y), width, height, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
+        ApplyHostedWindowStyle();
 
         var region = PInvoke.CreateRectRgn(0, 0, width, height);
         _ = PInvoke.SetWindowRgn(_windowHandle, region, true);
@@ -241,6 +252,7 @@ public class TaskbarContentHostBase : IDisposable
         var region = PInvoke.CreateRectRgn(0, 0, 0, 0);
         _ = PInvoke.SetWindowRgn(_windowHandle, region, true);
         PInvoke.SetWindowPos(_windowHandle, HWND.Null, 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
+        ApplyHostedWindowStyle();
     }
 
     private async Task RefreshTaskbarButtonMeasurementAsync()
