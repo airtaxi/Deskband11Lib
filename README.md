@@ -107,7 +107,7 @@ Deskband11Lib gives your app a taskbar-sized surface and keeps that surface alig
 - Calculates the available rectangle between the taskbar buttons and the notification area.
 - Moves and clips the hosted window to that rectangle with `SetWindowPos` and `SetWindowRgn`.
 
-Taskbar button width is not reliable from the taskbar child HWND hierarchy alone on current Windows 11 builds. Deskband11Lib therefore uses UI Automation to inspect the taskbar's visible button rectangles. The UI Automation scan runs off the UI thread and is cached so layout refreshes do not block the hosted content.
+Taskbar button width is not reliable from the taskbar child HWND hierarchy alone on current Windows 11 builds, especially because the taskbar content can be left-aligned or centered. Deskband11Lib therefore uses UI Automation to detect the Start button (the leftmost in-process taskbar button) and the contiguous taskbar app button group, so content is always laid out next to whatever comes first regardless of alignment. The UI Automation scan runs off the UI thread and is cached so layout refreshes do not block the hosted content.
 
 ## Options
 
@@ -120,7 +120,6 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 | `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
 | `LayoutAnimationDuration` | `500`                       | Layout animation duration in milliseconds.                                                                                                               |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
-| `StartAreaWidth`          | `60`                        | Reserved width for the Start button area.                                                                                                                |
 | `Placement`               | `BeforeNotificationArea`    | Places content before the notification area or after taskbar buttons.                                                                                    |
 | `TrackTaskbarButtons`     | `true`                      | Enables UI Automation based taskbar button measurement.                                                                                                  |
 | `TrackNotificationArea`   | `true`                      | Keeps content away from the notification area.                                                                                                           |

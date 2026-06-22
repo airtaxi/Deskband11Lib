@@ -15,7 +15,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         scaleFactor = NormalizeScaleFactor(scaleFactor);
 
         var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
-        var leftBoundary = taskbarRectangle.left + (int)Math.Ceiling(options.StartAreaWidth * scaleFactor);
+        var leftBoundary = taskbarRectangle.left;
         var rightBoundary = taskbarRectangle.right;
         if (options.TrackNotificationArea && TryGetWindowRectangle(taskbarWindowLocator.NotificationWindow, out var notificationRectangle)) rightBoundary = Math.Min(rightBoundary, notificationRectangle.left);
         if (TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, leftBoundary, rightBoundary, out var taskbarButtonsSearchRectangle)) await taskbarButtonReader.RefreshAsync(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle);
@@ -28,11 +28,15 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         scaleFactor = NormalizeScaleFactor(scaleFactor);
 
         var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
-        var leftBoundary = taskbarRectangle.left + (int)Math.Ceiling(options.StartAreaWidth * scaleFactor);
+        var leftBoundary = taskbarRectangle.left;
         var rightBoundary = taskbarRectangle.right;
 
         if (options.TrackNotificationArea && TryGetWindowRectangle(taskbarWindowLocator.NotificationWindow, out var notificationRectangle)) rightBoundary = Math.Min(rightBoundary, notificationRectangle.left);
-        if (options.TrackTaskbarButtons && TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, leftBoundary, rightBoundary, out var taskbarButtonsSearchRectangle) && taskbarButtonReader.TryGetTaskbarButtonsRightEdge(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle, out var taskbarButtonsRightEdge)) leftBoundary = Math.Max(leftBoundary, taskbarButtonsRightEdge);
+        if (TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, leftBoundary, rightBoundary, out var taskbarButtonsSearchRectangle))
+        {
+            if (taskbarButtonReader.TryGetStartButtonRightEdge(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle, out var startButtonRightEdge)) leftBoundary = Math.Max(leftBoundary, startButtonRightEdge);
+            if (options.TrackTaskbarButtons && taskbarButtonReader.TryGetTaskbarButtonsRightEdge(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle, out var taskbarButtonsRightEdge)) leftBoundary = Math.Max(leftBoundary, taskbarButtonsRightEdge);
+        }
 
         var availableWidth = Math.Max(0, rightBoundary - leftBoundary);
         if (availableWidth <= 0) return new TaskbarLayoutSnapshot(0, 0, 0, 0, 0, scaleFactor, false);
