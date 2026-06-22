@@ -104,10 +104,10 @@ Deskband11Lib gives your app a taskbar-sized surface and keeps that surface alig
 - Creates or receives a normal framework `Window` from the application.
 - Changes the window style from popup-style top-level window to child window.
 - Calls `SetParent` to place the window under the taskbar.
-- Calculates the available rectangle between the taskbar buttons and the notification area.
+- Calculates the available rectangle between the taskbar buttons and the notification area, taking taskbar alignment (left or center) into account.
 - Moves and clips the hosted window to that rectangle with `SetWindowPos` and `SetWindowRgn`.
 
-Taskbar button width is not reliable from the taskbar child HWND hierarchy alone on current Windows 11 builds, especially because the taskbar content can be left-aligned or centered. Deskband11Lib therefore uses UI Automation to detect the Start button (the leftmost in-process taskbar button) and the contiguous taskbar app button group, so content is always laid out next to whatever comes first regardless of alignment. The UI Automation scan runs off the UI thread and is cached so layout refreshes do not block the hosted content.
+Taskbar button width is not reliable from the taskbar child HWND hierarchy alone on current Windows 11 builds, and the taskbar content can be left-aligned or centered. Deskband11Lib therefore uses UI Automation to precisely target the Start button (`AutomationId = StartButton`) and the optional Widgets button, plus the contiguous taskbar app button group. It also reads the taskbar alignment from the registry (`TaskbarAl`) and falls back to inferring it from the Start button position. Based on alignment, it picks the more spacious of the two free gaps around the centered Start button group, so content never overlaps the Start button, app buttons, Widgets button, or the notification area. The UI Automation scan runs off the UI thread and is cached so layout refreshes do not block the hosted content.
 
 ## Options
 
@@ -120,10 +120,14 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 | `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
 | `LayoutAnimationDuration` | `500`                       | Layout animation duration in milliseconds.                                                                                                               |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
-| `Placement`               | `BeforeNotificationArea`    | Places content before the notification area or after taskbar buttons.                                                                                    |
+| `Placement`               | `Auto`                      | `Auto` picks the more spacious free gap when the taskbar is centered, and falls back to `BeforeNotificationArea` when left-aligned. `BeforeNotificationArea` always places content next to the notification area. `BeforeStartButton` places content next to the Start button and falls back to `Auto` when the taskbar is not centered. |
 | `TrackTaskbarButtons`     | `true`                      | Enables UI Automation based taskbar button measurement.                                                                                                  |
 | `TrackNotificationArea`   | `true`                      | Keeps content away from the notification area.                                                                                                           |
 | `LayoutRefreshInterval`   | `500 ms`                    | Refresh interval for ongoing taskbar layout updates.                                                                                                     |
+
+## Taskbar Alignment
+
+Deskband11Lib detects whether the Windows 11 taskbar is left-aligned or centered by reading the `TaskbarAl` registry value, falling back to inferring the alignment from the Start button position. Call `GetTaskbarAlignment()` on a `TaskbarContentHost` to get a `TaskbarAlignment` (`Left`, `Center`, or `Unknown`). The detected alignment drives `Placement = Auto`.
 
 ## Built-in Easing Functions
 

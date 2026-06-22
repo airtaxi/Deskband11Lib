@@ -15,10 +15,9 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         scaleFactor = NormalizeScaleFactor(scaleFactor);
 
         var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
-        var leftBoundary = taskbarRectangle.left;
-        var rightBoundary = taskbarRectangle.right;
-        if (options.TrackNotificationArea && TryGetWindowRectangle(taskbarWindowLocator.NotificationWindow, out var notificationRectangle)) rightBoundary = Math.Min(rightBoundary, notificationRectangle.left);
-        if (TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, leftBoundary, rightBoundary, out var taskbarButtonsSearchRectangle)) await taskbarButtonReader.RefreshAsync(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle);
+        var searchLeft = taskbarRectangle.left;
+        var searchRight = ResolveNotificationLeft(taskbarRectangle);
+        if (TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, searchLeft, searchRight, out var taskbarButtonsSearchRectangle)) await taskbarButtonReader.RefreshAsync(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle);
     }
 
     public TaskbarLayoutSnapshot Calculate(double requestedWidth, double requestedHeight, double scaleFactor)
@@ -28,27 +27,64 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         scaleFactor = NormalizeScaleFactor(scaleFactor);
 
         var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
-        var leftBoundary = taskbarRectangle.left;
-        var rightBoundary = taskbarRectangle.right;
+        var searchLeft = taskbarRectangle.left;
+        var searchRight = ResolveNotificationLeft(taskbarRectangle);
 
-        if (options.TrackNotificationArea && TryGetWindowRectangle(taskbarWindowLocator.NotificationWindow, out var notificationRectangle)) rightBoundary = Math.Min(rightBoundary, notificationRectangle.left);
-        if (TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, leftBoundary, rightBoundary, out var taskbarButtonsSearchRectangle))
-        {
-            if (taskbarButtonReader.TryGetStartButtonRightEdge(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle, out var startButtonRightEdge)) leftBoundary = Math.Max(leftBoundary, startButtonRightEdge);
-            if (options.TrackTaskbarButtons && taskbarButtonReader.TryGetTaskbarButtonsRightEdge(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle, out var taskbarButtonsRightEdge)) leftBoundary = Math.Max(leftBoundary, taskbarButtonsRightEdge);
-        }
+        TaskbarButtonGeometry geometry = default;
+        if (options.TrackTaskbarButtons && TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, searchLeft, searchRight, out var taskbarButtonsSearchRectangle)) taskbarButtonReader.TryGetTaskbarButtonGeometry(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle, out geometry);
 
-        var availableWidth = Math.Max(0, rightBoundary - leftBoundary);
+        var alignment = TaskbarAlignmentDetector.Detect(taskbarWindowLocator.TaskbarWindow, geometry.StartButton);
+        var (areaLeft, areaRight) = SelectContentArea(options.Placement, alignment, taskbarRectangle, searchRight, geometry);
+
+        var availableWidth = Math.Max(0, areaRight - areaLeft);
         if (availableWidth <= 0) return new TaskbarLayoutSnapshot(0, 0, 0, 0, 0, scaleFactor, false);
 
         var requestedWidthInPixels = Math.Max(1, (int)Math.Ceiling(requestedWidth * scaleFactor));
         var requestedHeightInPixels = Math.Max(1, (int)Math.Ceiling(requestedHeight * scaleFactor));
         var width = Math.Min(requestedWidthInPixels, availableWidth);
         var height = Math.Min(requestedHeightInPixels, Math.Max(1, rowRectangle.bottom - rowRectangle.top));
-        var x = options.Placement == TaskbarContentPlacement.BeforeNotificationArea ? rightBoundary - width - taskbarRectangle.left : leftBoundary - taskbarRectangle.left;
+        var x = areaRight - width - taskbarRectangle.left;
         var y = rowRectangle.top - taskbarRectangle.top;
 
         return new TaskbarLayoutSnapshot(x, y, width, height, availableWidth, scaleFactor, true);
+    }
+
+    private int ResolveNotificationLeft(RECT taskbarRectangle)
+    {
+        if (options.TrackNotificationArea && TryGetWindowRectangle(taskbarWindowLocator.NotificationWindow, out var notificationRectangle)) return Math.Min(taskbarRectangle.right, notificationRectangle.left);
+        return taskbarRectangle.right;
+    }
+
+    private static (int AreaLeft, int AreaRight) SelectContentArea(TaskbarContentPlacement placement, TaskbarAlignment alignment, RECT taskbarRectangle, int notificationLeft, TaskbarButtonGeometry geometry)
+    {
+        var leftGap = ComputeLeftGap(taskbarRectangle, geometry);
+        var rightGap = ComputeRightGap(notificationLeft, geometry);
+        var leftAvailableWidth = Math.Max(0, leftGap.Right - leftGap.Left);
+        var rightAvailableWidth = Math.Max(0, rightGap.Right - rightGap.Left);
+
+        var useLeftGap = placement switch
+        {
+            TaskbarContentPlacement.BeforeStartButton => alignment == TaskbarAlignment.Center,
+            TaskbarContentPlacement.Auto => alignment == TaskbarAlignment.Center && leftAvailableWidth > rightAvailableWidth,
+            _ => false
+        };
+
+        return useLeftGap ? leftGap : rightGap;
+    }
+
+    private static (int Left, int Right) ComputeLeftGap(RECT taskbarRectangle, TaskbarButtonGeometry geometry)
+    {
+        var left = geometry.WidgetsButton.IsValid ? geometry.WidgetsButton.Right : taskbarRectangle.left;
+        var right = geometry.StartButton.IsValid ? geometry.StartButton.Left : taskbarRectangle.left;
+        return (left, right);
+    }
+
+    private static (int Left, int Right) ComputeRightGap(int notificationLeft, TaskbarButtonGeometry geometry)
+    {
+        var left = geometry.TaskbarButtonsGroup.IsValid ? geometry.TaskbarButtonsGroup.Right : (geometry.StartButton.IsValid ? geometry.StartButton.Right : notificationLeft);
+        var right = notificationLeft;
+        if (geometry.WidgetsButton.IsValid && geometry.WidgetsButton.Left >= left && geometry.WidgetsButton.Left < right) right = geometry.WidgetsButton.Left;
+        return (left, right);
     }
 
     private static double NormalizeScaleFactor(double scaleFactor)

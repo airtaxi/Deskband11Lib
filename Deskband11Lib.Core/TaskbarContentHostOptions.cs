@@ -18,5 +18,5 @@ public class TaskbarContentHostOptions
 
     public TimeSpan LayoutRefreshInterval { get; set; } = TimeSpan.FromMilliseconds(500);
 
-    public TaskbarContentPlacement Placement { get; set; } = TaskbarContentPlacement.BeforeNotificationArea;
+    public TaskbarContentPlacement Placement { get; set; } = TaskbarContentPlacement.Auto;
 }

@@ -121,7 +121,8 @@ internal partial interface IGeneratedUIAutomationElement
 
     void GetCurrentIsEnabled();
 
-    void GetCurrentAutomationIdentifier();
+    [PreserveSig]
+    int GetCurrentAutomationIdentifier(out nint automationIdentifier);
 
     void GetCurrentClassName();
 

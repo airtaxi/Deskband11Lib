@@ -13,42 +13,27 @@ internal sealed partial class TaskbarButtonReader : IDisposable
     private const int RpcChangedMode = unchecked((int)0x80010106);
     private const int ButtonControlTypeIdentifier = 50000;
     private const int MaximumTaskbarButtonGap = 16;
+    private const string StartButtonAutomationIdentifier = "StartButton";
+    private const string WidgetsButtonAutomationIdentifier = "WidgetsButton";
 
     private readonly object _refreshLock = new();
-    private int _cachedStartButtonRightEdge;
-    private bool _hasCachedStartButtonRightEdge;
-    private int _cachedTaskbarButtonsRightEdge;
-    private bool _hasCachedTaskbarButtonsRightEdge;
+    private TaskbarButtonGeometry _cachedGeometry;
+    private bool _hasCachedGeometry;
     private bool _isRefreshRunning;
     private bool _isDisposed;
 
-    public bool TryGetStartButtonRightEdge(HWND taskbarWindow, RECT searchRectangle, out int rightEdge)
+    public bool TryGetTaskbarButtonGeometry(HWND taskbarWindow, RECT searchRectangle, out TaskbarButtonGeometry geometry)
     {
-        rightEdge = 0;
+        geometry = default;
         if (taskbarWindow.IsNull) return false;
 
         QueueRefresh(taskbarWindow, searchRectangle);
 
         lock (_refreshLock)
         {
-            if (!_hasCachedStartButtonRightEdge) return false;
-            rightEdge = _cachedStartButtonRightEdge;
-            return rightEdge > 0;
-        }
-    }
-
-    public bool TryGetTaskbarButtonsRightEdge(HWND taskbarWindow, RECT searchRectangle, out int rightEdge)
-    {
-        rightEdge = 0;
-        if (taskbarWindow.IsNull) return false;
-
-        QueueRefresh(taskbarWindow, searchRectangle);
-
-        lock (_refreshLock)
-        {
-            if (!_hasCachedTaskbarButtonsRightEdge) return false;
-            rightEdge = _cachedTaskbarButtonsRightEdge;
-            return rightEdge > 0;
+            if (!_hasCachedGeometry) return false;
+            geometry = _cachedGeometry;
+            return geometry.StartButton.IsValid || geometry.WidgetsButton.IsValid || geometry.TaskbarButtonsGroup.IsValid;
         }
     }
 
@@ -64,10 +49,8 @@ internal sealed partial class TaskbarButtonReader : IDisposable
         lock (_refreshLock)
         {
             _isDisposed = true;
-            _hasCachedStartButtonRightEdge = false;
-            _cachedStartButtonRightEdge = 0;
-            _hasCachedTaskbarButtonsRightEdge = false;
-            _cachedTaskbarButtonsRightEdge = 0;
+            _hasCachedGeometry = false;
+            _cachedGeometry = default;
         }
     }
 
@@ -93,16 +76,14 @@ internal sealed partial class TaskbarButtonReader : IDisposable
     {
         try
         {
-            if (TryReadTaskbarGeometry(taskbarWindow, searchRectangle, out var startButtonRightEdge, out var taskbarButtonsRightEdge))
+            if (TryReadTaskbarGeometry(taskbarWindow, searchRectangle, out var geometry))
             {
                 lock (_refreshLock)
                 {
                     if (_isDisposed) return;
 
-                    _cachedStartButtonRightEdge = startButtonRightEdge;
-                    _hasCachedStartButtonRightEdge = startButtonRightEdge > 0;
-                    _cachedTaskbarButtonsRightEdge = taskbarButtonsRightEdge;
-                    _hasCachedTaskbarButtonsRightEdge = taskbarButtonsRightEdge > 0;
+                    _cachedGeometry = geometry;
+                    _hasCachedGeometry = true;
                 }
             }
         }
@@ -117,17 +98,18 @@ internal sealed partial class TaskbarButtonReader : IDisposable
     }
 
     [UnconditionalSuppressMessage("AOT", "IL2050", Justification = "UI Automation is an optional geometry probe. Failures keep the previous cached measurement.")]
-    private static unsafe bool TryReadTaskbarGeometry(HWND taskbarWindow, RECT searchRectangle, out int startButtonRightEdge, out int taskbarButtonsRightEdge)
+    private static unsafe bool TryReadTaskbarGeometry(HWND taskbarWindow, RECT searchRectangle, out TaskbarButtonGeometry geometry)
     {
-        startButtonRightEdge = 0;
-        taskbarButtonsRightEdge = 0;
+        geometry = default;
         if (!TryGetWindowProcessIdentifier(taskbarWindow, out var taskbarProcessIdentifier)) return false;
 
         IGeneratedUIAutomation? automation = null;
         IGeneratedUIAutomationCondition? trueCondition = null;
         IGeneratedUIAutomationElement? taskbarElement = null;
         IGeneratedUIAutomationElementArray? taskButtonElements = null;
-        List<GeneratedRectangle> taskbarButtonRectangles = [];
+        List<GeneratedRectangle> taskbarAppButtonRectangles = [];
+        var startButtonSpan = ButtonSpan.Invalid;
+        var widgetsButtonSpan = ButtonSpan.Invalid;
         var coInitializeResult = CoInitializeEx(0, CoInitializeMultithreaded);
         var shouldUninitializeCom = coInitializeResult is 0 or 1;
         if (coInitializeResult < 0 && coInitializeResult != RpcChangedMode) return false;
@@ -152,13 +134,26 @@ internal sealed partial class TaskbarButtonReader : IDisposable
                     if (!TryGetBoundingRectangle(taskButtonElement, out var boundingRectangle)) continue;
                     if (!IsInsideSearchRectangle(searchRectangle, boundingRectangle)) continue;
 
-                    taskbarButtonRectangles.Add(boundingRectangle);
+                    var automationIdentifier = TryGetAutomationIdentifier(taskButtonElement);
+                    if (automationIdentifier == StartButtonAutomationIdentifier)
+                    {
+                        startButtonSpan = new ButtonSpan(boundingRectangle.Left, boundingRectangle.Right);
+                        continue;
+                    }
+                    if (automationIdentifier == WidgetsButtonAutomationIdentifier)
+                    {
+                        widgetsButtonSpan = new ButtonSpan(boundingRectangle.Left, boundingRectangle.Right);
+                        continue;
+                    }
+
+                    taskbarAppButtonRectangles.Add(boundingRectangle);
                 }
                 finally { ReleaseComObject(taskButtonElement); }
             }
 
-            (startButtonRightEdge, taskbarButtonsRightEdge) = ResolveTaskbarButtonGeometry(taskbarButtonRectangles);
-            return startButtonRightEdge > 0 || taskbarButtonsRightEdge > 0;
+            var taskbarButtonsGroup = ResolveTaskbarButtonsGroup(startButtonSpan, taskbarAppButtonRectangles);
+            geometry = new TaskbarButtonGeometry(startButtonSpan, widgetsButtonSpan, taskbarButtonsGroup);
+            return startButtonSpan.IsValid || widgetsButtonSpan.IsValid || taskbarButtonsGroup.IsValid;
         }
         catch (COMException) { return false; }
         finally
@@ -171,28 +166,34 @@ internal sealed partial class TaskbarButtonReader : IDisposable
         }
     }
 
-    private static (int StartButtonRightEdge, int TaskbarButtonsRightEdge) ResolveTaskbarButtonGeometry(List<GeneratedRectangle> taskbarButtonRectangles)
+    private static string TryGetAutomationIdentifier(IGeneratedUIAutomationElement element)
     {
-        if (taskbarButtonRectangles.Count == 0) return (0, 0);
-
-        var orderedRectangles = taskbarButtonRectangles.OrderBy(rectangle => rectangle.Left).ToList();
-        var startButtonRightEdge = orderedRectangles[0].Right;
-        var taskbarButtonsRightEdge = GetContiguousTaskbarButtonsRightEdge(startButtonRightEdge, orderedRectangles);
-        return (startButtonRightEdge, taskbarButtonsRightEdge);
+        try
+        {
+            if (element.GetCurrentAutomationIdentifier(out var automationIdentifierHandle) < 0 || automationIdentifierHandle == 0) return string.Empty;
+            try { return Marshal.PtrToStringBSTR(automationIdentifierHandle) ?? string.Empty; }
+            finally { Marshal.FreeBSTR(automationIdentifierHandle); }
+        }
+        catch { return string.Empty; }
     }
 
-    private static int GetContiguousTaskbarButtonsRightEdge(int startButtonRightEdge, List<GeneratedRectangle> orderedRectangles)
+    private static ButtonSpan ResolveTaskbarButtonsGroup(ButtonSpan startButtonSpan, List<GeneratedRectangle> taskbarAppButtonRectangles)
     {
-        var rightEdge = startButtonRightEdge;
+        if (taskbarAppButtonRectangles.Count == 0) return ButtonSpan.Invalid;
 
-        foreach (var rectangle in orderedRectangles)
+        var anchor = startButtonSpan.IsValid ? startButtonSpan.Right : 0;
+        var rightEdge = anchor;
+        var leftEdge = int.MaxValue;
+
+        foreach (var rectangle in taskbarAppButtonRectangles.OrderBy(rectangle => rectangle.Left))
         {
             if (rectangle.Left > rightEdge + MaximumTaskbarButtonGap) break;
 
+            leftEdge = Math.Min(leftEdge, rectangle.Left);
             rightEdge = Math.Max(rightEdge, rectangle.Right);
         }
 
-        return rightEdge > startButtonRightEdge ? rightEdge : 0;
+        return rightEdge > anchor ? new ButtonSpan(leftEdge, rightEdge) : ButtonSpan.Invalid;
     }
 
     private static bool IsVisibleTaskbarButton(IGeneratedUIAutomationElement element, int taskbarProcessIdentifier)

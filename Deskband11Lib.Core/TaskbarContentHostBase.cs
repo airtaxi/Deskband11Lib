@@ -45,6 +45,8 @@ public class TaskbarContentHostBase : IDisposable
 
     public bool IsAttached { get; private set; }
 
+    public TaskbarAlignment GetTaskbarAlignment() => TaskbarAlignmentDetector.ReadRegistryAlignment();
+
     public void Attach()
     {
         ThrowIfDisposed();
