@@ -158,8 +158,9 @@ public class TaskbarContentHostBase : IDisposable
         var currentWindowStyle = NativeWindowMethods.GetWindowStyle(_windowHandle);
         var hostedWindowStyle = currentWindowStyle & ~(WINDOW_STYLE.WS_POPUP | WINDOW_STYLE.WS_CAPTION | WINDOW_STYLE.WS_THICKFRAME | WINDOW_STYLE.WS_SYSMENU | WINDOW_STYLE.WS_MINIMIZEBOX | WINDOW_STYLE.WS_MAXIMIZEBOX);
         hostedWindowStyle |= WINDOW_STYLE.WS_CHILD;
-        if (currentWindowStyle != hostedWindowStyle) NativeWindowMethods.SetWindowStyle(_windowHandle, hostedWindowStyle);
+        if (currentWindowStyle == hostedWindowStyle) return;
 
+        NativeWindowMethods.SetWindowStyle(_windowHandle, hostedWindowStyle);
         RefreshWindowFrame();
     }
 
@@ -167,6 +168,8 @@ public class TaskbarContentHostBase : IDisposable
 
     private void ApplyOrAnimateLayoutSnapshot(TaskbarLayoutSnapshot snapshot)
     {
+        if (_hasAppliedLayoutSnapshot && !_layoutAnimationTimer.IsRunning && AreLayoutSnapshotsClose(snapshot, _lastAppliedLayoutSnapshot)) return;
+
         if (!CanAnimateLayoutSnapshot(snapshot))
         {
             StopLayoutAnimation();
