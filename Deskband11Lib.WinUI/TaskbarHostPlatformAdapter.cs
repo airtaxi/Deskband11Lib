@@ -1,6 +1,8 @@
 ﻿using Deskband11Lib.Core;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.Win32;
+using Windows.UI.ViewManagement;
 
 namespace Deskband11Lib.WinUI;
 
@@ -14,6 +16,10 @@ internal sealed class TaskbarHostPlatformAdapter(Window window, FrameworkElement
     private bool _originalPresenterIsMinimizable;
     private bool _originalExtendsContentIntoTitleBar;
     private bool _hasPreparedWindow;
+    private ElementTheme _originalContentTheme;
+    private ElementTheme _appliedSystemTheme;
+    private bool _hasAppliedSystemTheme;
+    private readonly UISettings _uiSettings = new();
 
     public nint WindowHandle => WinRT.Interop.WindowNative.GetWindowHandle(window);
 
@@ -64,11 +70,22 @@ internal sealed class TaskbarHostPlatformAdapter(Window window, FrameworkElement
         }
 
         _hasPreparedWindow = true;
+
+        _originalContentTheme = contentElement.RequestedTheme;
+        ApplySystemThemeIfNeeded();
+        _uiSettings.ColorValuesChanged += OnUiSettingsColorValuesChanged;
     }
 
     public void RestoreWindowAfterChildHosting()
     {
         if (!_hasPreparedWindow) return;
+
+        _uiSettings.ColorValuesChanged -= OnUiSettingsColorValuesChanged;
+        if (_hasAppliedSystemTheme)
+        {
+            contentElement.RequestedTheme = _originalContentTheme;
+            _hasAppliedSystemTheme = false;
+        }
 
         window.ExtendsContentIntoTitleBar = _originalExtendsContentIntoTitleBar;
 
@@ -93,4 +110,22 @@ internal sealed class TaskbarHostPlatformAdapter(Window window, FrameworkElement
     public void RunOnDispatcher(Action action) => window.DispatcherQueue.TryEnqueue(() => action());
 
     public ITaskbarHostTimer CreateTimer(TimeSpan interval, Action tick) => new TaskbarHostTimer(window.DispatcherQueue, interval, tick);
+
+    private void OnUiSettingsColorValuesChanged(UISettings sender, object args) => window.DispatcherQueue.TryEnqueue(ApplySystemThemeIfNeeded);
+
+    private void ApplySystemThemeIfNeeded()
+    {
+        var systemTheme = IsSystemLightTheme() ? ElementTheme.Light : ElementTheme.Dark;
+        if (_hasAppliedSystemTheme && _appliedSystemTheme == systemTheme) return;
+
+        contentElement.RequestedTheme = systemTheme;
+        _appliedSystemTheme = systemTheme;
+        _hasAppliedSystemTheme = true;
+    }
+
+    private static bool IsSystemLightTheme()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+        return key?.GetValue("SystemUsesLightTheme") is int value && value != 0;
+    }
 }
