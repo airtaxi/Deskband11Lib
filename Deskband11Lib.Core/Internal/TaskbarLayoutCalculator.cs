@@ -34,7 +34,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         if (options.TrackTaskbarButtons && TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, searchLeft, searchRight, out var taskbarButtonsSearchRectangle)) taskbarButtonReader.TryGetTaskbarButtonGeometry(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle, out geometry);
 
         var alignment = TaskbarAlignmentDetector.Detect(taskbarWindowLocator.TaskbarWindow, geometry.StartButton);
-        var (areaLeft, areaRight) = SelectContentArea(options.Placement, alignment, taskbarRectangle, searchRight, geometry);
+        var (areaLeft, areaRight, leftAlign) = SelectContentArea(options.Placement, alignment, taskbarRectangle, searchRight, geometry);
 
         var availableWidth = Math.Max(0, areaRight - areaLeft);
         if (availableWidth <= 0) return new TaskbarLayoutSnapshot(0, 0, 0, 0, 0, scaleFactor, false);
@@ -43,7 +43,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         var requestedHeightInPixels = Math.Max(1, (int)Math.Ceiling(requestedHeight * scaleFactor));
         var width = Math.Min(requestedWidthInPixels, availableWidth);
         var height = Math.Min(requestedHeightInPixels, Math.Max(1, rowRectangle.bottom - rowRectangle.top));
-        var x = areaRight - width - taskbarRectangle.left;
+        var x = (leftAlign ? areaLeft : areaRight - width) - taskbarRectangle.left;
         var y = rowRectangle.top - taskbarRectangle.top;
 
         return new TaskbarLayoutSnapshot(x, y, width, height, availableWidth, scaleFactor, true);
@@ -55,7 +55,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         return taskbarRectangle.right;
     }
 
-    private static (int AreaLeft, int AreaRight) SelectContentArea(TaskbarContentPlacement placement, TaskbarAlignment alignment, RECT taskbarRectangle, int notificationLeft, TaskbarButtonGeometry geometry)
+    private static (int AreaLeft, int AreaRight, bool LeftAlign) SelectContentArea(TaskbarContentPlacement placement, TaskbarAlignment alignment, RECT taskbarRectangle, int notificationLeft, TaskbarButtonGeometry geometry)
     {
         var leftGap = ComputeLeftGap(taskbarRectangle, geometry);
         var rightGap = ComputeRightGap(notificationLeft, geometry);
@@ -64,12 +64,16 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
 
         var useLeftGap = placement switch
         {
+            TaskbarContentPlacement.LeftEdge => alignment == TaskbarAlignment.Center,
             TaskbarContentPlacement.BeforeStartButton => alignment == TaskbarAlignment.Center,
             TaskbarContentPlacement.Auto => alignment == TaskbarAlignment.Center && leftAvailableWidth > rightAvailableWidth,
             _ => false
         };
 
-        return useLeftGap ? leftGap : rightGap;
+        if (!useLeftGap) return (rightGap.Left, rightGap.Right, false);
+
+        var leftAlign = placement is TaskbarContentPlacement.LeftEdge or TaskbarContentPlacement.Auto;
+        return (leftGap.Left, leftGap.Right, leftAlign);
     }
 
     private static (int Left, int Right) ComputeLeftGap(RECT taskbarRectangle, TaskbarButtonGeometry geometry)
