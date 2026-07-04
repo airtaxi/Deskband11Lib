@@ -16,6 +16,7 @@ on:
       - Deskband11Lib.Core/**
       - Deskband11Lib.WinUI/**
       - Deskband11Lib.Wpf/**
+      - Deskband11Lib.Avalonia/**
       - README.md
       - LICENSE
 
@@ -46,7 +47,8 @@ jobs:
           $packageProjects = @(
             @{ Id = "Deskband11Lib.Core"; Path = "Deskband11Lib.Core/Deskband11Lib.Core.csproj" },
             @{ Id = "Deskband11Lib.WinUI"; Path = "Deskband11Lib.WinUI/Deskband11Lib.WinUI.csproj" },
-            @{ Id = "Deskband11Lib.Wpf"; Path = "Deskband11Lib.Wpf/Deskband11Lib.Wpf.csproj" }
+            @{ Id = "Deskband11Lib.Wpf"; Path = "Deskband11Lib.Wpf/Deskband11Lib.Wpf.csproj" },
+            @{ Id = "Deskband11Lib.Avalonia"; Path = "Deskband11Lib.Avalonia/Deskband11Lib.Avalonia.csproj" }
           )
 
           function Get-ProjectVersion([string]$projectPath) {
@@ -106,7 +108,7 @@ jobs:
             exit 0
           }
 
-          $facadeProjects = @($packageProjects | Where-Object { $_.Id -in @("Deskband11Lib.WinUI", "Deskband11Lib.Wpf") })
+          $facadeProjects = @($packageProjects | Where-Object { $_.Id -in @("Deskband11Lib.WinUI", "Deskband11Lib.Wpf", "Deskband11Lib.Avalonia") })
           $shouldPublish = $false
           $previousVersions = @()
 
@@ -158,13 +160,17 @@ jobs:
         if: steps.version.outputs.run == 'true'
         run: dotnet pack Deskband11Lib.Wpf/Deskband11Lib.Wpf.csproj -c Release /p:ContinuousIntegrationBuild=true --output artifacts/packages
 
+      - name: Pack Avalonia
+        if: steps.version.outputs.run == 'true'
+        run: dotnet pack Deskband11Lib.Avalonia/Deskband11Lib.Avalonia.csproj -c Release /p:ContinuousIntegrationBuild=true --output artifacts/packages
+
       - name: Validate packages
         if: steps.version.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
 
-          for package_id in Deskband11Lib.Core Deskband11Lib.WinUI Deskband11Lib.Wpf; do
+          for package_id in Deskband11Lib.Core Deskband11Lib.WinUI Deskband11Lib.Wpf Deskband11Lib.Avalonia; do
             package_path="artifacts/packages/${package_id}.${{ steps.version.outputs.current }}.nupkg"
             if [ ! -f "$package_path" ]; then
               echo "Missing expected package: $package_path" >&2
@@ -185,7 +191,7 @@ jobs:
             exit 1
           fi
 
-          for package_id in Deskband11Lib.Core Deskband11Lib.WinUI Deskband11Lib.Wpf; do
+          for package_id in Deskband11Lib.Core Deskband11Lib.WinUI Deskband11Lib.Wpf Deskband11Lib.Avalonia; do
             dotnet nuget push "artifacts/packages/${package_id}.${{ steps.version.outputs.current }}.nupkg" \
               --api-key "$NUGET_API_KEY" \
               --source "https://api.nuget.org/v3/index.json" \

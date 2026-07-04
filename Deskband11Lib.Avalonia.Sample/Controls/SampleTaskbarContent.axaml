@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Deskband11Lib.Avalonia.Sample.Controls.SampleTaskbarContent">
+    <Border Padding="8,4" Background="Transparent" CornerRadius="8">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Grid.Column="0"
+                       VerticalAlignment="Center"
+                       FontFamily="Segoe MDL2 Assets"
+                       FontSize="16"
+                       Foreground="{DynamicResource SystemAccentColor}"
+                       Text="&#xE8A7;" />
+
+            <StackPanel Grid.Column="1"
+                        Margin="8,0"
+                        VerticalAlignment="Center">
+                <TextBlock FontSize="13"
+                           Text="Deskband11Lib.Avalonia"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock FontSize="10"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                           Text="Avalonia sample"
+                           TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+
+            <Button Grid.Column="2"
+                    MinWidth="32"
+                    MinHeight="32"
+                    Padding="8,0"
+                    VerticalAlignment="Center"
+                    Background="#01808080"
+                    BorderBrush="Transparent"
+                    Click="OnCloseButtonClicked"
+                    ToolTip.Tip="Close sample">
+                <TextBlock FontFamily="Segoe MDL2 Assets"
+                           FontSize="12"
+                           Text="&#xE711;" />
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

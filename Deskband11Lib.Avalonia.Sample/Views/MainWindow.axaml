@@ -1,0 +1,12 @@
+﻿<Window
+    x:Class="Deskband11Lib.Avalonia.Sample.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Deskband11Lib.Avalonia.Sample.Controls;assembly=Deskband11Lib.Avalonia.Sample"
+    Title="Deskband11Lib.Avalonia.Sample"
+    Width="360"
+    Height="48"
+    Background="Transparent"
+    CanResize="False"
+    ShowInTaskbar="False"
+    SystemDecorations="None" />

@@ -2,6 +2,7 @@
 
 [![NuGet WinUI](https://img.shields.io/nuget/v/Deskband11Lib.WinUI.svg)](https://www.nuget.org/packages/Deskband11Lib.WinUI)
 [![NuGet WPF](https://img.shields.io/nuget/v/Deskband11Lib.Wpf.svg)](https://www.nuget.org/packages/Deskband11Lib.Wpf)
+[![NuGet Avalonia](https://img.shields.io/nuget/v/Deskband11Lib.Avalonia.svg)](https://www.nuget.org/packages/Deskband11Lib.Avalonia)
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -13,13 +14,14 @@ Deskband11Lib is a library for building rich, always-visible taskbar companions 
 
 ## Packages
 
-Deskband11Lib comes in multiple NuGet packages, one for each supported UI framework. A shared `Deskband11Lib.Core` package holds the taskbar hosting engine. Future frameworks such as Avalonia can be added as additional facade packages.
+Deskband11Lib comes in multiple NuGet packages, one for each supported UI framework. A shared `Deskband11Lib.Core` package holds the taskbar hosting engine. Additional frameworks can be added as additional facade packages.
 
-| Package               | Description                                                                                                                                                           |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Deskband11Lib.Core`  | Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting engine. Independent of any UI framework. |
-| `Deskband11Lib.WinUI` | WinUI 3 facade. Build taskbar widgets with the same WinUI controls, styling, and composition features used by your app.                                               |
-| `Deskband11Lib.Wpf`   | WPF facade. Bring WPF-based content into the Windows 11 taskbar with the same simple API.                                                                             |
+| Package                 | Description                                                                                                                                                           |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Deskband11Lib.Core`    | Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting engine. Independent of any UI framework. |
+| `Deskband11Lib.WinUI`   | WinUI 3 facade. Build taskbar widgets with the same WinUI controls, styling, and composition features used by your app.                                               |
+| `Deskband11Lib.Wpf`     | WPF facade. Bring WPF-based content into the Windows 11 taskbar with the same simple API.                                                                             |
+| `Deskband11Lib.Avalonia` | Avalonia facade. Bring Avalonia-based content into the Windows 11 taskbar with the same simple API.                                                                  |
 
 ## Highlights
 
@@ -30,6 +32,7 @@ Deskband11Lib comes in multiple NuGet packages, one for each supported UI framew
 - Built-in easing functions (Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle) for smooth layout animations.
 - Recover cleanly when Explorer restarts by letting the application rebuild its hosted window.
 - WinUI facade supports Windows App SDK apps and NativeAOT publishing.
+- Avalonia facade supports Avalonia 11 desktop apps.
 
 ## Install
 
@@ -41,6 +44,9 @@ dotnet add package Deskband11Lib.WinUI
 
 # WPF
 dotnet add package Deskband11Lib.Wpf
+
+# Avalonia
+dotnet add package Deskband11Lib.Avalonia
 ```
 
 The `Deskband11Lib.Core` package is pulled in automatically as a transitive dependency.
@@ -73,6 +79,26 @@ The WPF API is identical. The only difference is the UI framework namespace used
 ```csharp
 using Deskband11Lib.Core;
 using Deskband11Lib.Wpf;
+
+var window = new MainWindow();
+var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
+{
+    PreferredWidth = 360,
+    PreferredHeight = 48
+});
+
+await host.AttachWhenLayoutReadyAsync();
+window.Show();
+```
+
+### Avalonia
+
+The Avalonia API matches the WPF flow. Pass an Avalonia `Window` and a `Control` (the content element). Note that Avalonia 11 does not have `FrameworkElement`; use `Control` directly.
+
+```csharp
+using Avalonia.Controls;
+using Deskband11Lib.Avalonia;
+using Deskband11Lib.Core;
 
 var window = new MainWindow();
 var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
@@ -150,6 +176,7 @@ The snippets above show the core API shape, but a real taskbar companion should 
 
 - `Deskband11Lib.WinUI.Sample` for WinUI 3 and Windows App SDK apps.
 - `Deskband11Lib.Wpf.Sample` for WPF apps, including the transparent borderless host window setup.
+- `Deskband11Lib.Avalonia.Sample` for Avalonia 11 desktop apps.
 
 ## Requirements
 
@@ -157,6 +184,7 @@ The snippets above show the core API shape, but a real taskbar companion should 
 - The target framework must be compatible with your chosen UI framework.
 - WinUI 3 requires Windows App SDK.
 - WPF requires `UseWPF=true` in the project file.
+- Avalonia requires Avalonia 11 (`Avalonia.Win32` or `Avalonia.Desktop`) and `Avalonia.Themes.Fluent`.
 
 ## Project Development
 

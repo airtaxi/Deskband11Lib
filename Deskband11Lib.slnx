@@ -17,7 +17,14 @@
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>
+  <Project Path="Deskband11Lib.Avalonia.Sample/Deskband11Lib.Avalonia.Sample.csproj">
+    <Platform Solution="*|Any CPU" Project="x86" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
   <Project Path="Deskband11Lib.Core/Deskband11Lib.Core.csproj" />
   <Project Path="Deskband11Lib.Wpf/Deskband11Lib.Wpf.csproj" />
   <Project Path="Deskband11Lib.WinUI/Deskband11Lib.WinUI.csproj" />
+  <Project Path="Deskband11Lib.Avalonia/Deskband11Lib.Avalonia.csproj" />
 </Solution>
