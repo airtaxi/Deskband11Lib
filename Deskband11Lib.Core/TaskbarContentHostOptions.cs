@@ -12,6 +12,8 @@ public class TaskbarContentHostOptions
 
     public bool TrackNotificationArea { get; set; } = true;
 
+    public int PreferredMonitorIdentity { get; set; } = 0;
+
     public double PreferredWidth { get; set; } = 360;
 
     public double PreferredHeight { get; set; } = 48;

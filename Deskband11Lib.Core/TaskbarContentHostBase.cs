@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.Versioning;
 using Deskband11Lib.Core.Internal;
 using Windows.Win32;
@@ -16,10 +16,11 @@ public class TaskbarContentHostBase : IDisposable
     private readonly TaskbarContentHostOptions _options;
     private readonly TaskbarWindowLocator _taskbarWindowLocator = new();
     private readonly TaskbarButtonReader _taskbarButtonReader = new();
-    private readonly ExplorerRestartMonitorService _explorerRestartMonitorService = new();
+    private readonly TaskbarWindowMonitorService _taskbarWindowMonitorService;
     private readonly ITaskbarHostTimer _layoutRefreshTimer;
     private readonly ITaskbarHostTimer _layoutAnimationTimer;
     private readonly TaskbarLayoutCalculator _taskbarLayoutCalculator;
+    private int _effectiveMonitorIdentity;
     private HWND _windowHandle;
     private HWND _originalParentWindow;
     private WINDOW_STYLE _originalWindowStyle;
@@ -35,10 +36,13 @@ public class TaskbarContentHostBase : IDisposable
     {
         _platformAdapter = platformAdapter;
         _options = options ?? new TaskbarContentHostOptions();
-        _taskbarLayoutCalculator = new TaskbarLayoutCalculator(_taskbarWindowLocator, _options, _taskbarButtonReader);
+        _effectiveMonitorIdentity = _options.PreferredMonitorIdentity;
+        _taskbarWindowMonitorService = new TaskbarWindowMonitorService(() => _effectiveMonitorIdentity, () => _options.PreferredMonitorIdentity, value => _effectiveMonitorIdentity = value);
+        _taskbarLayoutCalculator = new TaskbarLayoutCalculator(_taskbarWindowLocator, _options, _taskbarButtonReader, () => _effectiveMonitorIdentity);
         _layoutRefreshTimer = _platformAdapter.CreateTimer(_options.LayoutRefreshInterval, OnLayoutRefreshTimerTick);
         _layoutAnimationTimer = _platformAdapter.CreateTimer(TimeSpan.FromMilliseconds(16), OnLayoutAnimationTimerTick);
-        _explorerRestartMonitorService.TaskbarWindowRecreated += OnExplorerRestartMonitorServiceTaskbarWindowRecreated;
+        _taskbarWindowMonitorService.TaskbarWindowRecreated += OnTaskbarWindowMonitorServiceTaskbarWindowRecreated;
+        _taskbarWindowMonitorService.PreferredMonitorRestored += OnTaskbarWindowMonitorServicePreferredMonitorRestored;
     }
 
     public event EventHandler? TaskbarWindowRecreated;
@@ -74,7 +78,7 @@ public class TaskbarContentHostBase : IDisposable
 
         _layoutRefreshTimer.Stop();
         StopLayoutAnimation();
-        _explorerRestartMonitorService.Stop();
+        _taskbarWindowMonitorService.Stop();
 
         _ = PInvoke.SetWindowRgn(_windowHandle, HRGN.Null, true);
         NativeWindowMethods.SetWindowStyle(_windowHandle, _originalWindowStyle);
@@ -126,10 +130,11 @@ public class TaskbarContentHostBase : IDisposable
 
         _layoutRefreshTimer.Dispose();
         _layoutAnimationTimer.Dispose();
-        _explorerRestartMonitorService.TaskbarWindowRecreated -= OnExplorerRestartMonitorServiceTaskbarWindowRecreated;
+        _taskbarWindowMonitorService.TaskbarWindowRecreated -= OnTaskbarWindowMonitorServiceTaskbarWindowRecreated;
+        _taskbarWindowMonitorService.PreferredMonitorRestored -= OnTaskbarWindowMonitorServicePreferredMonitorRestored;
         TaskbarWindowRecreated = null;
 
-        _explorerRestartMonitorService.Dispose();
+        _taskbarWindowMonitorService.Dispose();
         _taskbarButtonReader.Dispose();
     }
 
@@ -141,7 +146,11 @@ public class TaskbarContentHostBase : IDisposable
 
         _windowHandle = new HWND(_platformAdapter.WindowHandle);
         if (_windowHandle.IsNull) throw new InvalidOperationException("The hosted window handle is not available.");
-        if (!_taskbarWindowLocator.TryRefresh()) throw new InvalidOperationException("The Windows taskbar window could not be found.");
+        if (!_taskbarWindowLocator.TryRefresh(_effectiveMonitorIdentity))
+        {
+            if (_effectiveMonitorIdentity != 0 && _taskbarWindowLocator.TryRefresh(0)) _effectiveMonitorIdentity = 0;
+            else throw new InvalidOperationException("The Windows taskbar window could not be found.");
+        }
 
         _originalParentWindow = PInvoke.GetParent(_windowHandle);
         _originalWindowStyle = NativeWindowMethods.GetWindowStyle(_windowHandle);
@@ -149,7 +158,7 @@ public class TaskbarContentHostBase : IDisposable
         ApplyHostedWindowStyle();
 
         IsAttached = true;
-        _explorerRestartMonitorService.Start();
+        _taskbarWindowMonitorService.Start();
         if (deferInitialLayout) CollapseWindowRegion();
     }
 
@@ -260,11 +269,7 @@ public class TaskbarContentHostBase : IDisposable
         ApplyHostedWindowStyle();
     }
 
-    private async Task RefreshTaskbarButtonMeasurementAsync()
-    {
-        var scaleFactor = GetScaleFactor();
-        await _taskbarLayoutCalculator.RefreshTaskbarButtonMeasurementAsync(scaleFactor);
-    }
+    private async Task RefreshTaskbarButtonMeasurementAsync() => await _taskbarLayoutCalculator.RefreshTaskbarButtonMeasurementAsync();
 
     private double GetScaleFactor()
     {
@@ -290,11 +295,26 @@ public class TaskbarContentHostBase : IDisposable
         ApplyLayoutAnimationFrame();
     }
 
-    private void OnExplorerRestartMonitorServiceTaskbarWindowRecreated(object? sender, EventArgs e)
+    private void OnTaskbarWindowMonitorServiceTaskbarWindowRecreated(object? sender, EventArgs e)
     {
         if (_isDisposed || !IsAttached) return;
 
         _platformAdapter.RunOnDispatcher(() => TaskbarWindowRecreated?.Invoke(this, EventArgs.Empty));
+    }
+
+    private void OnTaskbarWindowMonitorServicePreferredMonitorRestored(object? sender, EventArgs e)
+    {
+        if (_isDisposed || !IsAttached) return;
+
+        _platformAdapter.RunOnDispatcher(() =>
+        {
+            if (_isDisposed || !IsAttached) return;
+            if (!_taskbarWindowLocator.TryRefresh(_effectiveMonitorIdentity)) return;
+
+            PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
+            ApplyHostedWindowStyle();
+            RefreshLayout();
+        });
     }
 
     private void ThrowIfDisposed()
