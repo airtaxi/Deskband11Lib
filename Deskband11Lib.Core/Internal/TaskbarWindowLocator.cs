@@ -5,9 +5,9 @@ namespace Deskband11Lib.Core.Internal;
 
 internal sealed class TaskbarWindowLocator
 {
-    private const string PrimaryTaskbarClassName = "Shell_TrayWnd";
+    public const string PrimaryTaskbarClassName = "Shell_TrayWnd";
 
-    private const string SecondaryTaskbarClassName = "Shell_SecondaryTrayWnd";
+    public const string SecondaryTaskbarClassName = "Shell_SecondaryTrayWnd";
 
     public HWND TaskbarWindow { get; private set; }
 
