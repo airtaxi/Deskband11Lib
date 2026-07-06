@@ -9,4 +9,4 @@ internal readonly record struct ButtonSpan(int Left, int Right)
     public int Width => Math.Max(0, Right - Left);
 }
 
-internal readonly record struct TaskbarButtonGeometry(ButtonSpan StartButton, ButtonSpan WidgetsButton, ButtonSpan TaskbarButtonsGroup);
+internal readonly record struct TaskbarButtonGeometry(ButtonSpan StartButton, ButtonSpan WidgetsButton, ButtonSpan TaskbarButtonsGroup, ButtonSpan NotificationArea);

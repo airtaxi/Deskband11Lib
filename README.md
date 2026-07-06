@@ -96,18 +96,22 @@ host.TaskbarWindowRecreated += async (_, _) =>
 };
 ```
 
+### Secondary Monitor Reconnection
+
+When you set `PreferredMonitorIdentity` to a secondary monitor's taskbar and that monitor is later disconnected, Deskband11Lib automatically falls back to the primary taskbar. When the secondary monitor is reconnected, the hosted window moves back to the secondary monitor's taskbar automatically — no application code is required.
+
 ## How It Works
 
 Deskband11Lib gives your app a taskbar-sized surface and keeps that surface aligned with the real taskbar layout. Internally, it uses regular Win32 window parenting:
 
-- Finds the primary taskbar window, `Shell_TrayWnd`.
+- Finds the primary taskbar window, `Shell_TrayWnd`, or a secondary monitor's taskbar window, `Shell_SecondaryTrayWnd`, based on `PreferredMonitorIdentity`.
 - Creates or receives a normal framework `Window` from the application.
 - Changes the window style from popup-style top-level window to child window.
 - Calls `SetParent` to place the window under the taskbar.
 - Calculates the available rectangle between the taskbar buttons and the notification area, taking taskbar alignment (left or center) into account.
 - Moves and clips the hosted window to that rectangle with `SetWindowPos` and `SetWindowRgn`.
 
-Taskbar button width is not reliable from the taskbar child HWND hierarchy alone on current Windows 11 builds, and the taskbar content can be left-aligned or centered. Deskband11Lib therefore uses UI Automation to precisely target the Start button (`AutomationId = StartButton`) and the optional Widgets button, plus the contiguous taskbar app button group. It also reads the taskbar alignment from the registry (`TaskbarAl`) and falls back to inferring it from the Start button position. Based on alignment, it picks the more spacious of the two free gaps around the centered Start button group, so content never overlaps the Start button, app buttons, Widgets button, or the notification area. The UI Automation scan runs off the UI thread and is cached so layout refreshes do not block the hosted content.
+Taskbar button width is not reliable from the taskbar child HWND hierarchy alone on current Windows 11 builds, and the taskbar content can be left-aligned or centered. Deskband11Lib therefore uses UI Automation to precisely target the Start button (`AutomationId = StartButton`) and the optional Widgets button, plus the contiguous taskbar app button group. It also reads the taskbar alignment from the registry (`TaskbarAl`) and falls back to inferring it from the Start button position. Based on alignment, it picks the more spacious of the two free gaps around the centered Start button group, so content never overlaps the Start button, app buttons, Widgets button, or the notification area. On secondary monitor taskbars, where the notification area has no dedicated HWND, UI Automation also locates the clock and notification cluster (`AutomationId = SystemTrayIcon` / `NotifyItemIcon`) to compute the right boundary. The UI Automation scan runs off the UI thread and is cached so layout refreshes do not block the hosted content.
 
 ## Options
 
@@ -123,6 +127,7 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 | `Placement`               | `Auto`                      | `Auto` picks the more spacious free gap around the centered Start button group — placing content at the far-left edge (like `LeftEdge`) when the left gap wins, or next to the notification area when the right gap wins — and falls back to `BeforeNotificationArea` when left-aligned. `LeftEdge` places content at the far left edge, right after the Widgets button, when centered, and falls back to `BeforeNotificationArea` when left-aligned. `BeforeNotificationArea` always places content next to the notification area. `BeforeStartButton` places content next to the Start button and falls back to `BeforeNotificationArea` when not centered. |
 | `TrackTaskbarButtons`     | `true`                      | Enables UI Automation based taskbar button measurement.                                                                                                  |
 | `TrackNotificationArea`   | `true`                      | Keeps content away from the notification area.                                                                                                           |
+| `PreferredMonitorIdentity` | `0`                       | Selects which taskbar to host on. `0` uses the primary taskbar (`Shell_TrayWnd`). `1` uses the first secondary monitor's taskbar (`Shell_SecondaryTrayWnd`), `2` the next, and so on, ordered left-to-right by screen position. Falls back to the primary taskbar when the requested secondary monitor's taskbar is not present. |
 | `LayoutRefreshInterval`   | `500 ms`                    | Refresh interval for ongoing taskbar layout updates.                                                                                                     |
 
 ## Taskbar Alignment

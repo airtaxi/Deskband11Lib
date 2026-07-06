@@ -3,16 +3,15 @@ using Windows.Win32.Foundation;
 
 namespace Deskband11Lib.Core.Internal;
 
-internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindowLocator, TaskbarContentHostOptions options, TaskbarButtonReader taskbarButtonReader)
+internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindowLocator, TaskbarContentHostOptions options, TaskbarButtonReader taskbarButtonReader, Func<int> getEffectiveMonitorIdentity)
 {
     private static double? s_lastScaleFactor;
 
-    public async Task RefreshTaskbarButtonMeasurementAsync(double scaleFactor)
+    public async Task RefreshTaskbarButtonMeasurementAsync()
     {
         if (!options.TrackTaskbarButtons) return;
-        if (!taskbarWindowLocator.TryRefresh()) return;
+        if (!taskbarWindowLocator.TryRefresh(getEffectiveMonitorIdentity())) return;
         if (!TryGetWindowRectangle(taskbarWindowLocator.TaskbarWindow, out var taskbarRectangle)) return;
-        scaleFactor = NormalizeScaleFactor(scaleFactor);
 
         var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
         var searchLeft = taskbarRectangle.left;
@@ -22,7 +21,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
 
     public TaskbarLayoutSnapshot Calculate(double requestedWidth, double requestedHeight, double scaleFactor)
     {
-        if (!taskbarWindowLocator.TryRefresh()) return default;
+        if (!taskbarWindowLocator.TryRefresh(getEffectiveMonitorIdentity())) return default;
         if (!TryGetWindowRectangle(taskbarWindowLocator.TaskbarWindow, out var taskbarRectangle)) return default;
         scaleFactor = NormalizeScaleFactor(scaleFactor);
 
@@ -34,7 +33,8 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         if (options.TrackTaskbarButtons && TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, searchLeft, searchRight, out var taskbarButtonsSearchRectangle)) taskbarButtonReader.TryGetTaskbarButtonGeometry(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle, out geometry);
 
         var alignment = TaskbarAlignmentDetector.Detect(taskbarWindowLocator.TaskbarWindow, geometry.StartButton);
-        var (areaLeft, areaRight, leftAlign) = SelectContentArea(options.Placement, alignment, taskbarRectangle, searchRight, geometry);
+        var notificationLeft = geometry.NotificationArea.IsValid ? geometry.NotificationArea.Left : searchRight;
+        var (areaLeft, areaRight, leftAlign) = SelectContentArea(options.Placement, alignment, taskbarRectangle, notificationLeft, geometry);
 
         var availableWidth = Math.Max(0, areaRight - areaLeft);
         if (availableWidth <= 0) return new TaskbarLayoutSnapshot(0, 0, 0, 0, 0, scaleFactor, false);
