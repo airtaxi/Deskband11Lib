@@ -134,11 +134,13 @@ internal sealed partial class TaskbarButtonReader : IDisposable
                 var taskButtonElement = taskButtonElements.GetElement(index);
                 try
                 {
-                    if (!IsVisibleTaskbarButton(taskButtonElement, taskbarProcessIdentifier)) continue;
+                    var automationIdentifier = TryGetAutomationIdentifier(taskButtonElement);
+                    var isNotificationAreaElement = automationIdentifier == SystemTrayIconAutomationIdentifier || automationIdentifier == NotifyItemIconAutomationIdentifier;
+
+                    if (!isNotificationAreaElement && !IsVisibleTaskbarButton(taskButtonElement, taskbarProcessIdentifier)) continue;
                     if (!TryGetBoundingRectangle(taskButtonElement, out var boundingRectangle)) continue;
 
-                    var automationIdentifier = TryGetAutomationIdentifier(taskButtonElement);
-                    if (automationIdentifier == SystemTrayIconAutomationIdentifier || automationIdentifier == NotifyItemIconAutomationIdentifier)
+                    if (isNotificationAreaElement)
                     {
                         if (!IsInsideSearchRectangle(searchRectangle, boundingRectangle)) continue;
                         notificationAreaLeft = Math.Min(notificationAreaLeft, boundingRectangle.Left);
