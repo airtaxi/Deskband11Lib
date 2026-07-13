@@ -18,6 +18,8 @@ internal sealed partial class TaskbarHostTimer : ITaskbarHostTimer
 
     public bool IsRunning => _timer.IsRunning;
 
+    public TimeSpan Interval { get => _timer.Interval; set => _timer.Interval = value; }
+
     public void Start() => _timer.Start();
 
     public void Stop() => _timer.Stop();

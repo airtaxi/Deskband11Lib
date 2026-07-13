@@ -4,6 +4,8 @@ public class TaskbarContentHostOptions
 {
     public bool AnimateLayoutChanges { get; set; } = true;
 
+    public bool HighRefreshRateMode { get; set; }
+
     public double LayoutAnimationDuration { get; set; } = 500;
 
     public Func<double, double>? LayoutAnimationEasing { get; set; } = EasingFunctions.CircleOut;

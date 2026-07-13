@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.Versioning;
 using Deskband11Lib.Core.Internal;
 using Windows.Win32;
@@ -37,12 +37,13 @@ public class TaskbarContentHostBase : IDisposable
         _platformAdapter = platformAdapter;
         _options = options ?? new TaskbarContentHostOptions();
         _effectiveMonitorIdentity = _options.PreferredMonitorIdentity;
-        _taskbarWindowMonitorService = new TaskbarWindowMonitorService(() => _effectiveMonitorIdentity, () => _options.PreferredMonitorIdentity, value => _effectiveMonitorIdentity = value);
+        _taskbarWindowMonitorService = new TaskbarWindowMonitorService(() => _effectiveMonitorIdentity, () => _options.PreferredMonitorIdentity, value => _effectiveMonitorIdentity = value, () => _options.HighRefreshRateMode);
         _taskbarLayoutCalculator = new TaskbarLayoutCalculator(_taskbarWindowLocator, _options, _taskbarButtonReader, () => _effectiveMonitorIdentity);
         _layoutRefreshTimer = _platformAdapter.CreateTimer(_options.LayoutRefreshInterval, OnLayoutRefreshTimerTick);
         _layoutAnimationTimer = _platformAdapter.CreateTimer(TimeSpan.FromMilliseconds(16), OnLayoutAnimationTimerTick);
         _taskbarWindowMonitorService.TaskbarWindowRecreated += OnTaskbarWindowMonitorServiceTaskbarWindowRecreated;
         _taskbarWindowMonitorService.PreferredMonitorRestored += OnTaskbarWindowMonitorServicePreferredMonitorRestored;
+        _taskbarWindowMonitorService.RefreshRateChanged += OnTaskbarWindowMonitorServiceRefreshRateChanged;
     }
 
     public event EventHandler? TaskbarWindowRecreated;
@@ -132,6 +133,7 @@ public class TaskbarContentHostBase : IDisposable
         _layoutAnimationTimer.Dispose();
         _taskbarWindowMonitorService.TaskbarWindowRecreated -= OnTaskbarWindowMonitorServiceTaskbarWindowRecreated;
         _taskbarWindowMonitorService.PreferredMonitorRestored -= OnTaskbarWindowMonitorServicePreferredMonitorRestored;
+        _taskbarWindowMonitorService.RefreshRateChanged -= OnTaskbarWindowMonitorServiceRefreshRateChanged;
         TaskbarWindowRecreated = null;
 
         _taskbarWindowMonitorService.Dispose();
@@ -317,10 +319,20 @@ public class TaskbarContentHostBase : IDisposable
         });
     }
 
-    private void ThrowIfDisposed()
+    private void OnTaskbarWindowMonitorServiceRefreshRateChanged(int refreshRateHz)
     {
-        if (_isDisposed) throw new ObjectDisposedException(nameof(TaskbarContentHostBase));
+        if (_isDisposed || !IsAttached) return;
+
+        _platformAdapter.RunOnDispatcher(() =>
+        {
+            if (_isDisposed || !IsAttached) return;
+            UpdateAnimationTimerInterval(refreshRateHz);
+        });
     }
+
+    private void UpdateAnimationTimerInterval(int refreshRateHz) => _layoutAnimationTimer.Interval = (_options.HighRefreshRateMode && _options.AnimateLayoutChanges && refreshRateHz >= 2) ? TimeSpan.FromMilliseconds(1000.0 / refreshRateHz) : TimeSpan.FromMilliseconds(16);
+
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_isDisposed, this);
 
     private static TaskbarLayoutSnapshot InterpolateLayoutSnapshot(TaskbarLayoutSnapshot startSnapshot, TaskbarLayoutSnapshot targetSnapshot, double progress) => new(Interpolate(startSnapshot.X, targetSnapshot.X, progress), Interpolate(startSnapshot.Y, targetSnapshot.Y, progress), Interpolate(startSnapshot.Width, targetSnapshot.Width, progress), Interpolate(startSnapshot.Height, targetSnapshot.Height, progress), Interpolate(startSnapshot.AvailableWidth, targetSnapshot.AvailableWidth, progress), targetSnapshot.ScaleFactor, true);
 

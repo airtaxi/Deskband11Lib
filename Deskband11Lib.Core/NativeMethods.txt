@@ -5,10 +5,15 @@ GetParent
 GetWindowRect
 GetWindowThreadProcessId
 GetDpiForWindow
+MonitorFromWindow
+GetMonitorInfoW
+MONITORINFOEXW
+EnumDisplaySettingsW
 SetParent
 SetWindowPos
 SetWindowRgn
 HWND
+HMONITOR
 RECT
 WINDOW_LONG_PTR_INDEX
 WINDOW_STYLE
