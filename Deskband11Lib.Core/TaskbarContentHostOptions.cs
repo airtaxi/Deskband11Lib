@@ -4,7 +4,7 @@ public class TaskbarContentHostOptions
 {
     public bool AnimateLayoutChanges { get; set; } = true;
 
-    public bool HighRefreshRateMode { get; set; }
+    public bool HighRefreshRateMode { get; set; } = true;
 
     public double LayoutAnimationDuration { get; set; } = 500;
 
