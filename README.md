@@ -28,6 +28,7 @@ Deskband11Lib comes in multiple NuGet packages, one for each supported UI framew
 - Add compact controls for actions such as timers, media playback, account switching, build status, device monitoring, or quick launch workflows.
 - Automatically fit content into the available taskbar space without overlapping pinned apps or the notification area.
 - Built-in easing functions (Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle) for smooth layout animations.
+- Optional high refresh rate mode that matches the layout animation timer to the target monitor's current refresh rate for smoother motion on high refresh rate displays.
 - Recover cleanly when Explorer restarts by letting the application rebuild its hosted window.
 - WinUI facade supports Windows App SDK apps and NativeAOT publishing.
 
@@ -122,6 +123,7 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 | `PreferredWidth`          | `360`                       | Desired content width in effective pixels.                                                                                                               |
 | `PreferredHeight`         | `48`                        | Desired content height in effective pixels.                                                                                                              |
 | `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
+| `HighRefreshRateMode`     | `false`                     | When enabled along with `AnimateLayoutChanges`, matches the layout animation timer interval to the target monitor's current refresh rate instead of the default 60 FPS. |
 | `LayoutAnimationDuration` | `500`                       | Layout animation duration in milliseconds.                                                                                                               |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
 | `Placement`               | `Auto`                      | `Auto` picks the more spacious free gap around the centered Start button group — placing content at the far-left edge (like `LeftEdge`) when the left gap wins, or next to the notification area when the right gap wins — and falls back to `BeforeNotificationArea` when left-aligned. `LeftEdge` places content at the far left edge, right after the Widgets button, when centered, and falls back to `BeforeNotificationArea` when left-aligned. `BeforeNotificationArea` always places content next to the notification area. `BeforeStartButton` places content next to the Start button and falls back to `BeforeNotificationArea` when not centered. |
