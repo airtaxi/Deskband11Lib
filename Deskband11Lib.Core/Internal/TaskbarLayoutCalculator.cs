@@ -19,7 +19,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         if (TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, searchLeft, searchRight, out var taskbarButtonsSearchRectangle)) await taskbarButtonReader.RefreshAsync(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle);
     }
 
-    public TaskbarLayoutSnapshot Calculate(double requestedWidth, double requestedHeight, double scaleFactor)
+    public TaskbarLayoutSnapshot Calculate(double requestedWidth, double requestedHeight, double scaleFactor, TaskbarSlotInfo? ownSlot, IReadOnlyList<TaskbarSlotInfo> siblingSlots)
     {
         if (!taskbarWindowLocator.TryRefresh(getEffectiveMonitorIdentity())) return default;
         if (!TryGetWindowRectangle(taskbarWindowLocator.TaskbarWindow, out var taskbarRectangle)) return default;
@@ -37,16 +37,104 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         var (areaLeft, areaRight, leftAlign) = SelectContentArea(options.Placement, alignment, taskbarRectangle, notificationLeft, geometry);
 
         var availableWidth = Math.Max(0, areaRight - areaLeft);
-        if (availableWidth <= 0) return new TaskbarLayoutSnapshot(0, 0, 0, 0, 0, scaleFactor, false);
 
-        var requestedWidthInPixels = Math.Max(1, (int)Math.Ceiling(requestedWidth * scaleFactor));
+        var resolvedPlacement = ResolveActualPlacement(options.Placement, alignment, leftAvailableWidth: Math.Max(0, ComputeLeftGap(taskbarRectangle, geometry).Right - ComputeLeftGap(taskbarRectangle, geometry).Left), rightAvailableWidth: Math.Max(0, ComputeRightGap(notificationLeft, geometry).Right - ComputeRightGap(notificationLeft, geometry).Left));
+
+        if (availableWidth <= 0) return new TaskbarLayoutSnapshot(0, 0, 0, 0, 0, scaleFactor, false, resolvedPlacement);
+
         var requestedHeightInPixels = Math.Max(1, (int)Math.Ceiling(requestedHeight * scaleFactor));
-        var width = Math.Min(requestedWidthInPixels, availableWidth);
         var height = Math.Min(requestedHeightInPixels, Math.Max(1, rowRectangle.bottom - rowRectangle.top));
-        var x = (leftAlign ? areaLeft : areaRight - width) - taskbarRectangle.left;
+
+        var effectiveOwnSlot = ownSlot.HasValue && ownSlot.Value.ActualPlacement != resolvedPlacement ? ownSlot.Value with { ActualPlacement = resolvedPlacement } : ownSlot;
+        var siblingsInSameArea = FilterSiblingsInSameArea(siblingSlots, resolvedPlacement, getEffectiveMonitorIdentity());
+
+        double allocatedWidth;
+        double offsetX;
+
+        if (effectiveOwnSlot.HasValue && siblingsInSameArea.Count > 0)
+        {
+            var allocation = AllocateWidth(effectiveOwnSlot.Value, siblingsInSameArea, availableWidth, scaleFactor);
+            allocatedWidth = allocation.Width;
+            offsetX = allocation.Offset;
+        }
+        else
+        {
+            var requestedWidthInPixels = Math.Max(1, (int)Math.Ceiling(requestedWidth * scaleFactor));
+            allocatedWidth = Math.Min(requestedWidthInPixels, availableWidth);
+            offsetX = 0;
+        }
+
+        if (allocatedWidth <= 0) return new TaskbarLayoutSnapshot(0, 0, 0, 0, 0, scaleFactor, false, resolvedPlacement);
+
+        var x = (leftAlign ? areaLeft + offsetX : areaRight - offsetX - allocatedWidth) - taskbarRectangle.left;
         var y = rowRectangle.top - taskbarRectangle.top;
 
-        return new TaskbarLayoutSnapshot(x, y, width, height, availableWidth, scaleFactor, true);
+        return new TaskbarLayoutSnapshot(x, y, allocatedWidth, height, availableWidth, scaleFactor, true, resolvedPlacement);
+    }
+
+    private static TaskbarContentPlacement ResolveActualPlacement(TaskbarContentPlacement requestedPlacement, TaskbarAlignment alignment, int leftAvailableWidth, int rightAvailableWidth)
+    {
+        return requestedPlacement switch
+        {
+            TaskbarContentPlacement.LeftEdge => alignment == TaskbarAlignment.Center ? TaskbarContentPlacement.LeftEdge : TaskbarContentPlacement.BeforeNotificationArea,
+            TaskbarContentPlacement.BeforeStartButton => alignment == TaskbarAlignment.Center ? TaskbarContentPlacement.BeforeStartButton : TaskbarContentPlacement.BeforeNotificationArea,
+            TaskbarContentPlacement.Auto => leftAvailableWidth > rightAvailableWidth ? TaskbarContentPlacement.LeftEdge : TaskbarContentPlacement.BeforeNotificationArea,
+            _ => TaskbarContentPlacement.BeforeNotificationArea
+        };
+    }
+
+    private static List<TaskbarSlotInfo> FilterSiblingsInSameArea(IReadOnlyList<TaskbarSlotInfo> allSlots, TaskbarContentPlacement resolvedPlacement, int monitorIdentity)
+    {
+        var result = new List<TaskbarSlotInfo>();
+        foreach (var slot in allSlots)
+        {
+            if (slot.MonitorIdentity != monitorIdentity) continue;
+            if (slot.ActualPlacement != resolvedPlacement) continue;
+            result.Add(slot);
+        }
+        return result;
+    }
+
+    private static (double Width, double Offset) AllocateWidth(TaskbarSlotInfo ownSlot, List<TaskbarSlotInfo> siblings, int totalAvailableWidth, double scaleFactor)
+    {
+        var allSlots = new List<TaskbarSlotInfo>(siblings) { ownSlot };
+        allSlots.Sort((a, b) => (a.ManualSlotPriority, a.SlotIndex).CompareTo((b.ManualSlotPriority, b.SlotIndex)));
+
+        var fixedSlots = allSlots.Where(slot => !slot.IsStretch).OrderBy(slot => slot.ManualSlotPriority).ThenBy(slot => slot.SlotIndex).ToList();
+        var stretchSlots = allSlots.Where(slot => slot.IsStretch).OrderBy(slot => slot.ManualSlotPriority).ThenBy(slot => slot.SlotIndex).ToList();
+
+        var fixedWidthSum = 0;
+        var fixedAllocations = new Dictionary<long, int>();
+        foreach (var slot in fixedSlots)
+        {
+            var desiredWidth = (int)Math.Ceiling(slot.PreferredWidth * scaleFactor);
+            var allocatedWidth = Math.Min(desiredWidth, Math.Max(0, totalAvailableWidth - fixedWidthSum));
+            fixedAllocations[slot.SlotIndex] = allocatedWidth;
+            fixedWidthSum += allocatedWidth;
+        }
+
+        var remainingWidth = Math.Max(0, totalAvailableWidth - fixedWidthSum);
+        var stretchWidth = stretchSlots.Count > 0 ? remainingWidth / stretchSlots.Count : 0;
+
+        var offset = 0.0;
+        var ownIsFixed = !ownSlot.IsStretch;
+
+        foreach (var slot in allSlots)
+        {
+            if (slot.WindowHandle == ownSlot.WindowHandle) break;
+
+            int slotWidth;
+            if (!slot.IsStretch) slotWidth = fixedAllocations.GetValueOrDefault(slot.SlotIndex, 0);
+            else slotWidth = stretchWidth;
+
+            offset += slotWidth;
+        }
+
+        double allocatedOwnWidth;
+        if (ownIsFixed) allocatedOwnWidth = fixedAllocations.GetValueOrDefault(ownSlot.SlotIndex, 0);
+        else allocatedOwnWidth = stretchWidth;
+
+        return (allocatedOwnWidth, offset);
     }
 
     private int ResolveNotificationLeft(RECT taskbarRectangle)

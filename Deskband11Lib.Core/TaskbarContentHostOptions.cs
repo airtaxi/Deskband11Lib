@@ -23,4 +23,6 @@ public class TaskbarContentHostOptions
     public TimeSpan LayoutRefreshInterval { get; set; } = TimeSpan.FromMilliseconds(500);
 
     public TaskbarContentPlacement Placement { get; set; } = TaskbarContentPlacement.Auto;
+
+    public ushort ManualSlotPriority { get; set; } = 65535;
 }

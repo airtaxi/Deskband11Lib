@@ -27,6 +27,7 @@ Deskband11Lib comes in multiple NuGet packages, one for each supported UI framew
 - Show live information where users can see it at a glance without opening a full window.
 - Add compact controls for actions such as timers, media playback, account switching, build status, device monitoring, or quick launch workflows.
 - Automatically fit content into the available taskbar space without overlapping pinned apps or the notification area.
+- Run multiple instances side by side in the same taskbar area with automatic slot coordination — each instance gets its fair share of the available space.
 - Built-in easing functions (Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle) for smooth layout animations.
 - Optional high refresh rate mode that matches the layout animation timer to the target monitor's current refresh rate for smoother motion on high refresh rate displays.
 - Recover cleanly when Explorer restarts by letting the application rebuild its hosted window.
@@ -101,6 +102,46 @@ host.TaskbarWindowRecreated += async (_, _) =>
 
 When you set `PreferredMonitorIdentity` to a secondary monitor's taskbar and that monitor is later disconnected, Deskband11Lib automatically falls back to the primary taskbar. When the secondary monitor is reconnected, the hosted window moves back to the secondary monitor's taskbar automatically — no application code is required.
 
+## Multi-Instance Slot Coordination
+
+Deskband11Lib supports running multiple instances in the same taskbar area simultaneously. When several instances target the same placement area on the same monitor, they automatically coordinate via Win32 window properties and divide the available space without overlapping each other.
+
+### Slot Allocation
+
+Each registered instance is called a **slot**. Slots are ordered by `(ManualSlotPriority, SlotIndex)` — lower `ManualSlotPriority` values place the instance earlier (further from the notification area in left-aligned mode). Among slots with the same `ManualSlotPriority`, arrival order (`SlotIndex`) breaks the tie.
+
+Width allocation follows a Fixed-then-Stretch model:
+
+- **Fixed slots** — instances with a finite `PreferredWidth` get their requested width, in priority order, until available space runs out. Lower-priority Fixed slots that do not fit receive whatever remains (which may be zero).
+- **Stretch slots** — instances with `PreferredWidth = double.MaxValue` split the remaining space equally after all Fixed slots are served.
+
+Empty slots leave gaps — the remaining instances do not reflow to fill them.
+
+### Manual Slot Priority
+
+By default, all instances have `ManualSlotPriority = 65535`, which means they are ordered purely by arrival time. Set a lower value to pin an instance ahead of auto-ordered instances:
+
+```csharp
+var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
+{
+    PreferredWidth = 200,
+    ManualSlotPriority = 100
+});
+```
+
+### Stretch Mode
+
+Set `PreferredWidth` to `double.MaxValue` to make an instance stretch to fill whatever space remains after Fixed slots are allocated:
+
+```csharp
+var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOptions
+{
+    PreferredWidth = double.MaxValue
+});
+```
+
+When all instances in an area are Stretch, they share the space equally.
+
 ## How It Works
 
 Deskband11Lib gives your app a taskbar-sized surface and keeps that surface aligned with the real taskbar layout. Internally, it uses regular Win32 window parenting:
@@ -125,7 +166,7 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 
 | Option                    | Default                     | Description                                                                                                                                              |
 | ------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PreferredWidth`          | `360`                       | Desired content width in effective pixels.                                                                                                               |
+| `PreferredWidth`          | `360`                       | Desired content width in effective pixels. Set to `double.MaxValue` for stretch mode — the instance fills remaining space after Fixed-width instances are served.                                                                                                               |
 | `PreferredHeight`         | `48`                        | Desired content height in effective pixels.                                                                                                              |
 | `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
 | `HighRefreshRateMode`     | `false`                     | When enabled along with `AnimateLayoutChanges`, matches the layout animation timer interval to the target monitor's current refresh rate instead of the default 60 FPS. |
@@ -135,6 +176,7 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 | `TrackTaskbarButtons`     | `true`                      | Enables UI Automation based taskbar button measurement.                                                                                                  |
 | `TrackNotificationArea`   | `true`                      | Keeps content away from the notification area.                                                                                                           |
 | `PreferredMonitorIdentity` | `0`                       | Selects which taskbar to host on. `0` uses the primary taskbar (`Shell_TrayWnd`). `1` uses the first secondary monitor's taskbar (`Shell_SecondaryTrayWnd`), `2` the next, and so on, ordered left-to-right by screen position. Falls back to the primary taskbar when the requested secondary monitor's taskbar is not present. |
+| `ManualSlotPriority`      | `65535`                     | Controls ordering when multiple instances share the same taskbar area. Lower values place the instance earlier (further from the notification area when left-aligned). Instances with the same value are ordered by arrival time. Default `65535` means auto-ordering by arrival. |
 | `LayoutRefreshInterval`   | `500 ms`                    | Refresh interval for ongoing taskbar layout updates.                                                                                                     |
 
 ## Taskbar Alignment

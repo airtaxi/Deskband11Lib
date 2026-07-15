@@ -20,6 +20,7 @@ public class TaskbarContentHostBase : IDisposable
     private readonly ITaskbarHostTimer _layoutRefreshTimer;
     private readonly ITaskbarHostTimer _layoutAnimationTimer;
     private readonly TaskbarLayoutCalculator _taskbarLayoutCalculator;
+    private readonly TaskbarSlotRegistry _slotRegistry = new();
     private int _effectiveMonitorIdentity;
     private HWND _windowHandle;
     private HWND _originalParentWindow;
@@ -28,6 +29,8 @@ public class TaskbarContentHostBase : IDisposable
     private TaskbarLayoutSnapshot _layoutAnimationStartSnapshot;
     private TaskbarLayoutSnapshot _layoutAnimationTargetSnapshot;
     private long _layoutAnimationStartTimestamp;
+    private TaskbarSlotInfo? _ownSlot;
+    private TaskbarContentPlacement _lastResolvedPlacement;
     private bool _hasAppliedLayoutSnapshot;
     private bool _isApplyingLayoutSnapshot;
     private bool _isDisposed;
@@ -81,6 +84,9 @@ public class TaskbarContentHostBase : IDisposable
         StopLayoutAnimation();
         _taskbarWindowMonitorService.Stop();
 
+        _slotRegistry.Unregister();
+        _ownSlot = null;
+
         _ = PInvoke.SetWindowRgn(_windowHandle, HRGN.Null, true);
         NativeWindowMethods.SetWindowStyle(_windowHandle, _originalWindowStyle);
         PInvoke.SetParent(_windowHandle, _originalParentWindow);
@@ -98,13 +104,15 @@ public class TaskbarContentHostBase : IDisposable
         ApplyHostedWindowStyle();
 
         var scaleFactor = GetScaleFactor();
-        var snapshot = _taskbarLayoutCalculator.Calculate(_platformAdapter.RequestedWidth, _platformAdapter.RequestedHeight, scaleFactor);
+        var siblingSlots = TaskbarSlotRegistry.CollectSlots(_taskbarWindowLocator.TaskbarWindow, _windowHandle);
+        var snapshot = _taskbarLayoutCalculator.Calculate(_platformAdapter.RequestedWidth, _platformAdapter.RequestedHeight, scaleFactor, _ownSlot, siblingSlots);
         if (!snapshot.IsValid)
         {
             CollapseWindowRegion();
             return;
         }
 
+        UpdateResolvedPlacement(snapshot);
         ApplyOrAnimateLayoutSnapshot(snapshot);
     }
 
@@ -136,6 +144,7 @@ public class TaskbarContentHostBase : IDisposable
         _taskbarWindowMonitorService.RefreshRateChanged -= OnTaskbarWindowMonitorServiceRefreshRateChanged;
         TaskbarWindowRecreated = null;
 
+        _slotRegistry.Dispose();
         _taskbarWindowMonitorService.Dispose();
         _taskbarButtonReader.Dispose();
     }
@@ -159,9 +168,23 @@ public class TaskbarContentHostBase : IDisposable
         PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
         ApplyHostedWindowStyle();
 
+        _ownSlot = _slotRegistry.Register(_windowHandle, _options.PreferredWidth, _options.Placement, _effectiveMonitorIdentity, _options.ManualSlotPriority);
+
         IsAttached = true;
         _taskbarWindowMonitorService.Start();
         if (deferInitialLayout) CollapseWindowRegion();
+    }
+
+    private void UpdateResolvedPlacement(TaskbarLayoutSnapshot snapshot)
+    {
+        if (!_ownSlot.HasValue) return;
+
+        var resolvedPlacement = snapshot.ResolvedPlacement;
+        if (resolvedPlacement == _lastResolvedPlacement) return;
+
+        _lastResolvedPlacement = resolvedPlacement;
+        _ownSlot = _ownSlot.Value with { ActualPlacement = resolvedPlacement };
+        _slotRegistry.UpdateActualPlacement(_windowHandle, resolvedPlacement);
     }
 
     private void ApplyHostedWindowStyle()
@@ -315,6 +338,13 @@ public class TaskbarContentHostBase : IDisposable
 
             PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
             ApplyHostedWindowStyle();
+
+            if (_ownSlot.HasValue)
+            {
+                _ownSlot = _ownSlot.Value with { MonitorIdentity = _effectiveMonitorIdentity };
+                _slotRegistry.UpdateMonitorIdentity(_windowHandle, _effectiveMonitorIdentity);
+            }
+
             RefreshLayout();
         });
     }
@@ -334,7 +364,7 @@ public class TaskbarContentHostBase : IDisposable
 
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_isDisposed, this);
 
-    private static TaskbarLayoutSnapshot InterpolateLayoutSnapshot(TaskbarLayoutSnapshot startSnapshot, TaskbarLayoutSnapshot targetSnapshot, double progress) => new(Interpolate(startSnapshot.X, targetSnapshot.X, progress), Interpolate(startSnapshot.Y, targetSnapshot.Y, progress), Interpolate(startSnapshot.Width, targetSnapshot.Width, progress), Interpolate(startSnapshot.Height, targetSnapshot.Height, progress), Interpolate(startSnapshot.AvailableWidth, targetSnapshot.AvailableWidth, progress), targetSnapshot.ScaleFactor, true);
+    private static TaskbarLayoutSnapshot InterpolateLayoutSnapshot(TaskbarLayoutSnapshot startSnapshot, TaskbarLayoutSnapshot targetSnapshot, double progress) => new(Interpolate(startSnapshot.X, targetSnapshot.X, progress), Interpolate(startSnapshot.Y, targetSnapshot.Y, progress), Interpolate(startSnapshot.Width, targetSnapshot.Width, progress), Interpolate(startSnapshot.Height, targetSnapshot.Height, progress), Interpolate(startSnapshot.AvailableWidth, targetSnapshot.AvailableWidth, progress), targetSnapshot.ScaleFactor, true, targetSnapshot.ResolvedPlacement);
 
     private static double Interpolate(double start, double target, double progress) => start + ((target - start) * progress);
 
