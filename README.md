@@ -104,7 +104,7 @@ When you set `PreferredMonitorIdentity` to a secondary monitor's taskbar and tha
 
 ## Multi-Instance Slot Coordination
 
-Deskband11Lib supports running multiple instances in the same taskbar area simultaneously. When several instances target the same placement area on the same monitor, they automatically coordinate via Win32 window properties and divide the available space without overlapping each other.
+Deskband11Lib supports running multiple instances in the same taskbar area simultaneously. When several instances target the same placement area on the same monitor, they automatically coordinate via a shared memory slot registry and divide the available space without overlapping each other.
 
 ### Slot Allocation
 
