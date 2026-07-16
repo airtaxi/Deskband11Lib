@@ -104,7 +104,7 @@ public class TaskbarContentHostBase : IDisposable
         ApplyHostedWindowStyle();
 
         var scaleFactor = GetScaleFactor();
-        var siblingSlots = TaskbarSlotRegistry.CollectSlots(_taskbarWindowLocator.TaskbarWindow, _windowHandle);
+        var siblingSlots = _slotRegistry.CollectSlots(_taskbarWindowLocator.TaskbarWindow, _windowHandle);
         var snapshot = _taskbarLayoutCalculator.Calculate(_platformAdapter.RequestedWidth, _platformAdapter.RequestedHeight, scaleFactor, _ownSlot, siblingSlots);
         if (!snapshot.IsValid)
         {
@@ -168,7 +168,7 @@ public class TaskbarContentHostBase : IDisposable
         PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
         ApplyHostedWindowStyle();
 
-        _ownSlot = _slotRegistry.Register(_windowHandle, _options.PreferredWidth, _options.Placement, _effectiveMonitorIdentity, _options.ManualSlotPriority);
+        _ownSlot = _slotRegistry.Register(_windowHandle, _options.PreferredWidth, _options.Placement, _effectiveMonitorIdentity, _options.ManualSlotPriority, _taskbarWindowLocator.TaskbarWindow);
 
         IsAttached = true;
         _taskbarWindowMonitorService.Start();
