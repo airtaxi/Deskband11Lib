@@ -18,6 +18,8 @@ public class TaskbarContentHostOptions
 
     public double PreferredWidth { get; set; } = 360;
 
+    public bool AllowFixedSlotResize { get; set; } = true;
+
     public double PreferredHeight { get; set; } = 48;
 
     public TimeSpan LayoutRefreshInterval { get; set; } = TimeSpan.FromMilliseconds(500);

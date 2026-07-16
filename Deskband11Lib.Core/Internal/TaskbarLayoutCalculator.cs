@@ -100,41 +100,77 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         var allSlots = new List<TaskbarSlotInfo>(siblings) { ownSlot };
         allSlots.Sort((a, b) => (a.ManualSlotPriority, a.SlotIndex).CompareTo((b.ManualSlotPriority, b.SlotIndex)));
 
-        var fixedSlots = allSlots.Where(slot => !slot.IsStretch).OrderBy(slot => slot.ManualSlotPriority).ThenBy(slot => slot.SlotIndex).ToList();
+        var nonResizableFixedSlots = allSlots.Where(slot => !slot.IsStretch && !slot.AllowFixedSlotResize).OrderBy(slot => slot.ManualSlotPriority).ThenBy(slot => slot.SlotIndex).ToList();
+        var resizableFixedSlots = allSlots.Where(slot => !slot.IsStretch && slot.AllowFixedSlotResize).OrderBy(slot => slot.ManualSlotPriority).ThenBy(slot => slot.SlotIndex).ToList();
         var stretchSlots = allSlots.Where(slot => slot.IsStretch).OrderBy(slot => slot.ManualSlotPriority).ThenBy(slot => slot.SlotIndex).ToList();
 
-        var fixedWidthSum = 0;
-        var fixedAllocations = new Dictionary<long, int>();
-        foreach (var slot in fixedSlots)
+        var allocations = new Dictionary<nint, int>();
+        var allocatedWidthSum = 0;
+
+        foreach (var slot in nonResizableFixedSlots)
         {
             var desiredWidth = (int)Math.Ceiling(slot.PreferredWidth * scaleFactor);
-            var allocatedWidth = Math.Min(desiredWidth, Math.Max(0, totalAvailableWidth - fixedWidthSum));
-            fixedAllocations[slot.SlotIndex] = allocatedWidth;
-            fixedWidthSum += allocatedWidth;
+            var allocatedWidth = Math.Min(desiredWidth, Math.Max(0, totalAvailableWidth - allocatedWidthSum));
+            allocations[slot.WindowHandle] = allocatedWidth;
+            allocatedWidthSum += allocatedWidth;
         }
 
-        var remainingWidth = Math.Max(0, totalAvailableWidth - fixedWidthSum);
-        var stretchWidth = stretchSlots.Count > 0 ? remainingWidth / stretchSlots.Count : 0;
+        var remainingForResizable = Math.Max(0, totalAvailableWidth - allocatedWidthSum);
+        var resizableDesiredWidths = resizableFixedSlots.Select(slot => (int)Math.Ceiling(slot.PreferredWidth * scaleFactor)).ToList();
+        var resizableDesiredWidthSum = resizableDesiredWidths.Sum();
+        if (resizableFixedSlots.Count > 0)
+        {
+            if (remainingForResizable >= resizableDesiredWidthSum)
+            {
+                for (var index = 0; index < resizableFixedSlots.Count; index++)
+                {
+                    var allocatedWidth = resizableDesiredWidths[index];
+                    allocations[resizableFixedSlots[index].WindowHandle] = allocatedWidth;
+                    allocatedWidthSum += allocatedWidth;
+                }
+            }
+            else allocatedWidthSum += AllocateProportionally(resizableFixedSlots, resizableDesiredWidths, remainingForResizable, allocations);
+        }
+
+        var remainingForStretch = Math.Max(0, totalAvailableWidth - allocatedWidthSum);
+        var stretchWidth = stretchSlots.Count > 0 ? remainingForStretch / stretchSlots.Count : 0;
+        foreach (var slot in stretchSlots) allocations[slot.WindowHandle] = stretchWidth;
 
         var offset = 0.0;
-        var ownIsFixed = !ownSlot.IsStretch;
-
         foreach (var slot in allSlots)
         {
             if (slot.WindowHandle == ownSlot.WindowHandle) break;
-
-            int slotWidth;
-            if (!slot.IsStretch) slotWidth = fixedAllocations.GetValueOrDefault(slot.SlotIndex, 0);
-            else slotWidth = stretchWidth;
-
-            offset += slotWidth;
+            offset += allocations.GetValueOrDefault(slot.WindowHandle, 0);
         }
 
-        double allocatedOwnWidth;
-        if (ownIsFixed) allocatedOwnWidth = fixedAllocations.GetValueOrDefault(ownSlot.SlotIndex, 0);
-        else allocatedOwnWidth = stretchWidth;
+        return (allocations.GetValueOrDefault(ownSlot.WindowHandle, 0), offset);
+    }
 
-        return (allocatedOwnWidth, offset);
+    private static int AllocateProportionally(List<TaskbarSlotInfo> slots, List<int> desiredWidths, int availableWidth, Dictionary<nint, int> allocations)
+    {
+        var desiredWidthSum = desiredWidths.Sum();
+        if (desiredWidthSum <= 0)
+        {
+            for (var index = 0; index < slots.Count; index++) allocations[slots[index].WindowHandle] = 0;
+            return 0;
+        }
+
+        var distributedWidth = 0;
+        for (var index = 0; index < slots.Count; index++)
+        {
+            var allocatedWidth = (int)((long)availableWidth * desiredWidths[index] / desiredWidthSum);
+            allocations[slots[index].WindowHandle] = allocatedWidth;
+            distributedWidth += allocatedWidth;
+        }
+
+        var leftoverWidth = availableWidth - distributedWidth;
+        for (var index = 0; index < slots.Count && leftoverWidth > 0; index++)
+        {
+            allocations[slots[index].WindowHandle]++;
+            leftoverWidth--;
+        }
+
+        return availableWidth;
     }
 
     private int ResolveNotificationLeft(RECT taskbarRectangle)

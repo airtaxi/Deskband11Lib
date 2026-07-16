@@ -115,6 +115,8 @@ Width allocation follows a Fixed-then-Stretch model:
 - **Fixed slots** — instances with a finite `PreferredWidth` get their requested width, in priority order, until available space runs out. Lower-priority Fixed slots that do not fit receive whatever remains (which may be zero).
 - **Stretch slots** — instances with `PreferredWidth = double.MaxValue` split the remaining space equally after all Fixed slots are served.
 
+When `AllowFixedSlotResize` is `true` (the default) and the available space is too small to serve every resizable Fixed slot at its requested width, those slots shrink proportionally to their `PreferredWidth` instead of being starved to zero. Non-resizable Fixed slots (`AllowFixedSlotResize = false`) keep priority-ordered first-served behavior and are served before resizable Fixed slots. Stretch slots always split whatever remains after all Fixed slots are served.
+
 Empty slots leave gaps — the remaining instances do not reflow to fill them.
 
 ### Manual Slot Priority
@@ -167,6 +169,7 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 | Option                    | Default                     | Description                                                                                                                                              |
 | ------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PreferredWidth`          | `360`                       | Desired content width in effective pixels. Set to `double.MaxValue` for stretch mode — the instance fills remaining space after Fixed-width instances are served.                                                                                                               |
+| `AllowFixedSlotResize`   | `true`                      | When `true` and the available space is too small to serve every resizable Fixed slot at its requested `PreferredWidth`, those slots shrink proportionally to their `PreferredWidth` instead of being starved to zero. Set to `false` to keep priority-ordered first-served behavior. |
 | `PreferredHeight`         | `48`                        | Desired content height in effective pixels.                                                                                                              |
 | `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
 | `HighRefreshRateMode`     | `false`                     | When enabled along with `AnimateLayoutChanges`, matches the layout animation timer interval to the target monitor's current refresh rate instead of the default 60 FPS. |

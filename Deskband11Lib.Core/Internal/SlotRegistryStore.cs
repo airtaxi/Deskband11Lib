@@ -22,6 +22,7 @@ internal sealed class SlotRegistryStore : IDisposable
     private static readonly int s_taskbarHandleOffset = 24;
     private static readonly int s_preferredWidthBitsOffset = 32;
     private static readonly int s_isActiveOffset = 40;
+    private static readonly int s_allowFixedSlotResizeOffset = 41;
     private static readonly int s_lastHeartbeatOffset = 48;
 
     private readonly MemoryMappedFile _memoryMappedFile;
@@ -36,7 +37,7 @@ internal sealed class SlotRegistryStore : IDisposable
         _mutex = new Mutex(false, SlotMutexName);
     }
 
-    public ushort RegisterOrUpdate(nint windowHandle, nint taskbarHandle, double preferredWidth, TaskbarContentPlacement actualPlacement, int monitorIdentity, ushort manualSlotPriority)
+    public ushort RegisterOrUpdate(nint windowHandle, nint taskbarHandle, double preferredWidth, TaskbarContentPlacement actualPlacement, int monitorIdentity, ushort manualSlotPriority, bool allowFixedSlotResize)
     {
         if (!_mutex.WaitOne(5000)) throw new InvalidOperationException("Failed to acquire slot registry mutex.");
         try
@@ -46,14 +47,14 @@ internal sealed class SlotRegistryStore : IDisposable
             var existingIndex = FindSlotByWindowHandle(windowHandle);
             if (existingIndex >= 0)
             {
-                WriteSlot(existingIndex, windowHandle, taskbarHandle, preferredWidth, actualPlacement, monitorIdentity, manualSlotPriority, (ushort)existingIndex);
+                WriteSlot(existingIndex, windowHandle, taskbarHandle, preferredWidth, actualPlacement, monitorIdentity, manualSlotPriority, (ushort)existingIndex, allowFixedSlotResize);
                 return (ushort)existingIndex;
             }
 
             var slotIndex = ClaimNextSlotIndex();
             var entryIndex = FindFreeEntry();
             if (entryIndex < 0) throw new InvalidOperationException("Slot registry is full.");
-            WriteSlot(entryIndex, windowHandle, taskbarHandle, preferredWidth, actualPlacement, monitorIdentity, manualSlotPriority, slotIndex);
+            WriteSlot(entryIndex, windowHandle, taskbarHandle, preferredWidth, actualPlacement, monitorIdentity, manualSlotPriority, slotIndex, allowFixedSlotResize);
             return slotIndex;
         }
         finally { _mutex.ReleaseMutex(); }
@@ -138,8 +139,9 @@ internal sealed class SlotRegistryStore : IDisposable
                 var actualPlacement = (TaskbarContentPlacement)_viewAccessor.ReadInt32(baseOffset + s_actualPlacementOffset);
                 var preferredWidthBits = _viewAccessor.ReadUInt64(baseOffset + s_preferredWidthBitsOffset);
                 var preferredWidth = BitConverter.UInt64BitsToDouble(preferredWidthBits);
+                var allowFixedSlotResize = _viewAccessor.ReadBoolean(baseOffset + s_allowFixedSlotResizeOffset);
 
-                slots.Add(new TaskbarSlotInfo(slotIndex, manualSlotPriority, preferredWidth, actualPlacement, monitorIdentity, slotWindowHandle));
+                slots.Add(new TaskbarSlotInfo(slotIndex, manualSlotPriority, preferredWidth, actualPlacement, monitorIdentity, slotWindowHandle, allowFixedSlotResize));
             }
 
             return slots;
@@ -194,7 +196,7 @@ internal sealed class SlotRegistryStore : IDisposable
         return -1;
     }
 
-    private void WriteSlot(int entryIndex, nint windowHandle, nint taskbarHandle, double preferredWidth, TaskbarContentPlacement actualPlacement, int monitorIdentity, ushort manualSlotPriority, ushort slotIndex)
+    private void WriteSlot(int entryIndex, nint windowHandle, nint taskbarHandle, double preferredWidth, TaskbarContentPlacement actualPlacement, int monitorIdentity, ushort manualSlotPriority, ushort slotIndex, bool allowFixedSlotResize)
     {
         var baseOffset = entryIndex * SlotEntrySize;
         _viewAccessor.Write(baseOffset + s_slotIndexOffset, slotIndex);
@@ -205,6 +207,7 @@ internal sealed class SlotRegistryStore : IDisposable
         WriteNInt(baseOffset + s_taskbarHandleOffset, taskbarHandle);
         _viewAccessor.Write(baseOffset + s_preferredWidthBitsOffset, BitConverter.DoubleToUInt64Bits(preferredWidth));
         _viewAccessor.Write(baseOffset + s_isActiveOffset, true);
+        _viewAccessor.Write(baseOffset + s_allowFixedSlotResizeOffset, allowFixedSlotResize);
         _viewAccessor.Write(baseOffset + s_lastHeartbeatOffset, Environment.TickCount64);
     }
 

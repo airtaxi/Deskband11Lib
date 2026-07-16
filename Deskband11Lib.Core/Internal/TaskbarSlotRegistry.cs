@@ -10,19 +10,19 @@ internal sealed class TaskbarSlotRegistry : IDisposable
     private bool _hasRegistered;
     private nint _registeredWindowHandle;
 
-    public unsafe TaskbarSlotInfo Register(HWND window, double preferredWidth, TaskbarContentPlacement actualPlacement, int monitorIdentity, ushort manualSlotPriority, HWND taskbarWindow)
+    public unsafe TaskbarSlotInfo Register(HWND window, double preferredWidth, TaskbarContentPlacement actualPlacement, int monitorIdentity, ushort manualSlotPriority, bool allowFixedSlotResize, HWND taskbarWindow)
     {
         if (window.IsNull) throw new ArgumentException("Window handle is null.", nameof(window));
         if (preferredWidth < 0 && preferredWidth != double.MaxValue) throw new ArgumentOutOfRangeException(nameof(preferredWidth), "Preferred width must be non-negative or double.MaxValue for stretch.");
 
         var windowHandle = (nint)window.Value;
         var taskbarHandle = (nint)taskbarWindow.Value;
-        var slotIndex = _store.RegisterOrUpdate(windowHandle, taskbarHandle, preferredWidth, actualPlacement, monitorIdentity, manualSlotPriority);
+        var slotIndex = _store.RegisterOrUpdate(windowHandle, taskbarHandle, preferredWidth, actualPlacement, monitorIdentity, manualSlotPriority, allowFixedSlotResize);
 
         _registeredWindowHandle = windowHandle;
         _hasRegistered = true;
 
-        return new TaskbarSlotInfo(slotIndex, manualSlotPriority, preferredWidth, actualPlacement, monitorIdentity, windowHandle);
+        return new TaskbarSlotInfo(slotIndex, manualSlotPriority, preferredWidth, actualPlacement, monitorIdentity, windowHandle, allowFixedSlotResize);
     }
 
     public unsafe void UpdateActualPlacement(HWND window, TaskbarContentPlacement actualPlacement)

@@ -168,7 +168,7 @@ public class TaskbarContentHostBase : IDisposable
         PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
         ApplyHostedWindowStyle();
 
-        _ownSlot = _slotRegistry.Register(_windowHandle, _options.PreferredWidth, _options.Placement, _effectiveMonitorIdentity, _options.ManualSlotPriority, _taskbarWindowLocator.TaskbarWindow);
+        _ownSlot = _slotRegistry.Register(_windowHandle, _options.PreferredWidth, _options.Placement, _effectiveMonitorIdentity, _options.ManualSlotPriority, _options.AllowFixedSlotResize, _taskbarWindowLocator.TaskbarWindow);
 
         IsAttached = true;
         _taskbarWindowMonitorService.Start();
