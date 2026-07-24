@@ -7,7 +7,7 @@
 
 🌐 English | [한국어](README.ko.md)
 
-Deskband11Lib is a library for building rich, always-visible taskbar companions on Windows 11. It lets your app place real UI content directly inside the taskbar, making compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools feel like a native part of the desktop.
+Deskband11Lib is a library for building always-visible taskbar companions on Windows 11. It lets your app place real UI content directly inside the taskbar, so compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools appear as part of the taskbar.
 
 ![Deskband11Lib screenshot](.github/screenshot.png)
 
@@ -27,7 +27,7 @@ Deskband11Lib comes in multiple NuGet packages, one for each supported UI framew
 - Show live information where users can see it at a glance without opening a full window.
 - Add compact controls for actions such as timers, media playback, account switching, build status, device monitoring, or quick launch workflows.
 - Automatically fit content into the available taskbar space without overlapping pinned apps or the notification area.
-- Run multiple instances side by side in the same taskbar area with automatic slot coordination — each instance gets its fair share of the available space.
+- Run multiple instances side by side in the same taskbar area with automatic slot coordination. Each instance gets its fair share of the available space.
 - Built-in easing functions (Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle) for smooth layout animations.
 - Optional high refresh rate mode that matches the layout animation timer to the target monitor's current refresh rate for smoother motion on high refresh rate displays.
 - Recover cleanly when Explorer restarts by letting the application rebuild its hosted window.
@@ -100,7 +100,7 @@ host.TaskbarWindowRecreated += async (_, _) =>
 
 ### Secondary Monitor Reconnection
 
-When you set `PreferredMonitorIdentity` to a secondary monitor's taskbar and that monitor is later disconnected, Deskband11Lib automatically falls back to the primary taskbar. When the secondary monitor is reconnected, the hosted window moves back to the secondary monitor's taskbar automatically — no application code is required.
+When you set `PreferredMonitorIdentity` to a secondary monitor's taskbar and that monitor is later disconnected, Deskband11Lib automatically falls back to the primary taskbar. When the secondary monitor is reconnected, the hosted window moves back to the secondary monitor's taskbar automatically, without any application code.
 
 ## Multi-Instance Slot Coordination
 
@@ -108,16 +108,16 @@ Deskband11Lib supports running multiple instances in the same taskbar area simul
 
 ### Slot Allocation
 
-Each registered instance is called a **slot**. Slots are ordered by `(ManualSlotPriority, SlotIndex)` — lower `ManualSlotPriority` values place the instance earlier (further from the notification area in left-aligned mode). Among slots with the same `ManualSlotPriority`, arrival order (`SlotIndex`) breaks the tie.
+Each registered instance is called a **slot**. Slots are ordered by `(ManualSlotPriority, SlotIndex)`: lower `ManualSlotPriority` values place the instance earlier (further from the notification area in left-aligned mode). Among slots with the same `ManualSlotPriority`, arrival order (`SlotIndex`) breaks the tie.
 
 Width allocation follows a Fixed-then-Stretch model:
 
-- **Fixed slots** — instances with a finite `PreferredWidth` get their requested width, in priority order, until available space runs out. Lower-priority Fixed slots that do not fit receive whatever remains (which may be zero).
-- **Stretch slots** — instances with `PreferredWidth = double.MaxValue` split the remaining space equally after all Fixed slots are served.
+- **Fixed slots**: instances with a finite `PreferredWidth` get their requested width, in priority order, until available space runs out. Lower-priority Fixed slots that do not fit receive whatever remains (which may be zero).
+- **Stretch slots**: instances with `PreferredWidth = double.MaxValue` split the remaining space equally after all Fixed slots are served.
 
 When `AllowFixedSlotResize` is `true` (the default) and the available space is too small to serve every resizable Fixed slot at its requested width, those slots shrink proportionally to their `PreferredWidth` instead of being starved to zero. Non-resizable Fixed slots (`AllowFixedSlotResize = false`) keep priority-ordered first-served behavior and are served before resizable Fixed slots. Stretch slots always split whatever remains after all Fixed slots are served.
 
-Empty slots leave gaps — the remaining instances do not reflow to fill them.
+Empty slots leave gaps. The remaining instances do not reflow to fill them.
 
 ### Manual Slot Priority
 
@@ -168,14 +168,14 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 
 | Option                    | Default                     | Description                                                                                                                                              |
 | ------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PreferredWidth`          | `360`                       | Desired content width in effective pixels. Set to `double.MaxValue` for stretch mode — the instance fills remaining space after Fixed-width instances are served.                                                                                                               |
+| `PreferredWidth`          | `360`                       | Desired content width in effective pixels. Set to `double.MaxValue` for stretch mode: the instance fills remaining space after Fixed-width instances are served.                                                                                                               |
 | `AllowFixedSlotResize`   | `true`                      | When `true` and the available space is too small to serve every resizable Fixed slot at its requested `PreferredWidth`, those slots shrink proportionally to their `PreferredWidth` instead of being starved to zero. Set to `false` to keep priority-ordered first-served behavior. |
 | `PreferredHeight`         | `48`                        | Desired content height in effective pixels.                                                                                                              |
 | `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
 | `HighRefreshRateMode`     | `false`                     | When enabled along with `AnimateLayoutChanges`, matches the layout animation timer interval to the target monitor's current refresh rate instead of the default 60 FPS. |
 | `LayoutAnimationDuration` | `500`                       | Layout animation duration in milliseconds.                                                                                                               |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
-| `Placement`               | `Auto`                      | Selects placement.<br>• `Auto` — When centered, picks the more spacious free gap around the Start button group. Left gap wins → far-left edge (same as `LeftEdge`); right gap wins → before the notification area. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `LeftEdge` — When centered, places content at the far left edge, right after the Widgets button. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `BeforeNotificationArea` — Always places content next to the notification area.<br>• `BeforeStartButton` — Places content next to the Start button. Falls back to `BeforeNotificationArea` when not centered. |
+| `Placement`               | `Auto`                      | Selects placement.<br>• `Auto`: When centered, picks the more spacious free gap around the Start button group. Left gap wins → far-left edge (same as `LeftEdge`); right gap wins → before the notification area. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `LeftEdge`: When centered, places content at the far left edge, right after the Widgets button. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `BeforeNotificationArea`: Always places content next to the notification area.<br>• `BeforeStartButton`: Places content next to the Start button. Falls back to `BeforeNotificationArea` when not centered. |
 | `TrackTaskbarButtons`     | `true`                      | Enables UI Automation based taskbar button measurement.                                                                                                  |
 | `TrackNotificationArea`   | `true`                      | Keeps content away from the notification area.                                                                                                           |
 | `PreferredMonitorIdentity` | `0`                       | Selects which taskbar to host on. `0` uses the primary taskbar (`Shell_TrayWnd`). `1` uses the first secondary monitor's taskbar (`Shell_SecondaryTrayWnd`), `2` the next, and so on, ordered left-to-right by screen position. Falls back to the primary taskbar when the requested secondary monitor's taskbar is not present. |
@@ -225,7 +225,7 @@ dotnet publish Deskband11Lib.WinUI.Sample\Deskband11Lib.WinUI.Sample.csproj -c R
 
 ## Acknowledgements
 
-Special thanks to [zadjii](https://github.com/zadjii) and [Deskband11](https://github.com/zadjii/Deskband11). The core idea of bringing application content into the Windows 11 taskbar comes from that project, and Deskband11Lib is grateful for the brilliant inspiration.
+Special thanks to [zadjii](https://github.com/zadjii) and [Deskband11](https://github.com/zadjii/Deskband11). The core idea of bringing application content into the Windows 11 taskbar comes from that project, which inspired Deskband11Lib.
 
 ## License
 
