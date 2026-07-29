@@ -31,6 +31,8 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
 
     public event EventHandler? TaskbarWindowRecreated;
 
+    public event EventHandler? TaskbarWindowDisappeared;
+
     public event EventHandler? PreferredMonitorRestored;
 
     public event Action<int>? RefreshRateChanged;
@@ -79,8 +81,17 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
             var taskbarWindow = ResolveTaskbarWindow();
             if (taskbarWindow != _lastTaskbarWindow)
             {
+                var wasPresent = !_lastTaskbarWindow.IsNull;
                 _lastTaskbarWindow = taskbarWindow;
-                TaskbarWindowRecreated?.Invoke(this, EventArgs.Empty);
+
+                if (taskbarWindow.IsNull)
+                {
+                    if (wasPresent) TaskbarWindowDisappeared?.Invoke(this, EventArgs.Empty);
+                }
+                else
+                {
+                    TaskbarWindowRecreated?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 

@@ -45,11 +45,14 @@ public class TaskbarContentHostBase : IDisposable
         _layoutRefreshTimer = _platformAdapter.CreateTimer(_options.LayoutRefreshInterval, OnLayoutRefreshTimerTick);
         _layoutAnimationTimer = _platformAdapter.CreateTimer(TimeSpan.FromMilliseconds(16), OnLayoutAnimationTimerTick);
         _taskbarWindowMonitorService.TaskbarWindowRecreated += OnTaskbarWindowMonitorServiceTaskbarWindowRecreated;
+        _taskbarWindowMonitorService.TaskbarWindowDisappeared += OnTaskbarWindowMonitorServiceTaskbarWindowDisappeared;
         _taskbarWindowMonitorService.PreferredMonitorRestored += OnTaskbarWindowMonitorServicePreferredMonitorRestored;
         _taskbarWindowMonitorService.RefreshRateChanged += OnTaskbarWindowMonitorServiceRefreshRateChanged;
     }
 
     public event EventHandler? TaskbarWindowRecreated;
+
+    public event EventHandler? TaskbarWindowDisappeared;
 
     public bool IsAttached { get; private set; }
 
@@ -70,10 +73,38 @@ public class TaskbarContentHostBase : IDisposable
         ThrowIfDisposed();
         if (IsAttached) return;
 
+        await WaitForTaskbarWindowAsync();
         AttachCore(true);
         await RefreshTaskbarButtonMeasurementAsync();
         RefreshLayout();
         _layoutRefreshTimer.Start();
+    }
+
+    private async Task WaitForTaskbarWindowAsync()
+    {
+        if (IsTaskbarWindowAvailable()) return;
+
+        await Task.Run(async () =>
+        {
+            while (!IsTaskbarWindowAvailable())
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+        });
+    }
+
+    private bool IsTaskbarWindowAvailable()
+    {
+        if (_taskbarWindowLocator.TryRefresh(_effectiveMonitorIdentity)) return true;
+        if (_effectiveMonitorIdentity == 0) return false;
+
+        if (_taskbarWindowLocator.TryRefresh(0))
+        {
+            _effectiveMonitorIdentity = 0;
+            return true;
+        }
+
+        return false;
     }
 
     public void Detach()
@@ -140,9 +171,11 @@ public class TaskbarContentHostBase : IDisposable
         _layoutRefreshTimer.Dispose();
         _layoutAnimationTimer.Dispose();
         _taskbarWindowMonitorService.TaskbarWindowRecreated -= OnTaskbarWindowMonitorServiceTaskbarWindowRecreated;
+        _taskbarWindowMonitorService.TaskbarWindowDisappeared -= OnTaskbarWindowMonitorServiceTaskbarWindowDisappeared;
         _taskbarWindowMonitorService.PreferredMonitorRestored -= OnTaskbarWindowMonitorServicePreferredMonitorRestored;
         _taskbarWindowMonitorService.RefreshRateChanged -= OnTaskbarWindowMonitorServiceRefreshRateChanged;
         TaskbarWindowRecreated = null;
+        TaskbarWindowDisappeared = null;
 
         _slotRegistry.Dispose();
         _taskbarWindowMonitorService.Dispose();
@@ -157,11 +190,7 @@ public class TaskbarContentHostBase : IDisposable
 
         _windowHandle = new HWND(_platformAdapter.WindowHandle);
         if (_windowHandle.IsNull) throw new InvalidOperationException("The hosted window handle is not available.");
-        if (!_taskbarWindowLocator.TryRefresh(_effectiveMonitorIdentity))
-        {
-            if (_effectiveMonitorIdentity != 0 && _taskbarWindowLocator.TryRefresh(0)) _effectiveMonitorIdentity = 0;
-            else throw new InvalidOperationException("The Windows taskbar window could not be found.");
-        }
+        if (!IsTaskbarWindowAvailable()) throw new InvalidOperationException("The Windows taskbar window could not be found.");
 
         _originalParentWindow = PInvoke.GetParent(_windowHandle);
         _originalWindowStyle = NativeWindowMethods.GetWindowStyle(_windowHandle);
@@ -325,6 +354,22 @@ public class TaskbarContentHostBase : IDisposable
         if (_isDisposed || !IsAttached) return;
 
         _platformAdapter.RunOnDispatcher(() => TaskbarWindowRecreated?.Invoke(this, EventArgs.Empty));
+    }
+
+    private void OnTaskbarWindowMonitorServiceTaskbarWindowDisappeared(object? sender, EventArgs e)
+    {
+        if (_isDisposed || !IsAttached) return;
+
+        _platformAdapter.RunOnDispatcher(() =>
+        {
+            if (_isDisposed || !IsAttached) return;
+
+            StopLayoutAnimation();
+            _layoutRefreshTimer.Stop();
+            _hasAppliedLayoutSnapshot = false;
+
+            TaskbarWindowDisappeared?.Invoke(this, EventArgs.Empty);
+        });
     }
 
     private void OnTaskbarWindowMonitorServicePreferredMonitorRestored(object? sender, EventArgs e)
