@@ -98,9 +98,18 @@ host.TaskbarWindowRecreated += async (_, _) =>
 };
 ```
 
-### 보조 모니터 다시 연결
+### 보조 모니터 연결 해제
 
-`PreferredMonitorIdentity`를 보조 모니터의 작업 표시줄로 설정한 상태에서 해당 모니터의 연결이 끊기면, Deskband11Lib가 자동으로 기본 작업 표시줄로 폴백합니다. 이후 보조 모니터가 다시 연결되면 호스팅된 창도 보조 모니터의 작업 표시줄로 자동으로 돌아갑니다 — 앱 측에서 추가로 처리할 코드는 필요 없습니다.
+위젯을 붙여 둔 보조 모니터의 연결이 끊기면 작업 표시줄이 자식 창을 파괴하고, 라이브러리는 `TaskbarWindowDisappeared`를 발생시킵니다. `TaskbarWindowRecreated`와 마찬가지로 이 이벤트에서 창을 다시 만들어 붙이면 됩니다. 그러면 선호 모니터를 쓸 수 없는 동안 새 호스트가 기본 작업 표시줄로 폴백합니다.
+
+```csharp
+host.TaskbarWindowDisappeared += async (_, _) =>
+{
+    await RecreateMainWindowAsync();
+};
+```
+
+보조 모니터가 다시 연결되면 `TaskbarWindowRecreated`가 발생하고, 새로 만든 창이 보조 모니터의 작업 표시줄에 붙습니다.
 
 ## 다중 인스턴스 슬롯 조정
 

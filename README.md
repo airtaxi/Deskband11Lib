@@ -98,9 +98,18 @@ host.TaskbarWindowRecreated += async (_, _) =>
 };
 ```
 
-### Secondary Monitor Reconnection
+### Secondary Monitor Disconnection
 
-When you set `PreferredMonitorIdentity` to a secondary monitor's taskbar and that monitor is later disconnected, Deskband11Lib automatically falls back to the primary taskbar. When the secondary monitor is reconnected, the hosted window moves back to the secondary monitor's taskbar automatically, without any application code.
+If the monitor you pinned the widget to is disconnected, the taskbar destroys the hosted child window and the library raises `TaskbarWindowDisappeared`. Recreate the window in that handler, the same way you would for `TaskbarWindowRecreated`. The new host attaches to the primary taskbar until the preferred monitor is back:
+
+```csharp
+host.TaskbarWindowDisappeared += async (_, _) =>
+{
+    await RecreateMainWindowAsync();
+};
+```
+
+On reconnect, `TaskbarWindowRecreated` fires again and the recreated window attaches to the secondary taskbar.
 
 ## Multi-Instance Slot Coordination
 
