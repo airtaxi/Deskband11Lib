@@ -470,6 +470,8 @@ public class TaskbarContentHostBase : IDisposable
             // The hosted window is still alive, so hide it before detaching to prevent it from flashing as a top-level window.
             _ = PInvoke.ShowWindow(_windowHandle, SHOW_WINDOW_CMD.SW_HIDE);
             Detach();
+            // Unlike the other recreation events, the window is not destroyed by the taskbar here, so close it explicitly to match their behavior.
+            _platformAdapter.CloseWindow();
             TaskbarDpiChanged?.Invoke(this, EventArgs.Empty);
             TaskbarWindowRecreationRequired?.Invoke(this, EventArgs.Empty);
         });
