@@ -87,9 +87,22 @@ await host.AttachWhenLayoutReadyAsync();
 window.Show();
 ```
 
+### Window Recreation
+
+The hosted window can be torn down for a few different reasons: Explorer restarts, the monitor you pinned the widget to gets disconnected, or the system DPI changes. Whatever the cause, the fix is the same: recreate the window and let the new host attach. `TaskbarWindowRecreationRequired` covers all of them, so one handler is enough for most apps:
+
+```csharp
+host.TaskbarWindowRecreationRequired += async (_, _) =>
+{
+    await RecreateMainWindowAsync();
+};
+```
+
+If you need to tell the cases apart, the individual events below are raised alongside it as well.
+
 ### Explorer Restart
 
-When Explorer restarts, the taskbar destroys the hosted child window. Handle `TaskbarWindowRecreated` to replace the window:
+When Explorer restarts, the taskbar destroys the hosted child window. `TaskbarWindowRecreated` fires and the window needs to be recreated:
 
 ```csharp
 host.TaskbarWindowRecreated += async (_, _) =>
@@ -100,7 +113,7 @@ host.TaskbarWindowRecreated += async (_, _) =>
 
 ### DPI Change
 
-When the system DPI changes, the hosted window can keep its old DPI while the taskbar moves to the new one, leaving the widget misaligned. Deskband11Lib polls the taskbar and hosted window DPI values and, on mismatch, hides and detaches the hosted window, then raises `TaskbarDpiChanged` so the application can rebuild it with the new DPI:
+When the system DPI changes, the taskbar moves to the new DPI but the hosted window can keep its old one, leaving the widget misaligned. Deskband11Lib polls the taskbar and hosted window DPI values. On mismatch, it hides and detaches the hosted window and raises `TaskbarDpiChanged`, so the application can rebuild it with the new DPI:
 
 ```csharp
 host.TaskbarDpiChanged += async (_, _) =>

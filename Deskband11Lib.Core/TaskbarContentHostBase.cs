@@ -60,6 +60,8 @@ public class TaskbarContentHostBase : IDisposable
 
     public event EventHandler? TaskbarDpiChanged;
 
+    public event EventHandler? TaskbarWindowRecreationRequired;
+
     public bool IsAttached { get; private set; }
 
     public TaskbarAlignment GetTaskbarAlignment() => TaskbarAlignmentDetector.ReadRegistryAlignment();
@@ -198,6 +200,7 @@ public class TaskbarContentHostBase : IDisposable
         TaskbarWindowRecreated = null;
         TaskbarWindowDisappeared = null;
         TaskbarDpiChanged = null;
+        TaskbarWindowRecreationRequired = null;
 
         _slotRegistry.Dispose();
         _taskbarWindowMonitorService.Dispose();
@@ -401,6 +404,7 @@ public class TaskbarContentHostBase : IDisposable
             _layoutRefreshTimer.Start();
             RefreshLayout();
             TaskbarWindowRecreated?.Invoke(this, EventArgs.Empty);
+            TaskbarWindowRecreationRequired?.Invoke(this, EventArgs.Empty);
         });
     }
 
@@ -412,11 +416,12 @@ public class TaskbarContentHostBase : IDisposable
         {
             if (_isDisposed || !IsAttached) return;
 
-            StopLayoutAnimation();
-            _layoutRefreshTimer.Stop();
-            _hasAppliedLayoutSnapshot = false;
+        StopLayoutAnimation();
+        _layoutRefreshTimer.Stop();
+        _hasAppliedLayoutSnapshot = false;
 
-            TaskbarWindowDisappeared?.Invoke(this, EventArgs.Empty);
+        TaskbarWindowDisappeared?.Invoke(this, EventArgs.Empty);
+        TaskbarWindowRecreationRequired?.Invoke(this, EventArgs.Empty);
         });
     }
 
@@ -466,6 +471,7 @@ public class TaskbarContentHostBase : IDisposable
             _ = PInvoke.ShowWindow(_windowHandle, SHOW_WINDOW_CMD.SW_HIDE);
             Detach();
             TaskbarDpiChanged?.Invoke(this, EventArgs.Empty);
+            TaskbarWindowRecreationRequired?.Invoke(this, EventArgs.Empty);
         });
     }
 

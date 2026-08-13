@@ -87,6 +87,19 @@ await host.AttachWhenLayoutReadyAsync();
 window.Show();
 ```
 
+### 창 재생성
+
+작업 표시줄에 붙어 있던 창이 사라지는 경우는 몇 가지가 있습니다. Explorer가 재시작되거나, 위젯을 붙여 둔 모니터의 연결이 끊기거나, 시스템 DPI가 바뀌는 경우입니다. 어느 쪽이든 해결 방법은 같습니다. 창을 새로 만들어 다시 붙이면 됩니다. `TaskbarWindowRecreationRequired`는 이 세 경우를 모두 묶어서 발생하므로, 대부분의 앱은 핸들러 하나만 등록하면 됩니다.
+
+```csharp
+host.TaskbarWindowRecreationRequired += async (_, _) =>
+{
+    await RecreateMainWindowAsync();
+};
+```
+
+어떤 이유로 창이 사라졌는지 구분해서 처리해야 한다면 아래 개별 이벤트를 쓰면 됩니다. 개별 이벤트는 통합 이벤트와 함께 발생합니다.
+
 ### Explorer 재시작
 
 Explorer가 재시작되면 작업 표시줄에 붙어 있던 자식 창도 사라집니다. 이때는 `TaskbarWindowRecreated` 이벤트에서 창을 다시 만들어 붙이면 됩니다.
@@ -128,16 +141,16 @@ Deskband11Lib는 같은 작업 표시줄 영역에 여러 인스턴스를 동시
 
 ### 슬롯 할당
 
-등록된 각 인스턴스를 **슬롯**이라고 합니다. 슬롯은 `(ManualSlotPriority, SlotIndex)` 순으로 정렬됩니다 — `ManualSlotPriority` 값이 낮을수록 인스턴스가 더 앞에 배치됩니다(왼쪽 정렬 모드에서 알림 영역에서 더 먼 쪽). `ManualSlotPriority`가 같은 슬롯 중에서는 도착 순서(`SlotIndex`)가 우선순위를 결정합니다.
+등록된 각 인스턴스를 **슬롯**이라고 합니다. 슬롯은 `(ManualSlotPriority, SlotIndex)` 순으로 정렬됩니다. `ManualSlotPriority` 값이 낮을수록 인스턴스가 더 앞에 배치됩니다(왼쪽 정렬 모드에서 알림 영역에서 더 먼 쪽). `ManualSlotPriority`가 같은 슬롯 중에서는 도착 순서(`SlotIndex`)가 우선순위를 결정합니다.
 
 너비 할당은 Fixed-then-Stretch 모델을 따릅니다:
 
-- **Fixed 슬롯** — 유한한 `PreferredWidth`를 가진 인스턴스는 우선순위 순서대로 요청한 너비를 할당받습니다. 사용 가능한 공간이 부족하면 우선순위가 낮은 Fixed 슬롯은 남은 공간만 받습니다(0이 될 수도 있음).
-- **Stretch 슬롯** — `PreferredWidth = double.MaxValue`로 설정된 인스턴스는 모든 Fixed 슬롯이 할당된 후 남은 공간을 균등하게 나눕니다.
+- **Fixed 슬롯**: 유한한 `PreferredWidth`를 가진 인스턴스는 우선순위 순서대로 요청한 너비를 할당받습니다. 사용 가능한 공간이 부족하면 우선순위가 낮은 Fixed 슬롯은 남은 공간만 받습니다(0이 될 수도 있음).
+- **Stretch 슬롯**: `PreferredWidth = double.MaxValue`로 설정된 인스턴스는 모든 Fixed 슬롯이 할당된 후 남은 공간을 균등하게 나눕니다.
 
 `AllowFixedSlotResize`가 `true`(기본값)이면, 공간이 부족할 때 해당 Fixed 슬롯들이 너비가 0이 되지 않고 `PreferredWidth` 비율에 맞춰 줄어듭니다. `AllowFixedSlotResize = false`로 설정한 Fixed 슬롯은 기존대로 우선순위 순서대로 먼저 할당받습니다. Stretch 슬롯은 항상 Fixed 슬롯 할당이 끝난 뒤 남은 공간을 나눕니다.
 
-빈 슬롯이 생기면 그 자리는 빈 공간으로 남습니다 — 나머지 인스턴스가 자동으로 채우지 않습니다.
+빈 슬롯이 생기면 그 자리는 빈 공간으로 남습니다. 나머지 인스턴스가 자동으로 채우지 않습니다.
 
 ### 수동 슬롯 우선순위
 
@@ -195,7 +208,7 @@ Deskband11Lib는 앱 창을 작업 표시줄 안에 들어갈 크기로 맞추�
 | `HighRefreshRateMode`     | `false`                     | `AnimateLayoutChanges`와 함께 활성화하면 레이아웃 애니메이션 타이머 주기를 기본 60 FPS가 아닌 대상 모니터의 현재 주사율에 맞춥니다. |
 | `LayoutAnimationDuration` | `500`                       | 레이아웃 애니메이션 시간입니다. ms 단위입니다.                                                                                                 |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | 레이아웃 애니메이션에 사용할 easing delegate(`Func<double, double>`)입니다. 오버슛 없는 기본 easing은 `Deskband11Lib.Core.EasingFunctions`에서 제공합니다. |
-| `Placement`               | `Auto`                      | 배치 방식을 선택합니다.<br>• `Auto` — 가운데 정렬일 때 시작 버튼 그룹 양쪽 남는 공간 중 더 넓은 쪽에 배치합니다. 왼쪽이 더 넓으면 가장 왼쪽 끝(`LeftEdge`와 동일), 오른쪽이 더 넓으면 알림 영역 앞에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `LeftEdge` — 가운데 정렬일 때 날씨 위젯 바로 오른쪽, 가장 왼쪽 끝에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `BeforeNotificationArea` — 항상 알림 영역 앞에 둡니다.<br>• `BeforeStartButton` — 시작 버튼 앞에 둡니다. 가운데 정렬이 아니면 `BeforeNotificationArea`로 동작합니다. |
+| `Placement`               | `Auto`                      | 배치 방식을 선택합니다.<br>• `Auto`: 가운데 정렬일 때 시작 버튼 그룹 양쪽 남는 공간 중 더 넓은 쪽에 배치합니다. 왼쪽이 더 넓으면 가장 왼쪽 끝(`LeftEdge`와 동일), 오른쪽이 더 넓으면 알림 영역 앞에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `LeftEdge`: 가운데 정렬일 때 날씨 위젯 바로 오른쪽, 가장 왼쪽 끝에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `BeforeNotificationArea`: 항상 알림 영역 앞에 둡니다.<br>• `BeforeStartButton`: 시작 버튼 앞에 둡니다. 가운데 정렬이 아니면 `BeforeNotificationArea`로 동작합니다. |
 | `TrackTaskbarButtons`     | `true`                      | UI Automation으로 작업 표시줄 버튼 영역을 추적합니다.                                                                                        |
 | `TrackNotificationArea`   | `true`                      | 콘텐츠가 알림 영역을 침범하지 않도록 합니다.                                                                                                   |
 | `PreferredMonitorIdentity` | `0`                        | 어느 작업 표시줄에 호스팅할지 선택합니다. `0`이면 기본 작업 표시줄(`Shell_TrayWnd`)을 씁니다. `1`이면 첫 번째 보조 모니터의 작업 표시줄(`Shell_SecondaryTrayWnd`), `2`면 그 다음, 화면 왼쪽부터 오른쪽 순서로 매핑됩니다. 요청한 보조 모니터의 작업 표시줄이 없으면 기본 작업 표시줄로 폴백합니다. |
