@@ -14,8 +14,6 @@ public interface ITaskbarHostPlatformAdapter
 
     void ApplyContentBounds(double maxWidth, double width, double height);
 
-    void CloseWindow();
-
     void RunOnDispatcher(Action action);
 
     ITaskbarHostTimer CreateTimer(TimeSpan interval, Action tick);

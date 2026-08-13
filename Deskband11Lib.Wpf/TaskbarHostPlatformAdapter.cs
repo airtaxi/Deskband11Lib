@@ -81,8 +81,6 @@ internal sealed class TaskbarHostPlatformAdapter(Window window, FrameworkElement
         contentElement.Height = height;
     }
 
-    public void CloseWindow() => window.Close();
-
     public void RunOnDispatcher(Action action)
     {
         if (window.Dispatcher.CheckAccess()) action();

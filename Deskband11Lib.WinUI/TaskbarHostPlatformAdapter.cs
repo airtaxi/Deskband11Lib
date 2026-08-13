@@ -107,8 +107,6 @@ internal sealed class TaskbarHostPlatformAdapter(Window window, FrameworkElement
         contentElement.Height = height;
     }
 
-    public void CloseWindow() => window.Close();
-
     public void RunOnDispatcher(Action action) => window.DispatcherQueue.TryEnqueue(() => action());
 
     public ITaskbarHostTimer CreateTimer(TimeSpan interval, Action tick) => new TaskbarHostTimer(window.DispatcherQueue, interval, tick);
