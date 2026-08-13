@@ -1,32 +1,43 @@
-﻿using Microsoft.UI.Xaml;
+﻿using Deskband11Lib.WinUI;
+using Microsoft.UI.Xaml;
 
 namespace Deskband11Lib.WinUI.Sample;
 
 public partial class App : Application
 {
-    private MainWindow? _window;
+    private static MainWindow? s_mainWindow;
 
     public App() => InitializeComponent();
 
-    protected override async void OnLaunched(LaunchActivatedEventArgs args) => await InitializeMainWindow();
+    protected override async void OnLaunched(LaunchActivatedEventArgs args) => await InitializeMainWindowAsync();
 
-    private async Task InitializeMainWindow()
+    private static async Task InitializeMainWindowAsync()
     {
-        var window = new MainWindow();
-        _window = window;
-        window.TaskbarContentHost.TaskbarWindowRecreated += OnTaskbarContentHostTaskbarWindowRecreated;
+        var mainWindow = new MainWindow();
+        s_mainWindow = mainWindow;
+        mainWindow.TaskbarContentHost.TaskbarWindowRecreationRequired += OnTaskbarContentHostTaskbarWindowRecreationRequired;
 
-        await window.PrepareTaskbarContentAsync();
-        window.Activate();
+        await mainWindow.PrepareTaskbarContentAsync();
+        mainWindow.Activate();
     }
 
-    private async void OnTaskbarContentHostTaskbarWindowRecreated(object? sender, EventArgs e)
+    // The hosted window is recreated when Explorer restarts, the monitor is disconnected, or the system DPI changes,
+    // so the main window must be recreated to attach to the new taskbar.
+    private static async void OnTaskbarContentHostTaskbarWindowRecreationRequired(object? sender, EventArgs e)
     {
-        // TaskbarContentHost clears its TaskbarWindowRecreated handlers during disposal, but unsubscribe explicitly to prevent leaks.
-        _window?.TaskbarContentHost.TaskbarWindowRecreated -= OnTaskbarContentHostTaskbarWindowRecreated;
-        // The taskbar has already disposed the hosted window. Do not call _window.Close(); it can throw an unrecoverable ExecutionEngineException.
+        var mainWindow = s_mainWindow;
+        if (mainWindow is not null) ReleaseMainWindow(mainWindow);
 
-        await Task.Delay(1000); // Wait for the taskbar icon animation to settle.
-        await InitializeMainWindow();
+        // Wait for the taskbar to be ready before recreating the main window.
+        await Task.Delay(1000);
+        await InitializeMainWindowAsync();
+
+        if (mainWindow?.IsWindowAlive() == true) mainWindow.Close();
+    }
+
+    private static void ReleaseMainWindow(MainWindow mainWindow)
+    {
+        mainWindow.TaskbarContentHost.Dispose();
+        if (ReferenceEquals(s_mainWindow, mainWindow)) s_mainWindow = null;
     }
 }
