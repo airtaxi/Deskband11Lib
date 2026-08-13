@@ -43,7 +43,7 @@ public class TaskbarContentHostBase : IDisposable
         _platformAdapter = platformAdapter;
         _options = options ?? new TaskbarContentHostOptions();
         _effectiveMonitorIdentity = _options.PreferredMonitorIdentity;
-        _taskbarWindowMonitorService = new TaskbarWindowMonitorService(() => _effectiveMonitorIdentity, () => _options.PreferredMonitorIdentity, value => _effectiveMonitorIdentity = value, () => _options.HighRefreshRateMode);
+        _taskbarWindowMonitorService = new TaskbarWindowMonitorService(() => _effectiveMonitorIdentity, () => _options.PreferredMonitorIdentity, value => _effectiveMonitorIdentity = value, () => _options.HighRefreshRateMode, () => _windowHandle);
         _taskbarLayoutCalculator = new TaskbarLayoutCalculator(_taskbarWindowLocator, _options, _taskbarButtonReader, () => _effectiveMonitorIdentity);
         _layoutRefreshTimer = _platformAdapter.CreateTimer(_options.LayoutRefreshInterval, OnLayoutRefreshTimerTick);
         _layoutAnimationTimer = _platformAdapter.CreateTimer(TimeSpan.FromMilliseconds(16), OnLayoutAnimationTimerTick);
@@ -51,11 +51,14 @@ public class TaskbarContentHostBase : IDisposable
         _taskbarWindowMonitorService.TaskbarWindowDisappeared += OnTaskbarWindowMonitorServiceTaskbarWindowDisappeared;
         _taskbarWindowMonitorService.PreferredMonitorRestored += OnTaskbarWindowMonitorServicePreferredMonitorRestored;
         _taskbarWindowMonitorService.RefreshRateChanged += OnTaskbarWindowMonitorServiceRefreshRateChanged;
+        _taskbarWindowMonitorService.DpiMismatchDetected += OnTaskbarWindowMonitorServiceDpiMismatchDetected;
     }
 
     public event EventHandler? TaskbarWindowRecreated;
 
     public event EventHandler? TaskbarWindowDisappeared;
+
+    public event EventHandler? TaskbarDpiChanged;
 
     public bool IsAttached { get; private set; }
 
@@ -191,8 +194,10 @@ public class TaskbarContentHostBase : IDisposable
         _taskbarWindowMonitorService.TaskbarWindowDisappeared -= OnTaskbarWindowMonitorServiceTaskbarWindowDisappeared;
         _taskbarWindowMonitorService.PreferredMonitorRestored -= OnTaskbarWindowMonitorServicePreferredMonitorRestored;
         _taskbarWindowMonitorService.RefreshRateChanged -= OnTaskbarWindowMonitorServiceRefreshRateChanged;
+        _taskbarWindowMonitorService.DpiMismatchDetected -= OnTaskbarWindowMonitorServiceDpiMismatchDetected;
         TaskbarWindowRecreated = null;
         TaskbarWindowDisappeared = null;
+        TaskbarDpiChanged = null;
 
         _slotRegistry.Dispose();
         _taskbarWindowMonitorService.Dispose();
@@ -446,6 +451,21 @@ public class TaskbarContentHostBase : IDisposable
         {
             if (_isDisposed || !IsAttached) return;
             UpdateAnimationTimerInterval(refreshRateHz);
+        });
+    }
+
+    private void OnTaskbarWindowMonitorServiceDpiMismatchDetected(object? sender, EventArgs e)
+    {
+        if (_isDisposed || !IsAttached) return;
+
+        _platformAdapter.RunOnDispatcher(() =>
+        {
+            if (_isDisposed || !IsAttached) return;
+
+            // The hosted window is still alive, so hide it before detaching to prevent it from flashing as a top-level window.
+            _ = PInvoke.ShowWindow(_windowHandle, SHOW_WINDOW_CMD.SW_HIDE);
+            Detach();
+            TaskbarDpiChanged?.Invoke(this, EventArgs.Empty);
         });
     }
 

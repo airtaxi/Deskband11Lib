@@ -5,6 +5,7 @@ GetParent
 GetWindowRect
 GetWindowThreadProcessId
 GetDpiForWindow
+ShowWindow
 MonitorFromWindow
 GetMonitorInfoW
 MONITORINFOEXW

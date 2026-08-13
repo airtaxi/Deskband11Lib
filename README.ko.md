@@ -98,6 +98,17 @@ host.TaskbarWindowRecreated += async (_, _) =>
 };
 ```
 
+### DPI 변경
+
+시스템 DPI가 바뀌면 작업 표시줄은 새 DPI로 넘어가는데 호스팅된 창은 예전 DPI를 그대로 물고 있는 경우가 있습니다. 이러면 위젯 위치가 어긋납니다. Deskband11Lib는 작업 표시줄과 호스팅 창의 DPI를 주기적으로 비교하다가 값이 달라지면 창을 숨기고 분리한 뒤 `TaskbarDpiChanged`를 발생시킵니다. 이 이벤트에서 창을 새로 만들어 붙이면 새 DPI에 맞춰 다시 배치됩니다.
+
+```csharp
+host.TaskbarDpiChanged += async (_, _) =>
+{
+    await RecreateMainWindowAsync();
+};
+```
+
 ### 보조 모니터 연결 해제
 
 위젯을 붙여 둔 보조 모니터의 연결이 끊기면 작업 표시줄이 자식 창을 파괴하고, 라이브러리는 `TaskbarWindowDisappeared`를 발생시킵니다. `TaskbarWindowRecreated`와 마찬가지로 이 이벤트에서 창을 다시 만들어 붙이면 됩니다. 그러면 선호 모니터를 쓸 수 없는 동안 새 호스트가 기본 작업 표시줄로 폴백합니다.

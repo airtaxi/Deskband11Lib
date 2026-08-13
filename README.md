@@ -98,6 +98,17 @@ host.TaskbarWindowRecreated += async (_, _) =>
 };
 ```
 
+### DPI Change
+
+When the system DPI changes, the hosted window can keep its old DPI while the taskbar moves to the new one, leaving the widget misaligned. Deskband11Lib polls the taskbar and hosted window DPI values and, on mismatch, hides and detaches the hosted window, then raises `TaskbarDpiChanged` so the application can rebuild it with the new DPI:
+
+```csharp
+host.TaskbarDpiChanged += async (_, _) =>
+{
+    await RecreateMainWindowAsync();
+};
+```
+
 ### Secondary Monitor Disconnection
 
 If the monitor you pinned the widget to is disconnected, the taskbar destroys the hosted child window and the library raises `TaskbarWindowDisappeared`. Recreate the window in that handler, the same way you would for `TaskbarWindowRecreated`. The new host attaches to the primary taskbar until the preferred monitor is back:

@@ -13,19 +13,22 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
     private readonly Func<int> _getPreferredMonitorIdentity;
     private readonly Action<int> _setEffectiveMonitorIdentity;
     private readonly Func<bool> _isHighRefreshRateModeEnabled;
+    private readonly Func<HWND> _getHostedWindowHandle;
     private readonly Lock _gate = new();
     private readonly Timer _pollingTimer;
     private HWND _lastTaskbarWindow;
     private int _lastRefreshRateHz;
+    private bool _lastDpiMismatch;
     private bool _isStarted;
     private bool _isDisposed;
 
-    public TaskbarWindowMonitorService(Func<int> getEffectiveMonitorIdentity, Func<int> getPreferredMonitorIdentity, Action<int> setEffectiveMonitorIdentity, Func<bool> isHighRefreshRateModeEnabled)
+    public TaskbarWindowMonitorService(Func<int> getEffectiveMonitorIdentity, Func<int> getPreferredMonitorIdentity, Action<int> setEffectiveMonitorIdentity, Func<bool> isHighRefreshRateModeEnabled, Func<HWND> getHostedWindowHandle)
     {
         _getEffectiveMonitorIdentity = getEffectiveMonitorIdentity;
         _getPreferredMonitorIdentity = getPreferredMonitorIdentity;
         _setEffectiveMonitorIdentity = setEffectiveMonitorIdentity;
         _isHighRefreshRateModeEnabled = isHighRefreshRateModeEnabled;
+        _getHostedWindowHandle = getHostedWindowHandle;
         _pollingTimer = new Timer(OnPollingTimerTick, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
 
@@ -37,6 +40,8 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
 
     public event Action<int>? RefreshRateChanged;
 
+    public event EventHandler? DpiMismatchDetected;
+
     public void Start()
     {
         lock (_gate)
@@ -45,6 +50,7 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
 
             _lastTaskbarWindow = ResolveTaskbarWindow();
             _lastRefreshRateHz = 0;
+            _lastDpiMismatch = false;
             _pollingTimer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
             _isStarted = true;
         }
@@ -96,6 +102,7 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
         }
 
         CheckRefreshRate();
+        CheckDpiMismatch();
     }
 
     private bool TryRestorePreferredMonitor()
@@ -147,5 +154,17 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
 
         _lastRefreshRateHz = refreshRateHz;
         RefreshRateChanged?.Invoke(refreshRateHz);
+    }
+
+    private void CheckDpiMismatch()
+    {
+        var taskbarDpi = _lastTaskbarWindow.IsNull ? 0 : PInvoke.GetDpiForWindow(_lastTaskbarWindow);
+        var hostedWindow = _getHostedWindowHandle();
+        var hostedWindowDpi = hostedWindow.IsNull ? 0 : PInvoke.GetDpiForWindow(hostedWindow);
+        var hasDpiMismatch = taskbarDpi > 0 && hostedWindowDpi > 0 && taskbarDpi != hostedWindowDpi;
+        if (hasDpiMismatch == _lastDpiMismatch) return;
+
+        _lastDpiMismatch = hasDpiMismatch;
+        if (hasDpiMismatch) DpiMismatchDetected?.Invoke(this, EventArgs.Empty);
     }
 }
