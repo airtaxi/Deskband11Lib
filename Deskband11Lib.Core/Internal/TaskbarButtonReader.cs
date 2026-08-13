@@ -39,6 +39,15 @@ internal sealed partial class TaskbarButtonReader : IDisposable
         }
     }
 
+    public bool TryGetCachedTaskbarButtonGeometry(out TaskbarButtonGeometry geometry)
+    {
+        lock (_refreshLock)
+        {
+            geometry = _cachedGeometry;
+            return _hasCachedGeometry;
+        }
+    }
+
     public Task RefreshAsync(HWND taskbarWindow, RECT searchRectangle)
     {
         if (!TryBeginRefresh()) return Task.CompletedTask;

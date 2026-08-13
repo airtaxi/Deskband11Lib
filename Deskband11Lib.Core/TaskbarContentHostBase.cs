@@ -12,6 +12,8 @@ namespace Deskband11Lib.Core;
 public class TaskbarContentHostBase : IDisposable
 {
     private static double? s_lastScaleFactor;
+
+    private static readonly TimeSpan ButtonMeasurementTimeout = TimeSpan.FromSeconds(15);
     private readonly ITaskbarHostPlatformAdapter _platformAdapter;
     private readonly TaskbarContentHostOptions _options;
     private readonly TaskbarWindowLocator _taskbarWindowLocator = new();
@@ -31,6 +33,7 @@ public class TaskbarContentHostBase : IDisposable
     private long _layoutAnimationStartTimestamp;
     private TaskbarSlotInfo? _ownSlot;
     private TaskbarContentPlacement _lastResolvedPlacement;
+    private bool _requiresReparenting;
     private bool _hasAppliedLayoutSnapshot;
     private bool _isApplyingLayoutSnapshot;
     private bool _isDisposed;
@@ -75,7 +78,6 @@ public class TaskbarContentHostBase : IDisposable
 
         await WaitForTaskbarWindowAsync();
         AttachCore(true);
-        await RefreshTaskbarButtonMeasurementAsync();
         RefreshLayout();
         _layoutRefreshTimer.Start();
     }
@@ -86,14 +88,26 @@ public class TaskbarContentHostBase : IDisposable
 
         await Task.Run(async () =>
         {
-            while (!IsTaskbarWindowAvailable())
+            var startTimestamp = Stopwatch.GetTimestamp();
+            while (!Volatile.Read(ref _isDisposed))
             {
+                if (IsTaskbarWindowAvailable()) return;
+                if (_options.TrackTaskbarButtons && Stopwatch.GetElapsedTime(startTimestamp) >= ButtonMeasurementTimeout && TryRefreshTaskbarWindow()) return;
                 await Task.Delay(TimeSpan.FromSeconds(1));
             }
         });
     }
 
     private bool IsTaskbarWindowAvailable()
+    {
+        if (!TryRefreshTaskbarWindow()) return false;
+        if (!_options.TrackTaskbarButtons) return true;
+
+        _ = _taskbarLayoutCalculator.RefreshTaskbarButtonMeasurementAsync();
+        return _taskbarButtonReader.TryGetCachedTaskbarButtonGeometry(out var geometry) && (geometry.StartButton.IsValid || geometry.TaskbarButtonsGroup.IsValid);
+    }
+
+    private bool TryRefreshTaskbarWindow()
     {
         if (_taskbarWindowLocator.TryRefresh(_effectiveMonitorIdentity)) return true;
         if (_effectiveMonitorIdentity == 0) return false;
@@ -125,12 +139,15 @@ public class TaskbarContentHostBase : IDisposable
 
         IsAttached = false;
         _hasAppliedLayoutSnapshot = false;
+        _requiresReparenting = false;
     }
 
     public void RefreshLayout()
     {
         ThrowIfDisposed();
         if (!IsAttached) return;
+
+        if (_requiresReparenting) TryReparentToTaskbar();
 
         ApplyHostedWindowStyle();
 
@@ -195,6 +212,7 @@ public class TaskbarContentHostBase : IDisposable
         _originalParentWindow = PInvoke.GetParent(_windowHandle);
         _originalWindowStyle = NativeWindowMethods.GetWindowStyle(_windowHandle);
         PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
+        _requiresReparenting = PInvoke.GetParent(_windowHandle) != _taskbarWindowLocator.TaskbarWindow;
         ApplyHostedWindowStyle();
 
         _ownSlot = _slotRegistry.Register(_windowHandle, _options.PreferredWidth, _options.Placement, _effectiveMonitorIdentity, _options.ManualSlotPriority, _options.AllowFixedSlotResize, _taskbarWindowLocator.TaskbarWindow);
@@ -214,6 +232,25 @@ public class TaskbarContentHostBase : IDisposable
         _lastResolvedPlacement = resolvedPlacement;
         _ownSlot = _ownSlot.Value with { ActualPlacement = resolvedPlacement };
         _slotRegistry.UpdateActualPlacement(_windowHandle, resolvedPlacement);
+    }
+
+    private void TryReparentToTaskbar()
+    {
+        if (_requiresReparenting && PInvoke.GetParent(_windowHandle) == _taskbarWindowLocator.TaskbarWindow)
+        {
+            _requiresReparenting = false;
+            return;
+        }
+
+        if (!TryRefreshTaskbarWindow()) return;
+
+        _ = PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
+        if (PInvoke.GetParent(_windowHandle) == _taskbarWindowLocator.TaskbarWindow)
+        {
+            _requiresReparenting = false;
+            ApplyHostedWindowStyle();
+            RefreshWindowFrame();
+        }
     }
 
     private void ApplyHostedWindowStyle()
@@ -323,8 +360,6 @@ public class TaskbarContentHostBase : IDisposable
         ApplyHostedWindowStyle();
     }
 
-    private async Task RefreshTaskbarButtonMeasurementAsync() => await _taskbarLayoutCalculator.RefreshTaskbarButtonMeasurementAsync();
-
     private double GetScaleFactor()
     {
         var dpi = _windowHandle.IsNull ? 0 : PInvoke.GetDpiForWindow(_windowHandle);
@@ -353,7 +388,15 @@ public class TaskbarContentHostBase : IDisposable
     {
         if (_isDisposed || !IsAttached) return;
 
-        _platformAdapter.RunOnDispatcher(() => TaskbarWindowRecreated?.Invoke(this, EventArgs.Empty));
+        _platformAdapter.RunOnDispatcher(() =>
+        {
+            if (_isDisposed || !IsAttached) return;
+
+            _requiresReparenting = true;
+            _layoutRefreshTimer.Start();
+            RefreshLayout();
+            TaskbarWindowRecreated?.Invoke(this, EventArgs.Empty);
+        });
     }
 
     private void OnTaskbarWindowMonitorServiceTaskbarWindowDisappeared(object? sender, EventArgs e)
@@ -382,6 +425,7 @@ public class TaskbarContentHostBase : IDisposable
             if (!_taskbarWindowLocator.TryRefresh(_effectiveMonitorIdentity)) return;
 
             PInvoke.SetParent(_windowHandle, _taskbarWindowLocator.TaskbarWindow);
+            _requiresReparenting = PInvoke.GetParent(_windowHandle) != _taskbarWindowLocator.TaskbarWindow;
             ApplyHostedWindowStyle();
 
             if (_ownSlot.HasValue)
