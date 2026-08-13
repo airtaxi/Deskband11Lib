@@ -140,7 +140,8 @@ public class TaskbarContentHostBase : IDisposable
         _ = PInvoke.SetWindowRgn(_windowHandle, HRGN.Null, true);
         NativeWindowMethods.SetWindowStyle(_windowHandle, _originalWindowStyle);
         PInvoke.SetParent(_windowHandle, _originalParentWindow);
-        _platformAdapter.RestoreWindowAfterChildHosting();
+        // The window may already be destroyed (Explorer restart, monitor disconnection), in which case there is nothing to restore.
+        if (PInvoke.IsWindow(_windowHandle)) _platformAdapter.RestoreWindowAfterChildHosting();
 
         IsAttached = false;
         _hasAppliedLayoutSnapshot = false;
