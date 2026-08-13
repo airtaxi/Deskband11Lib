@@ -43,7 +43,7 @@ public class TaskbarContentHostBase : IDisposable
         _platformAdapter = platformAdapter;
         _options = options ?? new TaskbarContentHostOptions();
         _effectiveMonitorIdentity = _options.PreferredMonitorIdentity;
-        _taskbarWindowMonitorService = new TaskbarWindowMonitorService(() => _effectiveMonitorIdentity, () => _options.PreferredMonitorIdentity, value => _effectiveMonitorIdentity = value, () => _options.HighRefreshRateMode, () => _windowHandle);
+        _taskbarWindowMonitorService = new TaskbarWindowMonitorService(() => _effectiveMonitorIdentity, () => _options.PreferredMonitorIdentity, value => _effectiveMonitorIdentity = value, () => _options.HighRefreshRateMode);
         _taskbarLayoutCalculator = new TaskbarLayoutCalculator(_taskbarWindowLocator, _options, _taskbarButtonReader, () => _effectiveMonitorIdentity);
         _layoutRefreshTimer = _platformAdapter.CreateTimer(_options.LayoutRefreshInterval, OnLayoutRefreshTimerTick);
         _layoutAnimationTimer = _platformAdapter.CreateTimer(TimeSpan.FromMilliseconds(16), OnLayoutAnimationTimerTick);

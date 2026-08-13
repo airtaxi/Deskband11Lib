@@ -13,22 +13,21 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
     private readonly Func<int> _getPreferredMonitorIdentity;
     private readonly Action<int> _setEffectiveMonitorIdentity;
     private readonly Func<bool> _isHighRefreshRateModeEnabled;
-    private readonly Func<HWND> _getHostedWindowHandle;
     private readonly Lock _gate = new();
     private readonly Timer _pollingTimer;
     private HWND _lastTaskbarWindow;
     private int _lastRefreshRateHz;
+    private int _taskbarBaselineDpi;
     private bool _lastDpiMismatch;
     private bool _isStarted;
     private bool _isDisposed;
 
-    public TaskbarWindowMonitorService(Func<int> getEffectiveMonitorIdentity, Func<int> getPreferredMonitorIdentity, Action<int> setEffectiveMonitorIdentity, Func<bool> isHighRefreshRateModeEnabled, Func<HWND> getHostedWindowHandle)
+    public TaskbarWindowMonitorService(Func<int> getEffectiveMonitorIdentity, Func<int> getPreferredMonitorIdentity, Action<int> setEffectiveMonitorIdentity, Func<bool> isHighRefreshRateModeEnabled)
     {
         _getEffectiveMonitorIdentity = getEffectiveMonitorIdentity;
         _getPreferredMonitorIdentity = getPreferredMonitorIdentity;
         _setEffectiveMonitorIdentity = setEffectiveMonitorIdentity;
         _isHighRefreshRateModeEnabled = isHighRefreshRateModeEnabled;
-        _getHostedWindowHandle = getHostedWindowHandle;
         _pollingTimer = new Timer(OnPollingTimerTick, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
 
@@ -50,12 +49,14 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
 
             _lastTaskbarWindow = ResolveTaskbarWindow();
             _lastRefreshRateHz = 0;
+            _taskbarBaselineDpi = GetTaskbarDpi();
             _lastDpiMismatch = false;
             _pollingTimer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
             _isStarted = true;
         }
 
         CheckRefreshRate();
+        CheckDpiMismatch();
     }
 
     public void Stop()
@@ -89,6 +90,7 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
             {
                 var wasPresent = !_lastTaskbarWindow.IsNull;
                 _lastTaskbarWindow = taskbarWindow;
+                _taskbarBaselineDpi = GetTaskbarDpi();
 
                 if (taskbarWindow.IsNull)
                 {
@@ -123,6 +125,7 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
             {
                 _setEffectiveMonitorIdentity(preferredMonitorIdentity);
                 _lastTaskbarWindow = previousWindow;
+                _taskbarBaselineDpi = GetTaskbarDpi();
                 PreferredMonitorRestored?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -158,13 +161,13 @@ internal sealed partial class TaskbarWindowMonitorService : IDisposable
 
     private void CheckDpiMismatch()
     {
-        var taskbarDpi = _lastTaskbarWindow.IsNull ? 0 : PInvoke.GetDpiForWindow(_lastTaskbarWindow);
-        var hostedWindow = _getHostedWindowHandle();
-        var hostedWindowDpi = hostedWindow.IsNull ? 0 : PInvoke.GetDpiForWindow(hostedWindow);
-        var hasDpiMismatch = taskbarDpi > 0 && hostedWindowDpi > 0 && taskbarDpi != hostedWindowDpi;
+        var taskbarDpi = GetTaskbarDpi();
+        var hasDpiMismatch = taskbarDpi > 0 && _taskbarBaselineDpi > 0 && taskbarDpi != _taskbarBaselineDpi;
         if (hasDpiMismatch == _lastDpiMismatch) return;
 
         _lastDpiMismatch = hasDpiMismatch;
         if (hasDpiMismatch) DpiMismatchDetected?.Invoke(this, EventArgs.Empty);
     }
+
+    private int GetTaskbarDpi() => _lastTaskbarWindow.IsNull ? 0 : (int)PInvoke.GetDpiForWindow(_lastTaskbarWindow);
 }
