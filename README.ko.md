@@ -260,6 +260,8 @@ dotnet publish Deskband11Lib.WinUI.Sample\Deskband11Lib.WinUI.Sample.csproj -c R
 
 [zadjii](https://github.com/zadjii)와 [Deskband11](https://github.com/zadjii/Deskband11)에 감사드립니다. Windows 11 작업 표시줄 안에 앱 콘텐츠를 올린다는 핵심 아이디어는 해당 프로젝트에서 시작되었고 Deskband11Lib도 그 훌륭한 발상에서 큰 영감을 받았습니다.
 
+Deskband11Lib는 [FOSS for All(포스포올)](https://fossforall.org)의 [Microgrants 2026](https://forum.fossforall.org/t/foss-for-all-microgrants-2026/162) 지원 사업으로부터 후원을 받고 있습니다. 자유 오픈소스 생태계를 지원해 주시는 FOSS for All과 기부자 여러분께 감사드립니다.
+
 ## 라이선스
 
 Deskband11Lib는 [MIT License](LICENSE)로 배포됩니다.

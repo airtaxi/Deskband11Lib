@@ -260,6 +260,8 @@ dotnet publish Deskband11Lib.WinUI.Sample\Deskband11Lib.WinUI.Sample.csproj -c R
 
 Special thanks to [zadjii](https://github.com/zadjii) and [Deskband11](https://github.com/zadjii/Deskband11). The core idea of bringing application content into the Windows 11 taskbar comes from that project, which inspired Deskband11Lib.
 
+Deskband11Lib is supported by the [FOSS for All](https://fossforall.org) [Microgrants 2026](https://forum.fossforall.org/t/foss-for-all-microgrants-2026/162) program. Thanks to FOSS for All and every donor who helps sustain the free and open source ecosystem.
+
 ## License
 
 Deskband11Lib is licensed under the [MIT License](LICENSE).
