@@ -1,6 +1,4 @@
-![Deskband11Lib 아이콘](https://raw.githubusercontent.com/airtaxi/Deskband11Lib/master/.github/icon.png)
-
-# Deskband11Lib
+![Deskband11Lib](https://raw.githubusercontent.com/airtaxi/Deskband11Lib/master/.github/banner.ko.png)
 
 [![NuGet WinUI](https://img.shields.io/nuget/v/Deskband11Lib.WinUI.svg)](https://www.nuget.org/packages/Deskband11Lib.WinUI)
 [![NuGet WPF](https://img.shields.io/nuget/v/Deskband11Lib.Wpf.svg)](https://www.nuget.org/packages/Deskband11Lib.Wpf)
