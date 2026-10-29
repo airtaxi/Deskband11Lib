@@ -1,0 +1,44 @@
+:root {
+  color-scheme: light dark;
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
+  --text-xs: 0.8125rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.25rem; --text-xl: 1.5625rem; --text-2xl: 1.953rem; --text-3xl: 2.441rem;
+  --text-display-s: clamp(2.25rem, 4vw + 0.5rem, 3.75rem); --text-display: clamp(2.75rem, 5vw + 1rem, 5.25rem);
+  --text-section: clamp(2rem, 2.5vw + 1rem, 3.5rem); --text-title: clamp(1.25rem, 0.75vw + 0.875rem, 1.625rem); --text-lead: clamp(1.125rem, 0.35vw + 1rem, 1.375rem);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
+  --color-error: oklch(52% 0.19 27); --color-success: oklch(50% 0.12 150);
+  --container: 1440px; --gutter: 64px; --gap-columns: 32px; --section-gap-s: 120px; --section-gap: 144px; --section-gap-l: 176px;
+  --z-base: 1; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200; --z-sticky-nav: 300; --z-modal: 400; --z-toast: 500; --z-tooltip: 600;
+
+  --color-paper: oklch(99.3% 0.002 255); --color-paper-2: oklch(97% 0.005 255); --color-paper-3: oklch(94% 0.008 255);
+  --color-raised: oklch(99.3% 0.002 255);
+  --color-ink: oklch(21% 0.014 255); --color-ink-2: oklch(38% 0.014 255); --color-muted: oklch(50% 0.012 255);
+  --color-rule: oklch(90% 0.007 255); --color-rule-strong: oklch(82% 0.01 255);
+  --color-accent: oklch(49.1% 0.16 255); --color-accent-hover: oklch(44% 0.14 255); --color-accent-ink: oklch(99.3% 0.002 255); --color-focus: oklch(52% 0.18 258);
+
+  --color-taskbar: oklch(24.8% 0 0); --color-taskbar-edge: oklch(37.5% 0 0);
+  --color-bar-block: oklch(36% 0.006 255); --color-bar-ink: oklch(93% 0.004 255);
+  --color-bar-accent: oklch(76.7% 0.101 251); --color-bar-accent-ink: oklch(18% 0.03 255); --color-bar-stretch: oklch(33% 0.045 255);
+  --color-code-ink: oklch(92% 0.005 255); --color-code-keyword: oklch(76.7% 0.101 251); --color-code-type: oklch(78% 0.11 180); --color-code-number: oklch(84% 0.06 135);
+
+  --font-display: "Segoe UI Variable Display", "Segoe UI", "Pretendard Variable", Pretendard, "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-body: "Segoe UI Variable Text", "Segoe UI", "Pretendard Variable", Pretendard, "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-outlier: "Cascadia Code", "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
+  --display-weight: 600; --body-weight: 400;
+  --radius-card: 10px; --radius-control: 6px; --radius-inner: 4px; --radius-pill: 999px; --rule-hair: 1px;
+  --shadow-card: none; --shadow-raised: 0 1px 2px oklch(20% 0.01 255 / 0.12);
+  --tracking-display: -0.025em;
+  --nav-height: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: oklch(18% 0.009 255); --color-paper-2: oklch(21.5% 0.01 255); --color-paper-3: oklch(25% 0.011 255);
+    --color-raised: oklch(29% 0.012 255);
+    --color-ink: oklch(94% 0.006 255); --color-ink-2: oklch(81% 0.008 255); --color-muted: oklch(70% 0.01 255);
+    --color-rule: oklch(29% 0.01 255); --color-rule-strong: oklch(38% 0.012 255);
+    --color-accent: oklch(76.7% 0.101 251); --color-accent-hover: oklch(82% 0.09 251); --color-accent-ink: oklch(18% 0.03 255); --color-focus: oklch(78% 0.11 252);
+    --body-weight: 350;
+    --shadow-raised: none;
+  }
+}

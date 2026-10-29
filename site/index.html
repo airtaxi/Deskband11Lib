@@ -40,8 +40,8 @@
     <div class="container header-inner">
       <a class="wordmark" href="#top"><img src="favicon.svg" width="24" height="24" alt="">Deskband11Lib</a>
       <nav class="site-nav" aria-label="Sections" data-label-en="Sections" data-label-ko="섹션">
-        <a href="#quick-start"><span lang="en">Quick start</span><span lang="ko">시작하기</span></a>
         <a href="#placement"><span lang="en">Placement</span><span lang="ko">배치</span></a>
+        <a href="#quick-start"><span lang="en">Quick start</span><span lang="ko">시작하기</span></a>
         <a href="#instances"><span lang="en">Multiple instances</span><span lang="ko">다중 인스턴스</span></a>
         <a href="#options"><span lang="en">Options</span><span lang="ko">옵션</span></a>
         <a href="#packages"><span lang="en">Packages</span><span lang="ko">패키지</span></a>
@@ -60,132 +60,71 @@
 
   <main id="main">
     <section class="hero" id="top" aria-labelledby="hero-title">
-      <div class="container">
+      <div class="container hero-body">
         <h1 id="hero-title">
           <span lang="en">Host your own UI inside the Windows&nbsp;11 taskbar</span>
           <span lang="ko">Windows&nbsp;11 작업 표시줄 안에 직접 만든 UI를 띄워 보세요</span>
         </h1>
-        <p class="lead" lang="en">Deskband11Lib parents your window to the taskbar and fits it into the free space between the app buttons and the notification area. Use it for timers, media controls, build status, or anything else that should stay in view without opening a window.</p>
-        <p class="lead" lang="ko">Deskband11Lib는 앱 창을 작업 표시줄의 자식 창으로 붙이고, 앱 버튼과 알림 영역 사이에 남는 공간에 맞춰 크기를 조정합니다. 타이머, 미디어 컨트롤, 빌드 상태처럼 별도 창을 열지 않고도 늘 보여야 하는 기능에 활용할 수 있습니다.</p>
 
-        <div class="install">
-          <div class="segmented" role="group" aria-label="UI framework" data-label-en="UI framework" data-label-ko="UI 프레임워크">
-            <button type="button" data-set-framework="winui" aria-pressed="true">WinUI 3</button>
-            <button type="button" data-set-framework="wpf" aria-pressed="false">WPF</button>
+        <div class="hero-row">
+          <div class="hero-copy">
+            <p class="lead" lang="en">Deskband11Lib parents your window to the taskbar and fits it into the free space between the app buttons and the notification area. Use it for timers, media controls, build status, or anything else that should stay in view without opening a window.</p>
+            <p class="lead" lang="ko">Deskband11Lib는 앱 창을 작업 표시줄의 자식 창으로 붙이고, 앱 버튼과 알림 영역 사이에 남는 공간에 맞춰 크기를 조정합니다. 타이머, 미디어 컨트롤, 빌드 상태처럼 별도 창을 열지 않고도 늘 보여야 하는 기능에 활용할 수 있습니다.</p>
           </div>
-          <div class="command">
-            <code id="install-command">dotnet add package Deskband11Lib.WinUI</code>
-            <button type="button" class="copy-button" data-copy-target="install-command">
-              <span class="copy-idle" lang="en">Copy</span><span class="copy-idle" lang="ko">복사</span>
-              <span class="copy-done" lang="en">Copied</span><span class="copy-done" lang="ko">복사됨</span>
-            </button>
+
+          <div class="hero-act">
+            <div class="install">
+              <div class="segmented" role="group" aria-label="UI framework" data-label-en="UI framework" data-label-ko="UI 프레임워크">
+                <button type="button" data-set-framework="winui" aria-pressed="true">WinUI 3</button>
+                <button type="button" data-set-framework="wpf" aria-pressed="false">WPF</button>
+              </div>
+              <div class="command">
+                <code id="install-command">dotnet add package Deskband11Lib.WinUI</code>
+                <button type="button" class="copy-button" data-copy-target="install-command">
+                  <span class="copy-idle" lang="en">Copy</span><span class="copy-idle" lang="ko">복사</span>
+                  <span class="copy-done" lang="en">Copied</span><span class="copy-done" lang="ko">복사됨</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="hero-actions">
+              <a class="button button-primary" href="#quick-start"><span lang="en">Quick start</span><span lang="ko">시작하기</span></a>
+              <a class="button" href="https://github.com/airtaxi/Deskband11Lib"><span lang="en">Source on GitHub</span><span lang="ko">GitHub에서 소스 보기</span></a>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="hero-actions">
-          <a class="button button-primary" href="#quick-start"><span lang="en">Quick start</span><span lang="ko">시작하기</span></a>
-          <a class="button" href="https://github.com/airtaxi/Deskband11Lib"><span lang="en">Source on GitHub</span><span lang="ko">GitHub에서 소스 보기</span></a>
-        </div>
-
-        <figure class="taskbar-shot">
-          <div class="taskbar-shot-frame">
-            <img src="assets/taskbar-sample.png" width="2880" height="96"
-              alt="Windows 11 taskbar with the Deskband11Lib WinUI 3 sample between the app buttons and the notification area"
-              data-alt-en="Windows 11 taskbar with the Deskband11Lib WinUI 3 sample between the app buttons and the notification area"
-              data-alt-ko="앱 버튼과 알림 영역 사이에 Deskband11Lib WinUI 3 샘플이 표시된 Windows 11 작업 표시줄">
-          </div>
-          <div class="taskbar-shot-marker" aria-hidden="true"></div>
+      <figure class="taskbar-shot">
+        <div class="taskbar-shot-annotation">
           <figcaption>
-            <span lang="en">The WinUI 3 sample, placed before the notification area.</span>
-            <span lang="ko">알림 영역 앞에 배치된 WinUI 3 샘플입니다.</span>
+            <span lang="en">Media controls and system monitors, placed between the app buttons and the notification area.</span>
+            <span lang="ko">앱 버튼과 알림 영역 사이에 배치된 미디어 컨트롤과 시스템 모니터입니다.</span>
           </figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <section class="section" id="quick-start" aria-labelledby="quick-start-title">
-      <div class="container">
-        <h2 id="quick-start-title"><span lang="en">Quick start</span><span lang="ko">시작하기</span></h2>
-        <p class="section-intro" lang="en">Create a window, pass it and its root element to <code>TaskbarContentHost</code>, then attach it once the taskbar layout is ready. WinUI 3 and WPF share the same API; only the <code>Window</code> and <code>FrameworkElement</code> types come from different namespaces.</p>
-        <p class="section-intro" lang="ko">창을 만든 다음 창과 루트 요소를 <code>TaskbarContentHost</code>에 넘기고, 작업 표시줄 레이아웃이 준비되면 창을 붙입니다. WinUI 3와 WPF는 같은 API를 사용하며, <code>Window</code>와 <code>FrameworkElement</code> 타입의 네임스페이스만 다릅니다.</p>
-
-        <div class="code-group">
-          <div class="segmented" role="group" aria-label="UI framework" data-label-en="UI framework" data-label-ko="UI 프레임워크">
-            <button type="button" data-set-framework="winui" aria-pressed="true">WinUI 3</button>
-            <button type="button" data-set-framework="wpf" aria-pressed="false">WPF</button>
+          <div class="taskbar-shot-marker" aria-hidden="true"></div>
+        </div>
+        <div class="taskbar-band">
+          <div class="taskbar-shot-frame">
+            <img src="assets/taskbar-showcase.png" width="2230" height="64" fetchpriority="high"
+              alt="Windows 11 taskbar with two hosted widgets between the app buttons and the notification area"
+              data-alt-en="Windows 11 taskbar with two hosted widgets between the app buttons and the notification area"
+              data-alt-ko="앱 버튼과 알림 영역 사이에 위젯 두 개가 표시된 Windows 11 작업 표시줄">
           </div>
-<pre class="code" data-framework-panel="winui"><code><span class="k">using</span> Deskband11Lib.Core;
-<span class="k">using</span> Deskband11Lib.WinUI;
-
-<span class="k">var</span> window = <span class="k">new</span> <span class="t">MainWindow</span>();
-<span class="k">var</span> host = <span class="k">new</span> <span class="t">TaskbarContentHost</span>(window, rootElement, <span class="k">new</span> <span class="t">TaskbarContentHostOptions</span>
-{
-    PreferredWidth = <span class="n">360</span>,
-    PreferredHeight = <span class="n">48</span>
-});
-
-<span class="k">await</span> host.AttachWhenLayoutReadyAsync();
-window.Activate();</code></pre>
-<pre class="code" data-framework-panel="wpf" hidden><code><span class="k">using</span> Deskband11Lib.Core;
-<span class="k">using</span> Deskband11Lib.Wpf;
-
-<span class="k">var</span> window = <span class="k">new</span> <span class="t">MainWindow</span>();
-<span class="k">var</span> host = <span class="k">new</span> <span class="t">TaskbarContentHost</span>(window, rootElement, <span class="k">new</span> <span class="t">TaskbarContentHostOptions</span>
-{
-    PreferredWidth = <span class="n">360</span>,
-    PreferredHeight = <span class="n">48</span>
-});
-
-<span class="k">await</span> host.AttachWhenLayoutReadyAsync();
-window.Show();</code></pre>
         </div>
-
-        <h3><span lang="en">Recreate the window when the taskbar drops it</span><span lang="ko">창이 사라지면 다시 만들기</span></h3>
-        <p lang="en">An Explorer restart, a disconnected monitor, or a DPI change can destroy the hosted window or leave it misaligned. Handle <code>TaskbarWindowRecreationRequired</code>, build a new window, and attach a new host.</p>
-        <p lang="ko">Explorer가 재시작되거나, 모니터 연결이 끊기거나, DPI가 바뀌면 호스팅된 창이 사라지거나 위치가 어긋날 수 있습니다. <code>TaskbarWindowRecreationRequired</code> 이벤트에서 창을 새로 만들고 새 호스트를 붙이면 됩니다.</p>
-<pre class="code"><code>host.TaskbarWindowRecreationRequired += <span class="k">async</span> (_, _) =&gt; <span class="k">await</span> RecreateMainWindowAsync();</code></pre>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th><span lang="en">Event</span><span lang="ko">이벤트</span></th>
-                <th><span lang="en">Raised when</span><span lang="ko">발생 시점</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>TaskbarWindowRecreationRequired</code></td>
-                <td><span lang="en">Any of the cases below. One handler is enough for most apps.</span><span lang="ko">아래 모든 경우에 발생합니다. 대부분의 앱은 이 핸들러 하나로 충분합니다.</span></td>
-              </tr>
-              <tr>
-                <td><code>TaskbarWindowRecreated</code></td>
-                <td><span lang="en">Explorer restarted, or a disconnected monitor came back.</span><span lang="ko">Explorer가 재시작되었거나, 연결이 끊겼던 모니터가 다시 연결되었습니다.</span></td>
-              </tr>
-              <tr>
-                <td><code>TaskbarDpiChanged</code></td>
-                <td><span lang="en">The taskbar moved to a new DPI. The library hides and detaches the old window first.</span><span lang="ko">작업 표시줄의 DPI가 바뀌었습니다. 라이브러리가 기존 창을 먼저 숨기고 분리합니다.</span></td>
-              </tr>
-              <tr>
-                <td><code>TaskbarWindowDisappeared</code></td>
-                <td><span lang="en">The monitor hosting the widget was disconnected. The new host uses the primary taskbar until that monitor returns.</span><span lang="ko">위젯을 붙여 둔 모니터의 연결이 끊겼습니다. 그 모니터가 다시 연결될 때까지 새 호스트는 기본 작업 표시줄을 사용합니다.</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <p class="note" lang="en">The snippets show the shape of the API. For window lifetime, startup order, and framework-specific hosting, start from the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample">WinUI 3 sample</a> or the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample">WPF sample</a>, which also sets up a transparent borderless host window.</p>
-        <p class="note" lang="ko">위 코드는 API의 형태만 보여 줍니다. 창 수명 주기, 시작 순서, 프레임워크별 호스팅 처리는 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample">WinUI 3 샘플</a>이나 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample">WPF 샘플</a>에서 시작하시는 것을 권장합니다. WPF 샘플에는 테두리 없는 투명 호스트 창 설정도 들어 있습니다.</p>
-      </div>
+      </figure>
     </section>
 
-    <section class="section" id="placement" aria-labelledby="placement-title">
+    <section class="section section-placement" id="placement" aria-labelledby="placement-title">
       <div class="container">
-        <h2 id="placement-title"><span lang="en">Placement</span><span lang="ko">배치</span></h2>
-        <p class="section-intro" lang="en">UI Automation locates the Start button, the app buttons, the Widgets button, and the notification area. Content goes into one of the free gaps between them, chosen by the <code>Placement</code> option and the taskbar alignment, which is read from the <code>TaskbarAl</code> registry value.</p>
-        <p class="section-intro" lang="ko">UI Automation으로 시작 버튼, 앱 버튼, 위젯 버튼, 알림 영역의 위치를 찾습니다. 콘텐츠는 그 사이에 남는 공간 중 한 곳에 배치되며, 어느 공간을 쓸지는 <code>Placement</code> 옵션과 작업 표시줄 정렬에 따라 정해집니다. 작업 표시줄 정렬은 레지스트리의 <code>TaskbarAl</code> 값에서 읽습니다.</p>
+        <div class="section-head">
+          <h2 id="placement-title"><span lang="en">Placement</span><span lang="ko">배치</span></h2>
+          <div class="section-head-text">
+            <p class="section-intro" lang="en">UI Automation locates the Start button, the app buttons, the Widgets button, and the notification area. Content goes into one of the free gaps between them, chosen by the <code>Placement</code> option and the taskbar alignment, which is read from the <code>TaskbarAl</code> registry value.</p>
+            <p class="section-intro" lang="ko">UI Automation으로 시작 버튼, 앱 버튼, 위젯 버튼, 알림 영역의 위치를 찾습니다. 콘텐츠는 그 사이에 남는 공간 중 한 곳에 배치되며, 어느 공간을 쓸지는 <code>Placement</code> 옵션과 작업 표시줄 정렬에 따라 정해집니다. 작업 표시줄 정렬은 레지스트리의 <code>TaskbarAl</code> 값에서 읽습니다.</p>
+          </div>
+        </div>
 
-        <div class="demo" id="placement-demo">
+        <div class="demo demo-placement" id="placement-demo">
           <div class="demo-controls">
             <div class="control">
               <span class="control-label" id="alignment-label"><span lang="en">Taskbar alignment</span><span lang="ko">작업 표시줄 정렬</span></span>
@@ -210,20 +149,111 @@ window.Show();</code></pre>
               <div class="diagram-measures" data-diagram-measures></div>
             </div>
           </div>
-          <p class="demo-caption" data-diagram-caption aria-live="polite"></p>
-          <p class="demo-footnote" lang="en">Example layout: a 1920 px wide taskbar and the default content width of 360 px.</p>
-          <p class="demo-footnote" lang="ko">예시 레이아웃: 너비 1920px 작업 표시줄에 기본 너비 360px 콘텐츠를 배치한 경우입니다.</p>
+          <div class="demo-notes">
+            <p class="demo-caption" data-diagram-caption aria-live="polite"></p>
+            <div class="demo-footnotes">
+              <p class="demo-footnote" lang="en">Example layout: a 1920 px wide taskbar and the default content width of 360 px.</p>
+              <p class="demo-footnote" lang="ko">예시 레이아웃: 너비 1920px 작업 표시줄에 기본 너비 360px 콘텐츠를 배치한 경우입니다.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="instances" aria-labelledby="instances-title">
+    <section class="section section-quick-start" id="quick-start" aria-labelledby="quick-start-title">
       <div class="container">
-        <h2 id="instances-title"><span lang="en">Several instances in one area</span><span lang="ko">한 영역을 나눠 쓰는 여러 인스턴스</span></h2>
-        <p class="section-intro" lang="en">Instances that target the same area on the same monitor coordinate through a shared-memory slot registry and split the space without overlapping. Fixed instances, with a finite <code>PreferredWidth</code>, are served first in <code>ManualSlotPriority</code> order, then in arrival order. Stretch instances, with <code>PreferredWidth = double.MaxValue</code>, share whatever is left.</p>
-        <p class="section-intro" lang="ko">같은 모니터의 같은 영역을 대상으로 하는 인스턴스들은 공유 메모리 슬롯 레지스트리로 서로 조정하여 겹치지 않게 공간을 나눕니다. <code>PreferredWidth</code>가 유한한 Fixed 인스턴스가 <code>ManualSlotPriority</code> 순서, 그다음 도착 순서에 따라 먼저 너비를 받고, <code>PreferredWidth = double.MaxValue</code>인 Stretch 인스턴스들은 남은 공간을 똑같이 나눕니다.</p>
+        <div class="quick-start-grid">
+          <div class="quick-start-text">
+            <h2 id="quick-start-title"><span lang="en">Quick start</span><span lang="ko">시작하기</span></h2>
+            <p class="section-intro" lang="en">Create a window, pass it and its root element to <code>TaskbarContentHost</code>, then attach it once the taskbar layout is ready. WinUI 3 and WPF share the same API; only the <code>Window</code> and <code>FrameworkElement</code> types come from different namespaces.</p>
+            <p class="section-intro" lang="ko">창을 만든 다음 창과 루트 요소를 <code>TaskbarContentHost</code>에 넘기고, 작업 표시줄 레이아웃이 준비되면 창을 붙입니다. WinUI 3와 WPF는 같은 API를 사용하며, <code>Window</code>와 <code>FrameworkElement</code> 타입의 네임스페이스만 다릅니다.</p>
+            <p class="note" lang="en">The snippets show the shape of the API. For window lifetime, startup order, and framework-specific hosting, start from the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample">WinUI 3 sample</a> or the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample">WPF sample</a>, which also sets up a transparent borderless host window.</p>
+            <p class="note" lang="ko">위 코드는 API의 형태만 보여 줍니다. 창 수명 주기, 시작 순서, 프레임워크별 호스팅 처리는 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample">WinUI 3 샘플</a>이나 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample">WPF 샘플</a>에서 시작하시는 것을 권장합니다. WPF 샘플에는 테두리 없는 투명 호스트 창 설정도 들어 있습니다.</p>
+          </div>
 
-        <div class="demo" id="instances-demo">
+          <div class="code-group">
+            <div class="segmented" role="group" aria-label="UI framework" data-label-en="UI framework" data-label-ko="UI 프레임워크">
+              <button type="button" data-set-framework="winui" aria-pressed="true">WinUI 3</button>
+              <button type="button" data-set-framework="wpf" aria-pressed="false">WPF</button>
+            </div>
+<pre class="code" data-framework-panel="winui" tabindex="0" role="region" aria-label="WinUI 3 sample"><code><span class="k">using</span> Deskband11Lib.Core;
+<span class="k">using</span> Deskband11Lib.WinUI;
+
+<span class="k">var</span> window = <span class="k">new</span> <span class="t">MainWindow</span>();
+<span class="k">var</span> host = <span class="k">new</span> <span class="t">TaskbarContentHost</span>(window, rootElement, <span class="k">new</span> <span class="t">TaskbarContentHostOptions</span>
+{
+    PreferredWidth = <span class="n">360</span>,
+    PreferredHeight = <span class="n">48</span>
+});
+
+<span class="k">await</span> host.AttachWhenLayoutReadyAsync();
+window.Activate();</code></pre>
+<pre class="code" data-framework-panel="wpf" tabindex="0" role="region" aria-label="WPF sample" hidden><code><span class="k">using</span> Deskband11Lib.Core;
+<span class="k">using</span> Deskband11Lib.Wpf;
+
+<span class="k">var</span> window = <span class="k">new</span> <span class="t">MainWindow</span>();
+<span class="k">var</span> host = <span class="k">new</span> <span class="t">TaskbarContentHost</span>(window, rootElement, <span class="k">new</span> <span class="t">TaskbarContentHostOptions</span>
+{
+    PreferredWidth = <span class="n">360</span>,
+    PreferredHeight = <span class="n">48</span>
+});
+
+<span class="k">await</span> host.AttachWhenLayoutReadyAsync();
+window.Show();</code></pre>
+          </div>
+        </div>
+
+        <div class="recreate-grid">
+          <div class="recreate-text">
+            <h3><span lang="en">Recreate the window when the taskbar drops it</span><span lang="ko">창이 사라지면 다시 만들기</span></h3>
+            <p lang="en">An Explorer restart, a disconnected monitor, or a DPI change can destroy the hosted window or leave it misaligned. Handle <code>TaskbarWindowRecreationRequired</code>, build a new window, and attach a new host.</p>
+            <p lang="ko">Explorer가 재시작되거나, 모니터 연결이 끊기거나, DPI가 바뀌면 호스팅된 창이 사라지거나 위치가 어긋날 수 있습니다. <code>TaskbarWindowRecreationRequired</code> 이벤트에서 창을 새로 만들고 새 호스트를 붙이면 됩니다.</p>
+          </div>
+
+          <div class="recreate-body">
+<pre class="code code-line" tabindex="0" role="region" aria-label="Recreation handler"><code>host.TaskbarWindowRecreationRequired += <span class="k">async</span> (_, _) =&gt; <span class="k">await</span> RecreateMainWindowAsync();</code></pre>
+            <div class="table-wrap">
+              <table class="events-table">
+                <thead>
+                  <tr>
+                    <th><span lang="en">Event</span><span lang="ko">이벤트</span></th>
+                    <th><span lang="en">Raised when</span><span lang="ko">발생 시점</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>TaskbarWindowRecreationRequired</code></td>
+                    <td><span lang="en">Any of the cases below. One handler is enough for most apps.</span><span lang="ko">아래 모든 경우에 발생합니다. 대부분의 앱은 이 핸들러 하나로 충분합니다.</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>TaskbarWindowRecreated</code></td>
+                    <td><span lang="en">Explorer restarted, or a disconnected monitor came back.</span><span lang="ko">Explorer가 재시작되었거나, 연결이 끊겼던 모니터가 다시 연결되었습니다.</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>TaskbarDpiChanged</code></td>
+                    <td><span lang="en">The taskbar moved to a new DPI. The library hides and detaches the old window first.</span><span lang="ko">작업 표시줄의 DPI가 바뀌었습니다. 라이브러리가 기존 창을 먼저 숨기고 분리합니다.</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>TaskbarWindowDisappeared</code></td>
+                    <td><span lang="en">The monitor hosting the widget was disconnected. The new host uses the primary taskbar until that monitor returns.</span><span lang="ko">위젯을 붙여 둔 모니터의 연결이 끊겼습니다. 그 모니터가 다시 연결될 때까지 새 호스트는 기본 작업 표시줄을 사용합니다.</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-instances" id="instances" aria-labelledby="instances-title">
+      <div class="container">
+        <div class="section-head section-head-stacked">
+          <h2 id="instances-title"><span lang="en">Several instances in one area</span><span lang="ko">한 영역을 나눠 쓰는 여러 인스턴스</span></h2>
+          <p class="section-intro" lang="en">Instances that target the same area on the same monitor coordinate through a shared-memory slot registry and split the space without overlapping. Fixed instances, with a finite <code>PreferredWidth</code>, are served first in <code>ManualSlotPriority</code> order, then in arrival order. Stretch instances, with <code>PreferredWidth = double.MaxValue</code>, share whatever is left.</p>
+          <p class="section-intro" lang="ko">같은 모니터의 같은 영역을 대상으로 하는 인스턴스들은 공유 메모리 슬롯 레지스트리로 서로 조정하여 겹치지 않게 공간을 나눕니다. <code>PreferredWidth</code>가 유한한 Fixed 인스턴스가 <code>ManualSlotPriority</code> 순서, 그다음 도착 순서에 따라 먼저 너비를 받고, <code>PreferredWidth = double.MaxValue</code>인 Stretch 인스턴스들은 남은 공간을 똑같이 나눕니다.</p>
+        </div>
+
+        <div class="demo demo-instances" id="instances-demo">
           <div class="demo-controls">
             <label class="control">
               <span class="control-label"><span lang="en">Available width</span><span lang="ko">사용 가능한 너비</span></span>
@@ -237,14 +267,14 @@ window.Show();</code></pre>
               <code>AllowFixedSlotResize</code>
             </label>
           </div>
+          <p class="demo-caption" data-instances-caption aria-live="polite"></p>
           <div class="diagram-scroll">
             <div class="taskbar-diagram">
               <div class="diagram-bar" data-instances-bar></div>
             </div>
           </div>
-          <p class="demo-caption" data-instances-caption aria-live="polite"></p>
           <div class="table-wrap">
-            <table>
+            <table class="instances-table">
               <thead>
                 <tr>
                   <th><span lang="en">Instance</span><span lang="ko">인스턴스</span></th>
@@ -257,17 +287,23 @@ window.Show();</code></pre>
               <tbody data-instances-table></tbody>
             </table>
           </div>
-          <p class="demo-footnote" lang="en">Example instances using <code>BeforeNotificationArea</code>, started in the order Media, Build status, Timer. The first slot in order sits next to the notification area. Widths are effective pixels at 100% scaling.</p>
-          <p class="demo-footnote" lang="ko">미디어, 빌드 상태, 타이머 순서로 시작한 예시 인스턴스이며, 모두 <code>BeforeNotificationArea</code>를 사용합니다. 순서상 첫 번째 슬롯이 알림 영역 바로 옆에 놓입니다. 너비는 배율 100% 기준의 effective pixel입니다.</p>
+          <div class="demo-footnotes">
+            <p class="demo-footnote" lang="en">Example instances using <code>BeforeNotificationArea</code>, started in the order Media, Build status, Timer. The first slot in order sits next to the notification area. Widths are effective pixels at 100% scaling.</p>
+            <p class="demo-footnote" lang="ko">미디어, 빌드 상태, 타이머 순서로 시작한 예시 인스턴스이며, 모두 <code>BeforeNotificationArea</code>를 사용합니다. 순서상 첫 번째 슬롯이 알림 영역 바로 옆에 놓입니다. 너비는 배율 100% 기준의 effective pixel입니다.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="options" aria-labelledby="options-title">
+    <section class="section section-options" id="options" aria-labelledby="options-title">
       <div class="container">
-        <h2 id="options-title"><span lang="en">Options</span><span lang="ko">옵션</span></h2>
-        <p class="section-intro" lang="en">All options live in <code>Deskband11Lib.Core.TaskbarContentHostOptions</code> and work the same in every package.</p>
-        <p class="section-intro" lang="ko">모든 옵션은 <code>Deskband11Lib.Core.TaskbarContentHostOptions</code>에 정의되어 있으며, 어느 패키지에서든 똑같이 동작합니다.</p>
+        <div class="section-head">
+          <h2 id="options-title"><span lang="en">Options</span><span lang="ko">옵션</span></h2>
+          <div class="section-head-text">
+            <p class="section-intro" lang="en">All options live in <code>Deskband11Lib.Core.TaskbarContentHostOptions</code> and work the same in every package.</p>
+            <p class="section-intro" lang="ko">모든 옵션은 <code>Deskband11Lib.Core.TaskbarContentHostOptions</code>에 정의되어 있으며, 어느 패키지에서든 똑같이 동작합니다.</p>
+          </div>
+        </div>
 
         <div class="table-wrap">
           <table class="options-table">
@@ -327,7 +363,7 @@ window.Show();</code></pre>
               <tr>
                 <td><code>HighRefreshRateMode</code></td>
                 <td><code>false</code></td>
-                <td><span lang="en">Matches the animation timer to the monitor's current refresh rate instead of 60 FPS.</span><span lang="ko">애니메이션 타이머를 60 FPS 대신 모니터의 현재 주사율에 맞춥니다.</span></td>
+                <td><span lang="en">Matches the animation timer to the monitor’s current refresh rate instead of 60 FPS.</span><span lang="ko">애니메이션 타이머를 60 FPS 대신 모니터의 현재 주사율에 맞춥니다.</span></td>
               </tr>
               <tr>
                 <td><code>TrackTaskbarButtons</code></td>
@@ -341,7 +377,7 @@ window.Show();</code></pre>
               </tr>
               <tr>
                 <td><code>LayoutRefreshInterval</code></td>
-                <td><code>500 ms</code></td>
+                <td><code>500&nbsp;ms</code></td>
                 <td><span lang="en">How often the taskbar layout is checked again.</span><span lang="ko">작업 표시줄 레이아웃을 다시 확인하는 주기입니다.</span></td>
               </tr>
             </tbody>
@@ -350,70 +386,65 @@ window.Show();</code></pre>
       </div>
     </section>
 
-    <section class="section" id="packages" aria-labelledby="packages-title">
+    <section class="section section-packages" id="packages" aria-labelledby="packages-title">
       <div class="container">
-        <h2 id="packages-title"><span lang="en">Packages and requirements</span><span lang="ko">패키지와 요구 사항</span></h2>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th><span lang="en">Package</span><span lang="ko">패키지</span></th>
-                <th><span lang="en">Description</span><span lang="ko">설명</span></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>Deskband11Lib.WinUI</code></td>
-                <td><span lang="en">WinUI 3 facade for Windows App SDK apps. Supports NativeAOT publishing.</span><span lang="ko">Windows App SDK 기반 WinUI 3 앱용 패키지입니다. NativeAOT 게시를 지원합니다.</span></td>
-                <td><a href="https://www.nuget.org/packages/Deskband11Lib.WinUI">NuGet</a></td>
-              </tr>
-              <tr>
-                <td><code>Deskband11Lib.Wpf</code></td>
-                <td><span lang="en">WPF facade. Requires <code>UseWPF=true</code> in the project file.</span><span lang="ko">WPF 앱용 패키지입니다. 프로젝트 파일에 <code>UseWPF=true</code>가 필요합니다.</span></td>
-                <td><a href="https://www.nuget.org/packages/Deskband11Lib.Wpf">NuGet</a></td>
-              </tr>
-              <tr>
-                <td><code>Deskband11Lib.Core</code></td>
-                <td><span lang="en">Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting. Installed automatically with either package above.</span><span lang="ko">작업 표시줄 창 탐색, 레이아웃 계산, UI Automation 측정, Explorer 재시작 감지, Win32 HWND 호스팅을 담당합니다. 위 패키지 중 하나를 설치하면 함께 설치됩니다.</span></td>
-                <td><a href="https://www.nuget.org/packages/Deskband11Lib.Core">NuGet</a></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="section-head">
+          <h2 id="packages-title"><span lang="en">Packages and requirements</span><span lang="ko">패키지와 요구 사항</span></h2>
+          <div class="section-head-text">
+            <ul class="requirements" lang="en">
+              <li>Windows 11.</li>
+              <li>.NET 10. The packages target <code>net10.0-windows10.0.26100.0</code>.</li>
+              <li>WinUI 3 apps need the Windows App SDK.</li>
+            </ul>
+            <ul class="requirements" lang="ko">
+              <li>Windows 11이 필요합니다.</li>
+              <li>.NET 10이 필요합니다. 패키지의 대상 프레임워크는 <code>net10.0-windows10.0.26100.0</code>입니다.</li>
+              <li>WinUI 3 앱에는 Windows App SDK가 필요합니다.</li>
+            </ul>
+          </div>
         </div>
 
-        <ul class="requirements" lang="en">
-          <li>Windows 11.</li>
-          <li>.NET 10. The packages target <code>net10.0-windows10.0.26100.0</code>.</li>
-          <li>WinUI 3 apps need the Windows App SDK.</li>
-        </ul>
-        <ul class="requirements" lang="ko">
-          <li>Windows 11이 필요합니다.</li>
-          <li>.NET 10이 필요합니다. 패키지의 대상 프레임워크는 <code>net10.0-windows10.0.26100.0</code>입니다.</li>
-          <li>WinUI 3 앱에는 Windows App SDK가 필요합니다.</li>
+        <ul class="package-list">
+          <li class="package">
+            <h3 class="package-name"><code>Deskband11Lib.WinUI</code></h3>
+            <p><span lang="en">WinUI 3 facade for Windows App SDK apps. Supports NativeAOT publishing.</span><span lang="ko">Windows App SDK 기반 WinUI 3 앱용 패키지입니다. NativeAOT 게시를 지원합니다.</span></p>
+            <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.WinUI">NuGet</a>
+          </li>
+          <li class="package">
+            <h3 class="package-name"><code>Deskband11Lib.Wpf</code></h3>
+            <p><span lang="en">WPF facade. Requires <code>UseWPF=true</code> in the project file.</span><span lang="ko">WPF 앱용 패키지입니다. 프로젝트 파일에 <code>UseWPF=true</code>가 필요합니다.</span></p>
+            <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.Wpf">NuGet</a>
+          </li>
+          <li class="package">
+            <h3 class="package-name"><code>Deskband11Lib.Core</code></h3>
+            <p><span lang="en">Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting. Installed automatically with either package above.</span><span lang="ko">작업 표시줄 창 탐색, 레이아웃 계산, UI Automation 측정, Explorer 재시작 감지, Win32 HWND 호스팅을 담당합니다. 위 패키지 중 하나를 설치하면 함께 설치됩니다.</span></p>
+            <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.Core">NuGet</a>
+          </li>
         </ul>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="footer-text">
+    <div class="container">
+      <p class="footer-statement" lang="en">The idea of hosting app content in the Windows 11 taskbar comes from <a href="https://github.com/zadjii/Deskband11">Deskband11</a> by <a href="https://github.com/zadjii">zadjii</a>.</p>
+      <p class="footer-statement" lang="ko">Windows 11 작업 표시줄 안에 앱 콘텐츠를 배치한다는 아이디어는 <a href="https://github.com/zadjii">zadjii</a>의 <a href="https://github.com/zadjii/Deskband11">Deskband11</a>에서 시작되었습니다.</p>
+
+      <div class="footer-meta">
         <p class="wordmark"><img src="favicon.svg" width="24" height="24" alt="">Deskband11Lib</p>
-        <p lang="en">The idea of hosting app content in the Windows 11 taskbar comes from <a href="https://github.com/zadjii/Deskband11">Deskband11</a> by <a href="https://github.com/zadjii">zadjii</a>.</p>
-        <p lang="ko">Windows 11 작업 표시줄 안에 앱 콘텐츠를 배치한다는 아이디어는 <a href="https://github.com/zadjii">zadjii</a>의 <a href="https://github.com/zadjii/Deskband11">Deskband11</a>에서 시작되었습니다.</p>
-        <p lang="en">Supported by the <a href="https://fossforall.org">FOSS for All</a> <a href="https://forum.fossforall.org/t/foss-for-all-microgrants-2026/162">Microgrants 2026</a> program.</p>
-        <p lang="ko"><a href="https://fossforall.org">FOSS for All</a>의 <a href="https://forum.fossforall.org/t/foss-for-all-microgrants-2026/162">Microgrants 2026</a> 지원 사업으로부터 후원을 받고 있습니다.</p>
-        <p lang="en">Released under the <a href="https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE">MIT License</a>. Created by <a href="https://github.com/airtaxi">Howon Lee (airtaxi)</a>.</p>
-        <p lang="ko"><a href="https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE">MIT 라이선스</a>로 배포됩니다. <a href="https://github.com/airtaxi">Howon Lee (airtaxi)</a>가 만들었습니다.</p>
+        <div class="footer-text">
+          <p lang="en">Supported by the <a href="https://fossforall.org">FOSS for All</a> <a href="https://forum.fossforall.org/t/foss-for-all-microgrants-2026/162">Microgrants 2026</a> program.</p>
+          <p lang="ko"><a href="https://fossforall.org">FOSS for All</a>의 <a href="https://forum.fossforall.org/t/foss-for-all-microgrants-2026/162">Microgrants 2026</a> 지원 사업으로부터 후원을 받고 있습니다.</p>
+          <p lang="en">Released under the <a href="https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE">MIT License</a>. Created by <a href="https://github.com/airtaxi">Howon Lee (airtaxi)</a>.</p>
+          <p lang="ko"><a href="https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE">MIT 라이선스</a>로 배포됩니다. <a href="https://github.com/airtaxi">Howon Lee (airtaxi)</a>가 만들었습니다.</p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="https://github.com/airtaxi/Deskband11Lib">GitHub</a></li>
+          <li><a href="https://github.com/airtaxi/Deskband11Lib/issues"><span lang="en">Issues</span><span lang="ko">이슈</span></a></li>
+          <li><a href="https://www.nuget.org/packages/Deskband11Lib.WinUI">NuGet: WinUI</a></li>
+          <li><a href="https://www.nuget.org/packages/Deskband11Lib.Wpf">NuGet: WPF</a></li>
+        </ul>
       </div>
-      <ul class="footer-links">
-        <li><a href="https://github.com/airtaxi/Deskband11Lib">GitHub</a></li>
-        <li><a href="https://github.com/airtaxi/Deskband11Lib/issues"><span lang="en">Issues</span><span lang="ko">이슈</span></a></li>
-        <li><a href="https://www.nuget.org/packages/Deskband11Lib.WinUI">NuGet: WinUI</a></li>
-        <li><a href="https://www.nuget.org/packages/Deskband11Lib.Wpf">NuGet: WPF</a></li>
-      </ul>
     </div>
   </footer>
 </body>
