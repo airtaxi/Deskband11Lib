@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6F1FC"/>
+      <stop offset="1" stop-color="#B9D5F2"/>
+    </linearGradient>
+    <linearGradient id="petal" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#0A4FC4"/>
+      <stop offset="1" stop-color="#5AAEF6"/>
+    </linearGradient>
+    <linearGradient id="start" gradientUnits="userSpaceOnUse" x1="13.4" y1="23.4" x2="18.6" y2="28.6">
+      <stop offset="0" stop-color="#3FA7F5"/>
+      <stop offset="1" stop-color="#0063D1"/>
+    </linearGradient>
+    <clipPath id="tile">
+      <rect width="32" height="32" rx="7"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect width="32" height="32" fill="url(#sky)"/>
+    <g fill="url(#petal)">
+      <path d="M16 20C10.5 14.75 10.5 8 16 5C21.5 8 21.5 14.75 16 20Z" fill-opacity="0.72" transform="rotate(-60 16 20)"/>
+      <path d="M16 20C10.5 14.75 10.5 8 16 5C21.5 8 21.5 14.75 16 20Z" fill-opacity="0.72" transform="rotate(-20 16 20)"/>
+      <path d="M16 20C10.5 14.75 10.5 8 16 5C21.5 8 21.5 14.75 16 20Z" fill-opacity="0.72" transform="rotate(20 16 20)"/>
+      <path d="M16 20C10.5 14.75 10.5 8 16 5C21.5 8 21.5 14.75 16 20Z" fill-opacity="0.72" transform="rotate(60 16 20)"/>
+      <path d="M16 20C12.5 15.8 12.5 10.4 16 8C19.5 10.4 19.5 15.8 16 20Z" fill-opacity="0.9"/>
+    </g>
+    <rect y="20" width="32" height="12" fill="#F7F9FC" fill-opacity="0.92"/>
+    <rect y="20" width="32" height="0.5" fill="#0B2E5C" fill-opacity="0.1"/>
+    <rect x="3" y="23.75" width="8.5" height="4.5" rx="2.25" fill="#005FB8"/>
+    <rect x="5" y="25.4" width="4.5" height="1.2" rx="0.6" fill="#FFFFFF" fill-opacity="0.85"/>
+    <g fill="url(#start)">
+      <rect x="13.4" y="23.4" width="2.4" height="2.4" rx="0.45"/>
+      <rect x="16.2" y="23.4" width="2.4" height="2.4" rx="0.45"/>
+      <rect x="13.4" y="26.2" width="2.4" height="2.4" rx="0.45"/>
+      <rect x="16.2" y="26.2" width="2.4" height="2.4" rx="0.45"/>
+    </g>
+    <rect x="23.5" y="24.4" width="5" height="1.3" rx="0.65" fill="#3B3B3B" fill-opacity="0.75"/>
+    <rect x="24.5" y="26.6" width="4" height="1.1" rx="0.55" fill="#3B3B3B" fill-opacity="0.5"/>
+  </g>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" fill="none" stroke="#0B2E5C" stroke-opacity="0.16" vector-effect="non-scaling-stroke"/>
+</svg>
