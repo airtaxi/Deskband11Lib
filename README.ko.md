@@ -1,15 +1,17 @@
+![Deskband11Lib 아이콘](https://raw.githubusercontent.com/airtaxi/Deskband11Lib/master/.github/icon.png)
+
 # Deskband11Lib
 
 [![NuGet WinUI](https://img.shields.io/nuget/v/Deskband11Lib.WinUI.svg)](https://www.nuget.org/packages/Deskband11Lib.WinUI)
 [![NuGet WPF](https://img.shields.io/nuget/v/Deskband11Lib.Wpf.svg)](https://www.nuget.org/packages/Deskband11Lib.Wpf)
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE)
 
-🌐 [English](README.md) | 한국어
+🌐 [English](https://github.com/airtaxi/Deskband11Lib/blob/master/README.md) | 한국어
 
 Deskband11Lib는 Windows 11 작업 표시줄 안에 앱 UI를 자연스럽게 올릴 수 있게 해주는 라이브러리입니다. 작은 대시보드, 빠른 제어 패널, 상태 표시기, 미디어 위젯, 런처처럼 항상 눈에 띄어야 하는 기능을 데스크톱의 일부처럼 만들 수 있습니다.
 
-![Deskband11Lib 스크린샷](.github/screenshot.png)
+![Deskband11Lib 스크린샷](https://raw.githubusercontent.com/airtaxi/Deskband11Lib/master/.github/screenshot.png)
 
 ## 패키지 구성
 
@@ -264,7 +266,7 @@ Deskband11Lib는 [FOSS for All(포스포올)](https://fossforall.org)의 [Microg
 
 ## 라이선스
 
-Deskband11Lib는 [MIT License](LICENSE)로 배포됩니다.
+Deskband11Lib는 [MIT License](https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE)로 배포됩니다.
 
 ## 작성자
 

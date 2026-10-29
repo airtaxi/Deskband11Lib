@@ -1,15 +1,17 @@
+![Deskband11Lib icon](https://raw.githubusercontent.com/airtaxi/Deskband11Lib/master/.github/icon.png)
+
 # Deskband11Lib
 
 [![NuGet WinUI](https://img.shields.io/nuget/v/Deskband11Lib.WinUI.svg)](https://www.nuget.org/packages/Deskband11Lib.WinUI)
 [![NuGet WPF](https://img.shields.io/nuget/v/Deskband11Lib.Wpf.svg)](https://www.nuget.org/packages/Deskband11Lib.Wpf)
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE)
 
-🌐 English | [한국어](README.ko.md)
+🌐 English | [한국어](https://github.com/airtaxi/Deskband11Lib/blob/master/README.ko.md)
 
 Deskband11Lib is a library for building always-visible taskbar companions on Windows 11. It lets your app place real UI content directly inside the taskbar, so compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools appear as part of the taskbar.
 
-![Deskband11Lib screenshot](.github/screenshot.png)
+![Deskband11Lib screenshot](https://raw.githubusercontent.com/airtaxi/Deskband11Lib/master/.github/screenshot.png)
 
 ## Packages
 
@@ -264,7 +266,7 @@ Deskband11Lib is supported by the [FOSS for All](https://fossforall.org) [Microg
 
 ## License
 
-Deskband11Lib is licensed under the [MIT License](LICENSE).
+Deskband11Lib is licensed under the [MIT License](https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE).
 
 ## Author
 
