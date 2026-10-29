@@ -11,7 +11,7 @@
     <Copyright>Copyright (c) 2026 airtaxi</Copyright>
     <Description>WPF facade for hosting rich application content inside the Windows 11 taskbar.</Description>
     <PackageTags>wpf;windows11;taskbar;deskband;widget;desktop</PackageTags>
-    <PackageProjectUrl>https://github.com/airtaxi/Deskband11Lib</PackageProjectUrl>
+    <PackageProjectUrl>https://db11l.kagamine-rin.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/airtaxi/Deskband11Lib</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -22,10 +22,12 @@
     <LangVersion>preview</LangVersion>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+    <None Include="..\.github\icon.png" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

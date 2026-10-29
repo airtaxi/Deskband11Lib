@@ -11,7 +11,7 @@
 		<Copyright>Copyright (c) 2026 airtaxi</Copyright>
 		<Description>Core taskbar hosting engine shared by Deskband11Lib UI framework facades.</Description>
 		<PackageTags>windows11;taskbar;deskband;widget;desktop;cswin32</PackageTags>
-		<PackageProjectUrl>https://github.com/airtaxi/Deskband11Lib</PackageProjectUrl>
+		<PackageProjectUrl>https://db11l.kagamine-rin.com</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/airtaxi/Deskband11Lib</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -23,12 +23,14 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
 		<CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
 		<DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+		<None Include="..\.github\icon.png" Pack="true" PackagePath="" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>
