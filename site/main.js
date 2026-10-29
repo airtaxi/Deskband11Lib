@@ -8,11 +8,11 @@
     const documentTexts = {
         en: {
             title: "Deskband11Lib: Host your own UI inside the Windows 11 taskbar",
-            description: "Deskband11Lib is a .NET library that hosts WinUI 3 and WPF content inside the Windows 11 taskbar and fits it into the free space between the app buttons and the notification area."
+            description: "Deskband11Lib places your app's UI inside the Windows 11 taskbar and keeps it in the free space between the app buttons and the notification area."
         },
         ko: {
             title: "Deskband11Lib: Windows 11 작업 표시줄 안에 직접 만든 UI를 띄워 보세요",
-            description: "Deskband11Lib는 WinUI 3와 WPF 콘텐츠를 Windows 11 작업 표시줄 안에 배치하고, 앱 버튼과 알림 영역 사이에 남는 공간에 맞춰 크기를 조정하는 .NET 라이브러리입니다."
+            description: "Deskband11Lib는 앱 UI를 Windows 11 작업 표시줄 안에 배치하고, 앱 버튼과 알림 영역 사이에 남는 공간에 맞춰 자리를 잡아 줍니다."
         }
     };
 
