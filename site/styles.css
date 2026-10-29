@@ -470,11 +470,21 @@ main a:not([class]):hover,
 
 /* Interactive diagrams */
 
+.demo {
+  padding: var(--space-xl);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+}
+
+.section-instances .demo {
+  background: var(--color-raised);
+}
+
 .demo-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: var(--space-lg) var(--space-xl);
+  gap: var(--space-lg) var(--space-2xl);
 }
 
 .demo-placement .demo-controls {
@@ -532,12 +542,12 @@ input[type="checkbox"] {
 }
 
 .taskbar-diagram {
-  min-width: 760px;
+  min-width: 700px;
 }
 
 .diagram-bar {
   position: relative;
-  height: 88px;
+  height: 60px;
   border-radius: var(--radius-card);
   background: var(--color-taskbar);
   box-shadow: inset 0 1px 0 var(--color-taskbar-edge);
@@ -545,15 +555,17 @@ input[type="checkbox"] {
 
 .diagram-block {
   position: absolute;
-  top: var(--space-md);
-  bottom: var(--space-md);
+  top: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 var(--space-xs);
   overflow: hidden;
-  border-radius: var(--radius-inner);
+  border: 4px solid transparent;
+  border-radius: calc(var(--radius-inner) + 4px);
   background: var(--color-bar-block);
+  background-clip: padding-box;
   color: var(--color-bar-ink);
   font-size: var(--text-sm);
   white-space: nowrap;
@@ -561,20 +573,15 @@ input[type="checkbox"] {
 
 .diagram-content {
   z-index: var(--z-base);
-  background: var(--color-bar-accent);
+  background-color: var(--color-bar-accent);
   color: var(--color-bar-accent-ink);
   font-weight: 600;
 }
 
-.diagram-slot {
-  box-shadow: inset 0 0 0 1px var(--color-taskbar);
-}
-
 .diagram-stretch {
-  background: var(--color-bar-stretch);
+  background-color: var(--color-bar-stretch);
   color: var(--color-bar-accent);
   font-weight: 600;
-  box-shadow: inset 0 0 0 2px var(--color-bar-accent);
 }
 
 .diagram-slot.is-empty {
@@ -583,10 +590,10 @@ input[type="checkbox"] {
 
 .diagram-area {
   position: absolute;
-  top: var(--space-xs);
-  bottom: var(--space-xs);
+  top: var(--space-3xs);
+  bottom: var(--space-3xs);
   border: 1px dashed var(--color-bar-accent);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-inner);
   pointer-events: none;
 }
 
@@ -640,7 +647,7 @@ input[type="checkbox"] {
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--space-lg) var(--gap-columns);
   align-items: start;
-  margin-top: var(--space-lg);
+  margin-top: var(--space-xl);
 }
 
 .demo-notes .demo-caption {
@@ -987,6 +994,10 @@ td.num {
 }
 
 @media (max-width: 60rem) {
+  .demo {
+    padding: var(--space-lg);
+  }
+
   .hero {
     min-height: 0;
   }
@@ -1094,6 +1105,10 @@ td.num {
 
   .segmented-small {
     flex-wrap: nowrap;
+  }
+
+  .demo {
+    padding: var(--space-md);
   }
 
   .taskbar-shot {
