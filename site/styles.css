@@ -888,19 +888,9 @@ td.num {
 /* Footer */
 
 .site-footer {
-  padding-block: var(--space-3xl) var(--space-2xl);
+  padding-block: var(--space-xl);
   background: var(--color-paper-2);
   color: var(--color-ink);
-}
-
-.footer-statement {
-  max-width: 30ch;
-  font-family: var(--font-display);
-  font-size: var(--text-section);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: var(--tracking-display);
-  text-wrap: balance;
 }
 
 .footer-meta {
@@ -908,9 +898,6 @@ td.num {
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--space-lg) var(--gap-columns);
   align-items: start;
-  margin-top: var(--space-2xl);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-rule);
   color: var(--color-ink-2);
   font-size: var(--text-sm);
 }
