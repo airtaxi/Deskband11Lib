@@ -216,7 +216,8 @@ public class TaskbarContentHostBase : IDisposable
 
         _windowHandle = new HWND(_platformAdapter.WindowHandle);
         if (_windowHandle.IsNull) throw new InvalidOperationException("The hosted window handle is not available.");
-        if (!IsTaskbarWindowAvailable()) throw new InvalidOperationException("The Windows taskbar window could not be found.");
+        // Taskbar button measurement is not required here. Until it is available, the layout keeps the window region collapsed and the refresh timer retries.
+        if (!TryRefreshTaskbarWindow()) throw new InvalidOperationException("The Windows taskbar window could not be found.");
 
         _originalParentWindow = PInvoke.GetParent(_windowHandle);
         _originalWindowStyle = NativeWindowMethods.GetWindowStyle(_windowHandle);
@@ -417,12 +418,12 @@ public class TaskbarContentHostBase : IDisposable
         {
             if (_isDisposed || !IsAttached) return;
 
-        StopLayoutAnimation();
-        _layoutRefreshTimer.Stop();
-        _hasAppliedLayoutSnapshot = false;
+            StopLayoutAnimation();
+            _layoutRefreshTimer.Stop();
+            _hasAppliedLayoutSnapshot = false;
 
-        TaskbarWindowDisappeared?.Invoke(this, EventArgs.Empty);
-        TaskbarWindowRecreationRequired?.Invoke(this, EventArgs.Empty);
+            TaskbarWindowDisappeared?.Invoke(this, EventArgs.Empty);
+            TaskbarWindowRecreationRequired?.Invoke(this, EventArgs.Empty);
         });
     }
 

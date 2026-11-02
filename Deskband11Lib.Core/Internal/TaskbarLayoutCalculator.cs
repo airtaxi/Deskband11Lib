@@ -13,7 +13,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         if (!taskbarWindowLocator.TryRefresh(getEffectiveMonitorIdentity())) return;
         if (!TryGetWindowRectangle(taskbarWindowLocator.TaskbarWindow, out var taskbarRectangle)) return;
 
-        var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
+        var rowRectangle = ResolveRowRectangle(taskbarRectangle);
         var searchLeft = taskbarRectangle.left;
         var searchRight = ResolveNotificationLeft(taskbarRectangle);
         if (TryGetTaskbarButtonsSearchRectangle(taskbarRectangle, rowRectangle, searchLeft, searchRight, out var taskbarButtonsSearchRectangle)) await taskbarButtonReader.RefreshAsync(taskbarWindowLocator.TaskbarWindow, taskbarButtonsSearchRectangle);
@@ -25,7 +25,7 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
         if (!TryGetWindowRectangle(taskbarWindowLocator.TaskbarWindow, out var taskbarRectangle)) return default;
         scaleFactor = NormalizeScaleFactor(scaleFactor);
 
-        var rowRectangle = TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) ? rebarRectangle : taskbarRectangle;
+        var rowRectangle = ResolveRowRectangle(taskbarRectangle);
         var searchLeft = taskbarRectangle.left;
         var searchRight = ResolveNotificationLeft(taskbarRectangle);
 
@@ -172,6 +172,9 @@ internal sealed class TaskbarLayoutCalculator(TaskbarWindowLocator taskbarWindow
 
         return availableWidth;
     }
+
+    // The rebar window collapses to an empty rectangle when the taskbar has no app buttons (no pinned or running apps), so the taskbar rectangle is used instead.
+    private RECT ResolveRowRectangle(RECT taskbarRectangle) => TryGetWindowRectangle(taskbarWindowLocator.RebarWindow, out var rebarRectangle) && rebarRectangle.bottom > rebarRectangle.top ? rebarRectangle : taskbarRectangle;
 
     private int ResolveNotificationLeft(RECT taskbarRectangle)
     {
