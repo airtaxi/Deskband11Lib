@@ -156,6 +156,7 @@ public class TaskbarContentHostBase : IDisposable
         if (_requiresReparenting) TryReparentToTaskbar();
 
         ApplyHostedWindowStyle();
+        EnsureAboveTaskbarContent();
 
         var scaleFactor = GetScaleFactor();
         var siblingSlots = _slotRegistry.CollectSlots(_taskbarWindowLocator.TaskbarWindow, _windowHandle);
@@ -272,6 +273,27 @@ public class TaskbarContentHostBase : IDisposable
 
         NativeWindowMethods.SetWindowStyle(_windowHandle, hostedWindowStyle);
         RefreshWindowFrame();
+    }
+
+    // Explorer can create its taskbar content windows after the hosted window is attached (eg: right after sign-in).
+    // Those windows cover the whole taskbar, so the hosted window is moved back above them. Windows of other processes are left in place so that multiple instances do not keep reordering each other.
+    private void EnsureAboveTaskbarContent()
+    {
+        var taskbarWindow = _taskbarWindowLocator.TaskbarWindow;
+        if (taskbarWindow.IsNull || PInvoke.GetParent(_windowHandle) != taskbarWindow) return;
+
+        _ = PInvoke.GetWindowThreadProcessId(taskbarWindow, out var taskbarProcessIdentifier);
+        for (var siblingWindow = PInvoke.GetWindow(taskbarWindow, GET_WINDOW_CMD.GW_CHILD); !siblingWindow.IsNull && siblingWindow != _windowHandle; siblingWindow = PInvoke.GetWindow(siblingWindow, GET_WINDOW_CMD.GW_HWNDNEXT))
+        {
+            if (!PInvoke.IsWindowVisible(siblingWindow)) continue;
+
+            _ = PInvoke.GetWindowThreadProcessId(siblingWindow, out var siblingProcessIdentifier);
+            if (siblingProcessIdentifier != taskbarProcessIdentifier) continue;
+
+            // HWND.Null is HWND_TOP.
+            PInvoke.SetWindowPos(_windowHandle, HWND.Null, 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE);
+            return;
+        }
     }
 
     private void RefreshWindowFrame() => PInvoke.SetWindowPos(_windowHandle, HWND.Null, 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);

@@ -2,6 +2,8 @@ CreateRectRgn
 FindWindow
 FindWindowEx
 GetParent
+GetWindow
+IsWindowVisible
 GetWindowRect
 GetWindowThreadProcessId
 GetDpiForWindow
