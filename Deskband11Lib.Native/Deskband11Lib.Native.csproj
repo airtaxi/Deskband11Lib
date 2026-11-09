@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
+    <RootNamespace>Deskband11Lib.Native</RootNamespace>
+    <AssemblyName>deskband11lib</AssemblyName>
+    <Title>Deskband11Lib.Native</Title>
+    <Version>1.5.0</Version>
+    <Authors>airtaxi</Authors>
+    <Company>airtaxi</Company>
+    <Product>Deskband11Lib</Product>
+    <Copyright>Copyright (c) 2026 airtaxi</Copyright>
+    <Description>C ABI shared library for hosting native windows inside the Windows 11 taskbar.</Description>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="include\deskband11lib.h" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Deskband11Lib.Core\Deskband11Lib.Core.csproj" />
+  </ItemGroup>
+</Project>
