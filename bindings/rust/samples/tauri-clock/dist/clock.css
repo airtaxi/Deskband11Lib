@@ -1,0 +1,46 @@
+:root {
+    --text-color: #ffffff;
+}
+
+:root[data-theme="light"] {
+    --text-color: #1a1a1a;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: transparent;
+    cursor: default;
+    user-select: none;
+}
+
+body {
+    color: var(--text-color);
+    font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+    font-size: 12px;
+}
+
+.clock {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 6px;
+    white-space: nowrap;
+}
+
+.time {
+    font-weight: 600;
+}
+
+/* A thin horizontal taskbar fits a single line only. */
+@media (max-height: 39px) {
+    .clock {
+        flex-direction: row;
+        gap: 8px;
+    }
+}

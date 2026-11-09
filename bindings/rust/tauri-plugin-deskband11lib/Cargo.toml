@@ -1,0 +1,23 @@
+[package]
+name = "tauri-plugin-deskband11lib"
+version = "1.5.0"
+edition = "2024"
+rust-version = "1.90"
+description = "Tauri plugin that hosts webview windows inside the Windows 11 taskbar."
+license = "MIT"
+authors = ["airtaxi"]
+homepage = "https://db11l.kagamine-rin.com"
+repository = "https://github.com/airtaxi/Deskband11Lib"
+readme = "README.md"
+keywords = ["tauri", "tauri-plugin", "windows", "taskbar", "widget"]
+categories = ["gui", "os::windows-apis"]
+include = ["src/**", "README.md"]
+
+[package.metadata.docs.rs]
+default-target = "x86_64-pc-windows-msvc"
+
+[dependencies]
+deskband11lib = { version = "1.5.0", path = "../deskband11lib" }
+log = "0.4.35"
+serde = { version = "1.0.229", features = ["derive"] }
+tauri = "2.12.5"

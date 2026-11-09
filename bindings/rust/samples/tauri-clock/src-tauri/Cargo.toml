@@ -1,0 +1,18 @@
+[package]
+name = "tauri-clock"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[features]
+# Serves the frontend from the embedded assets, so the sample runs with cargo run.
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[dependencies]
+tauri = "2.12.5"
+tauri-plugin-deskband11lib = { path = "../../../tauri-plugin-deskband11lib" }
+windows-registry = "0.100.0"
+
+[build-dependencies]
+tauri-build = "2.7.4"

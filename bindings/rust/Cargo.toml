@@ -1,0 +1,3 @@
+[workspace]
+resolver = "3"
+members = ["deskband11lib", "tauri-plugin-deskband11lib", "samples/tauri-clock/src-tauri"]

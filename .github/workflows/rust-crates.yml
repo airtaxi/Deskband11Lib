@@ -1,0 +1,260 @@
+name: Build and Publish Rust Crates
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the current crate versions to crates.io.
+        required: true
+        default: false
+        type: boolean
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/rust-crates.yml
+      - bindings/rust/**
+      - Deskband11Lib.Core/**
+      - Deskband11Lib.Native/**
+  pull_request:
+    paths:
+      - .github/workflows/rust-crates.yml
+      - bindings/rust/**
+      - Deskband11Lib.Core/**
+      - Deskband11Lib.Native/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deskband11lib-rust-crates-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  resolve:
+    name: Resolve publish mode
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Pushes to master publish when a crate version increases. Manual releases use workflow_dispatch.
+      # crates.io only accepts a trusted publisher for a crate that already exists, so the first release of each crate is published by hand.
+      - name: Resolve publish mode
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PUBLISH_INPUT: ${{ inputs.publish }}
+          PREVIOUS_COMMIT: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          manifest_paths=(bindings/rust/deskband11lib/Cargo.toml bindings/rust/tauri-plugin-deskband11lib/Cargo.toml)
+          read_version() {
+            python3 -c 'import sys, tomllib; print(tomllib.loads(sys.stdin.read())["package"]["version"])'
+          }
+
+          should_publish=false
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$PUBLISH_INPUT" = "true" ]; then
+              if [ "$REF" != "refs/heads/master" ]; then
+                echo "Publishing is only allowed from master." >&2
+                exit 1
+              fi
+              should_publish=true
+            fi
+          elif [ "$EVENT_NAME" = "push" ] && [ -n "$PREVIOUS_COMMIT" ] && ! [[ "$PREVIOUS_COMMIT" =~ ^0+$ ]]; then
+            for manifest_path in "${manifest_paths[@]}"; do
+              current_version=$(read_version < "$manifest_path")
+              if previous_manifest=$(git show "$PREVIOUS_COMMIT:$manifest_path" 2>/dev/null); then
+                previous_version=$(read_version <<< "$previous_manifest")
+                highest_version=$(printf '%s\n%s\n' "$previous_version" "$current_version" | sort -V | tail -n 1)
+                if [ "$current_version" != "$previous_version" ] && [ "$highest_version" = "$current_version" ]; then
+                  should_publish=true
+                fi
+                echo "$manifest_path: $previous_version -> $current_version"
+              else
+                echo "$manifest_path is new in this push. Publish its first release by hand."
+              fi
+            done
+          fi
+
+          echo "publish=$should_publish" >> "$GITHUB_OUTPUT"
+          echo "Publish: $should_publish"
+
+  native:
+    name: Build ${{ matrix.runtime-identifier }} native library
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime-identifier: win-x64
+            runner: windows-latest
+          - runtime-identifier: win-arm64
+            runner: windows-11-vs2026-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Stage native library
+        working-directory: bindings/rust
+        shell: pwsh
+        run: ./scripts/stage-native.ps1 -RuntimeIdentifiers ${{ matrix.runtime-identifier }}
+
+      - name: Upload native library
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.runtime-identifier }}
+          path: bindings/rust/deskband11lib/bin/${{ matrix.runtime-identifier }}/deskband11lib.dll
+          if-no-files-found: error
+
+  test:
+    name: Test on ${{ matrix.runtime-identifier }}
+    needs: native
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime-identifier: win-x64
+            runner: windows-latest
+          - runtime-identifier: win-arm64
+            runner: windows-11-vs2026-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download native libraries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: win-*
+          path: bindings/rust/deskband11lib/bin
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt
+          rustup default stable
+
+      - name: Check formatting
+        if: matrix.runtime-identifier == 'win-x64'
+        working-directory: bindings/rust
+        run: cargo fmt --all --check
+
+      - name: Run Clippy
+        if: matrix.runtime-identifier == 'win-x64'
+        working-directory: bindings/rust
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      # Tests that attach a window to the taskbar need an interactive desktop session and run only locally.
+      - name: Run tests
+        working-directory: bindings/rust
+        run: cargo test --workspace --locked
+
+      # The native libraries are ignored by git but packaged, so cargo needs --allow-dirty to include them.
+      - name: Check package contents
+        if: matrix.runtime-identifier == 'win-x64'
+        working-directory: bindings/rust
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $packageFiles = cargo package -p deskband11lib --list --locked --allow-dirty
+          if ($LASTEXITCODE -ne 0) { throw "cargo package failed." }
+
+          $nativeLibraries = @($packageFiles | Where-Object { $_ -like "bin*deskband11lib.dll" })
+          if ($nativeLibraries.Count -ne 2) { throw "The crate must contain the x64 and ARM64 native libraries, but contains: $($nativeLibraries -join ', ')" }
+          $nativeLibraries
+
+  minimum-rust-version:
+    name: Check minimum Rust version
+    needs: native
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download native libraries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: win-*
+          path: bindings/rust/deskband11lib/bin
+
+      - name: Setup Rust
+        working-directory: bindings/rust
+        shell: pwsh
+        run: |
+          $minimumRustVersion = (cargo metadata --no-deps --format-version 1 | ConvertFrom-Json).packages | Where-Object { $_.name -eq "deskband11lib" } | Select-Object -ExpandProperty rust_version
+          rustup toolchain install $minimumRustVersion --profile minimal
+          "MINIMUM_RUST_VERSION=$minimumRustVersion" >> $env:GITHUB_ENV
+
+      - name: Check crates
+        working-directory: bindings/rust
+        run: cargo +${{ env.MINIMUM_RUST_VERSION }} check -p deskband11lib -p tauri-plugin-deskband11lib --locked
+
+  publish:
+    name: Publish to crates.io
+    needs: [resolve, test, minimum-rust-version]
+    if: needs.resolve.outputs.publish == 'true'
+    # Packaging verifies the plugin by building Tauri, which needs a Windows runner.
+    runs-on: windows-latest
+    environment:
+      name: crates-io
+      url: https://crates.io/crates/tauri-plugin-deskband11lib
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download native libraries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: win-*
+          path: bindings/rust/deskband11lib/bin
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Authenticate with crates.io
+        id: authentication
+        uses: rust-lang/crates-io-auth-action@v1
+
+      # The plugin depends on deskband11lib, so deskband11lib is published first. Versions already on crates.io are skipped.
+      # The native libraries are ignored by git but packaged, so cargo needs --allow-dirty to include them.
+      - name: Publish crates
+        working-directory: bindings/rust
+        shell: pwsh
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.authentication.outputs.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $packages = (cargo metadata --no-deps --format-version 1 | ConvertFrom-Json).packages
+          foreach ($crateName in @("deskband11lib", "tauri-plugin-deskband11lib")) {
+            $version = ($packages | Where-Object { $_.name -eq $crateName }).version
+            $response = Invoke-WebRequest "https://crates.io/api/v1/crates/$crateName/$version" -UserAgent "Deskband11Lib release workflow (https://github.com/airtaxi/Deskband11Lib)" -SkipHttpErrorCheck
+            if ($response.StatusCode -eq 200) {
+              Write-Host "$crateName $version is already on crates.io."
+              continue
+            }
+
+            cargo publish -p $crateName --locked --allow-dirty
+            if ($LASTEXITCODE -ne 0) { throw "Publishing $crateName $version failed." }
+          }

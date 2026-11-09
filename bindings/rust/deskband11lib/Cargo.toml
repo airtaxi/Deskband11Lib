@@ -1,0 +1,20 @@
+[package]
+name = "deskband11lib"
+version = "1.5.0"
+edition = "2024"
+rust-version = "1.90"
+description = "Host native windows inside the Windows 11 taskbar."
+license = "MIT"
+authors = ["airtaxi"]
+homepage = "https://db11l.kagamine-rin.com"
+repository = "https://github.com/airtaxi/Deskband11Lib"
+readme = "README.md"
+keywords = ["windows", "taskbar", "deskband", "widget", "tauri"]
+categories = ["gui", "os::windows-apis"]
+include = ["src/**", "build.rs", "bin/*/deskband11lib.dll", "README.md"]
+
+[package.metadata.docs.rs]
+default-target = "x86_64-pc-windows-msvc"
+
+[dependencies]
+libloading = "0.9"
