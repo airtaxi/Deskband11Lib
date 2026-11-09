@@ -1,0 +1,258 @@
+name: Build and Publish Node Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the current package version to npm.
+        required: true
+        default: false
+        type: boolean
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/node-package.yml
+      - bindings/node/**
+      - Deskband11Lib.Core/**
+      - Deskband11Lib.Native/**
+  pull_request:
+    paths:
+      - .github/workflows/node-package.yml
+      - bindings/node/**
+      - Deskband11Lib.Core/**
+      - Deskband11Lib.Native/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deskband11lib-node-package-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Tests run in plain Node.js, so the Electron binary is not needed.
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+jobs:
+  resolve:
+    name: Resolve publish mode
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
+      version: ${{ steps.version.outputs.current }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Pushes to master publish when the package version increases. Manual releases use workflow_dispatch.
+      # npm only accepts a trusted publisher for a package that already exists, so the first release is published by hand.
+      - name: Resolve publish mode
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PUBLISH_INPUT: ${{ inputs.publish }}
+          PREVIOUS_COMMIT: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          package_path=bindings/node/package.json
+          read_version() {
+            node -e 'let text = ""; process.stdin.on("data", chunk => text += chunk).on("end", () => console.log(JSON.parse(text).version))'
+          }
+
+          current_version=$(read_version < "$package_path")
+          echo "current=$current_version" >> "$GITHUB_OUTPUT"
+
+          should_publish=false
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$PUBLISH_INPUT" = "true" ]; then
+              if [ "$REF" != "refs/heads/master" ]; then
+                echo "Publishing is only allowed from master." >&2
+                exit 1
+              fi
+              should_publish=true
+            fi
+          elif [ "$EVENT_NAME" = "push" ] && [ -n "$PREVIOUS_COMMIT" ] && ! [[ "$PREVIOUS_COMMIT" =~ ^0+$ ]]; then
+            if previous_package=$(git show "$PREVIOUS_COMMIT:$package_path" 2>/dev/null); then
+              previous_version=$(read_version <<< "$previous_package")
+              highest_version=$(printf '%s\n%s\n' "$previous_version" "$current_version" | sort -V | tail -n 1)
+              if [ "$current_version" != "$previous_version" ] && [ "$highest_version" = "$current_version" ]; then
+                should_publish=true
+              fi
+              echo "Previous version: $previous_version"
+            else
+              echo "The package is new in this push. Publish the first release by hand."
+            fi
+          fi
+
+          echo "publish=$should_publish" >> "$GITHUB_OUTPUT"
+          echo "Current version: $current_version. Publish: $should_publish"
+
+  native:
+    name: Build ${{ matrix.architecture }} native library
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: windows-latest
+          - architecture: arm64
+            runner: windows-11-vs2026-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Stage native library
+        working-directory: bindings/node
+        run: node scripts/stage-native.mjs ${{ matrix.architecture }}
+
+      - name: Upload native library
+        uses: actions/upload-artifact@v7
+        with:
+          name: win32-${{ matrix.architecture }}
+          path: bindings/node/bin/win32-${{ matrix.architecture }}/deskband11lib.dll
+          if-no-files-found: error
+
+  test:
+    name: Test on Node.js ${{ matrix.node-version }} ${{ matrix.architecture }}
+    needs: native
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: windows-latest
+            node-version: "22"
+          - architecture: x64
+            runner: windows-latest
+            node-version: "24"
+          - architecture: arm64
+            runner: windows-11-vs2026-arm
+            node-version: "22"
+          - architecture: arm64
+            runner: windows-11-vs2026-arm
+            node-version: "24"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          package-manager-cache: false
+
+      - name: Install dependencies
+        working-directory: bindings/node
+        run: npm ci
+
+      - name: Download native libraries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: win32-*
+          path: bindings/node/bin
+
+      - name: Build
+        working-directory: bindings/node
+        run: npm run build
+
+      # Tests that attach windows to the taskbar need an interactive desktop session and run only locally.
+      - name: Run tests
+        working-directory: bindings/node
+        run: npm test
+
+  package:
+    name: Pack package
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Install dependencies
+        working-directory: bindings/node
+        run: npm ci
+
+      - name: Download native libraries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: win32-*
+          path: bindings/node/bin
+
+      - name: Pack
+        working-directory: bindings/node
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          npm run build
+          if ($LASTEXITCODE -ne 0) { throw "The build failed." }
+
+          $packResult = npm pack --json | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw "npm pack failed." }
+
+          $nativeLibraries = @($packResult[0].files.path | Where-Object { $_ -like "bin/*/deskband11lib.dll" })
+          if ($nativeLibraries.Count -ne 2) { throw "The package must contain the x64 and ARM64 native libraries, but contains: $($nativeLibraries -join ', ')" }
+          $nativeLibraries
+
+      - name: Upload package
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-package
+          path: bindings/node/deskband11lib-*.tgz
+          if-no-files-found: error
+
+  publish:
+    name: Publish to npm
+    needs: [resolve, package]
+    if: needs.resolve.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/deskband11lib/v/${{ needs.resolve.outputs.version }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Download package
+        uses: actions/download-artifact@v8
+        with:
+          name: npm-package
+
+      # npm authenticates through the OIDC token of this job and attaches a provenance statement.
+      - name: Publish to npm
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --version
+          npm publish ./deskband11lib-*.tgz --access public

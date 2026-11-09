@@ -1,0 +1,73 @@
+{
+  "name": "deskband11lib",
+  "version": "1.5.0",
+  "description": "Host Electron windows and other native windows inside the Windows 11 taskbar.",
+  "keywords": [
+    "windows11",
+    "taskbar",
+    "deskband",
+    "widget",
+    "electron"
+  ],
+  "homepage": "https://db11l.kagamine-rin.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/airtaxi/Deskband11Lib.git",
+    "directory": "bindings/node"
+  },
+  "bugs": "https://github.com/airtaxi/Deskband11Lib/issues",
+  "license": "MIT",
+  "author": "airtaxi",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./electron": {
+      "types": "./dist/electron.d.ts",
+      "default": "./dist/electron.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "electron": ">=30"
+  },
+  "peerDependenciesMeta": {
+    "electron": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "stage-native": "node scripts/stage-native.mjs",
+    "test": "node --test \"test/*.test.js\"",
+    "test:taskbar": "electron test/electron/taskbar.js",
+    "sample": "electron samples/electron-clock/main.js"
+  },
+  "dependencies": {
+    "koffi": "^3.3.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "electron": "^45.2.3",
+    "typescript": "^7.0.2"
+  }
+}
