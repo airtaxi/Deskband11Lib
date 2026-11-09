@@ -11,9 +11,12 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         TaskbarContentHost = new TaskbarContentHost(this, (FrameworkElement)Content, new() { PreferredWidth = double.MaxValue });
+        TaskbarContentHost.TaskbarEdgeChanged += OnTaskbarContentHostTaskbarEdgeChanged;
     }
 
     public async Task PrepareTaskbarContentAsync() => await TaskbarContentHost.AttachWhenLayoutReadyAsync();
+
+    private void OnTaskbarContentHostTaskbarEdgeChanged(object? _, EventArgs __) => TaskbarContent.ApplyTaskbarOrientation(TaskbarContentHost.IsTaskbarVertical);
 
     protected override void OnClosed(EventArgs e)
     {

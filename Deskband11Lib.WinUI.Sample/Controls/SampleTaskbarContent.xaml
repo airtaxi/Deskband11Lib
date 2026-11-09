@@ -9,52 +9,91 @@
     d:DesignWidth="360"
     mc:Ignorable="d">
 
-    <Border
-        Padding="8,4"
-        Background="Transparent"
-        BorderThickness="0"
-        CornerRadius="8">
-        <Grid ColumnSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+    <Grid>
+        <Border
+            x:Name="HorizontalLayoutBorder"
+            Padding="8,4"
+            Background="Transparent"
+            BorderThickness="0"
+            CornerRadius="8">
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <FontIcon
-                Grid.Column="0"
-                VerticalAlignment="Center"
-                FontSize="16"
-                Foreground="{ThemeResource SystemAccentColor}"
-                Glyph="&#xE8A7;" />
+                <FontIcon
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    Foreground="{ThemeResource SystemAccentColor}"
+                    Glyph="&#xE8A7;" />
 
-            <StackPanel
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                Spacing="0">
-                <TextBlock
-                    FontSize="13"
-                    Text="Deskband11Lib"
-                    TextTrimming="CharacterEllipsis" />
-                <TextBlock
-                    FontSize="10"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="Unpackaged NativeAOT sample"
-                    TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+                <StackPanel
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Spacing="0">
+                    <TextBlock
+                        FontSize="13"
+                        Text="Deskband11Lib"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        FontSize="10"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Unpackaged NativeAOT sample"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
 
-            <Button
-                Grid.Column="2"
-                MinWidth="32"
-                MinHeight="32"
-                Padding="8,0"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                Click="OnCloseButtonClicked"
-                ToolTipService.ToolTip="Close sample">
-                <FontIcon FontSize="12" Glyph="&#xE711;" />
-            </Button>
-        </Grid>
-    </Border>
+                <Button
+                    Grid.Column="2"
+                    MinWidth="32"
+                    MinHeight="32"
+                    Padding="8,0"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Click="OnCloseButtonClicked"
+                    ToolTipService.ToolTip="Close sample">
+                    <FontIcon FontSize="12" Glyph="&#xE711;" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <Border
+            x:Name="VerticalLayoutBorder"
+            Padding="4,8"
+            Background="Transparent"
+            BorderThickness="0"
+            CornerRadius="8"
+            Visibility="Collapsed">
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <FontIcon
+                    Grid.Row="0"
+                    HorizontalAlignment="Center"
+                    FontSize="16"
+                    Foreground="{ThemeResource SystemAccentColor}"
+                    Glyph="&#xE8A7;" />
+
+                <Button
+                    Grid.Row="2"
+                    MinWidth="32"
+                    MinHeight="32"
+                    Padding="0,8"
+                    HorizontalAlignment="Center"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Click="OnCloseButtonClicked"
+                    ToolTipService.ToolTip="Close sample">
+                    <FontIcon FontSize="12" Glyph="&#xE711;" />
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>

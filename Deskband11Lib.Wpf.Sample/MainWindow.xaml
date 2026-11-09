@@ -10,5 +10,5 @@
     AllowsTransparency="True"
     Background="Transparent"
     WindowStyle="None">
-    <controls:SampleTaskbarContent />
+    <controls:SampleTaskbarContent x:Name="TaskbarContent" />
 </Window>

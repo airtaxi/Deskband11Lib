@@ -27,6 +27,7 @@ Deskband11Lib는 UI 프레임워크별 NuGet 패키지로 제공됩니다. 작�
 - 별도 창을 열지 않아도 필요한 정보를 항상 보이는 위치에 띄울 수 있습니다.
 - 타이머, 미디어 재생, 계정 전환, 빌드 상태, 장치 모니터링, 빠른 실행 같은 기능을 작게 정리해 배치하기 좋습니다.
 - 고정 앱, 실행 중인 앱, 알림 영역과 겹치지 않도록 남는 작업 표시줄 공간에 맞춰 위치를 잡습니다.
+- Windows 11 26H2부터 쓸 수 있는 위쪽, 왼쪽, 오른쪽 위치를 포함해 작업 표시줄의 모든 위치에서 동작합니다. 작업 표시줄을 옮기면 콘텐츠도 함께 따라갑니다.
 - 같은 작업 표시줄 영역에 여러 인스턴스를 동시에 띄울 수 있습니다. 자동 슬롯 조정으로 각 인스턴스가 사용 가능한 공간을 겹치지 않고 나눕니다.
 - 레이아웃이 바뀔 때 자연스럽게 움직이도록 기본 easing 함수를 제공합니다. Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle 계열을 사용할 수 있습니다.
 - 고주사율 모드를 켜면 레이아웃 애니메이션 타이머를 대상 모니터의 현재 주사율에 맞춰 고주사율 디스플레이에서 더 매끄러운 움직임을 제공합니다.
@@ -143,7 +144,7 @@ Deskband11Lib는 같은 작업 표시줄 영역에 여러 인스턴스를 동시
 
 등록된 각 인스턴스를 **슬롯**이라고 합니다. 슬롯은 `(ManualSlotPriority, SlotIndex)` 순으로 정렬됩니다. `ManualSlotPriority` 값이 낮을수록 인스턴스가 더 앞에 배치됩니다(왼쪽 정렬 모드에서 알림 영역에서 더 먼 쪽). `ManualSlotPriority`가 같은 슬롯 중에서는 도착 순서(`SlotIndex`)가 우선순위를 결정합니다.
 
-너비 할당은 Fixed-then-Stretch 모델을 따릅니다:
+너비 할당은 Fixed-then-Stretch 모델을 따릅니다. 여기서 너비는 작업 표시줄을 따라가는 방향의 길이이며, 왼쪽이나 오른쪽 작업 표시줄에서는 높이를 뜻합니다([작업 표시줄 위치](#작업-표시줄-위치) 참고).
 
 - **Fixed 슬롯**: 유한한 `PreferredWidth`를 가진 인스턴스는 우선순위 순서대로 요청한 너비를 할당받습니다. 사용 가능한 공간이 부족하면 우선순위가 낮은 Fixed 슬롯은 남은 공간만 받습니다(0이 될 수도 있음).
 - **Stretch 슬롯**: `PreferredWidth = double.MaxValue`로 설정된 인스턴스는 모든 Fixed 슬롯이 할당된 후 남은 공간을 균등하게 나눕니다.
@@ -177,6 +178,58 @@ var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOpt
 
 같은 영역의 모든 인스턴스가 Stretch이면 공간을 균등하게 나눕니다.
 
+## 작업 표시줄 위치
+
+Windows 11 26H2부터는 작업 표시줄을 화면의 네 가장자리 어디에나 둘 수 있습니다. Deskband11Lib는 네 위치를 모두 지원합니다. 위쪽 작업 표시줄은 아래쪽 작업 표시줄과 같은 방식으로 동작합니다. 왼쪽이나 오른쪽 작업 표시줄은 세로 방향이므로 콘텐츠를 위에서 아래로 배치합니다.
+
+### 크기는 작업 표시줄 방향을 기준으로 합니다
+
+`PreferredWidth`와 `PreferredHeight`는 어느 위치에서든 이름이 같지만, 화면이 아니라 작업 표시줄을 기준으로 방향을 나타냅니다.
+
+| 옵션                | 방향                                  | 아래쪽 또는 위쪽 작업 표시줄 | 왼쪽 또는 오른쪽 작업 표시줄 |
+| ----------------- | ----------------------------------- | ---------------- | ---------------- |
+| `PreferredWidth`  | 작업 표시줄을 따라가는 방향                     | 너비               | 높이               |
+| `PreferredHeight` | 작업 표시줄을 가로지르는 방향(작업 표시줄 두께를 넘지 않음) | 높이               | 너비               |
+
+`PreferredWidth`를 기준으로 동작하는 기능도 같은 규칙을 따릅니다. Stretch 모드(`double.MaxValue`), `AllowFixedSlotResize`, `ManualSlotPriority`, 다중 인스턴스 슬롯 할당은 모두 작업 표시줄을 따라가는 방향으로 동작하므로, 세로 작업 표시줄을 위해 따로 바꿀 설정이 없습니다.
+
+반면 콘텐츠 요소에는 화면 기준의 실제 크기가 적용됩니다. 왼쪽이나 오른쪽 작업 표시줄에서는 라이브러리가 `FrameworkElement.Width`에 배정한 두께를, `FrameworkElement.Height`에 배정한 길이를 설정합니다. 기본 옵션(`PreferredWidth = 360`, `PreferredHeight = 48`)을 쓰면, 너비가 48 epx인 세로 작업 표시줄에서 콘텐츠의 너비는 48 epx가 되고 높이는 최대 360 epx가 됩니다.
+
+세로 작업 표시줄은 작업 표시줄 단추를 합치지 않고 레이블을 표시하도록 설정하면 훨씬 넓어집니다. 이때도 콘텐츠의 너비는 `PreferredHeight`를 넘지 않습니다. 어느 위치에서든 작업 표시줄 두께를 꽉 채우려면 `PreferredHeight = double.MaxValue`로 설정하시면 됩니다. 아래쪽이나 위쪽 작업 표시줄에서는 이렇게 설정해도 높이가 작업 표시줄 두께를 넘지 않습니다.
+
+세로 작업 표시줄에서는 알림 영역의 아이콘이 세로로 쌓여서 작업 표시줄의 상당 부분을 차지합니다. 그래서 남는 공간이 가로 작업 표시줄보다 짧은 경우가 많으므로, 세로 레이아웃은 짧은 길이에 맞춰 설계하는 편이 좋습니다.
+
+### 배치와 정렬
+
+`Placement`와 `TaskbarAlignment` 값도 이름을 그대로 쓰며, 작업 표시줄을 따라가는 방향으로 해석합니다.
+
+| 값                        | 아래쪽 또는 위쪽 작업 표시줄     | 왼쪽 또는 오른쪽 작업 표시줄     |
+| ------------------------ | -------------------- | -------------------- |
+| `TaskbarAlignment.Left`  | 아이콘을 왼쪽으로 정렬한 상태     | 아이콘을 위쪽으로 정렬한 상태     |
+| `LeftEdge`               | 날씨 위젯 오른쪽, 가장 왼쪽 끝   | 날씨 위젯 아래쪽, 가장 위쪽 끝   |
+| `BeforeStartButton`      | 시작 버튼 왼쪽             | 시작 버튼 위쪽             |
+| `BeforeNotificationArea` | 알림 영역 왼쪽             | 알림 영역 위쪽             |
+
+### 위치 변경에 대응하기
+
+작업 표시줄 위치를 바꿔도 작업 표시줄 창은 다시 만들어지지 않습니다. 따라서 호스팅된 창은 그대로 붙어 있고, 다음 레이아웃 갱신 때 새 위치에 맞춰 다시 배치됩니다. 콘텐츠를 가로 레이아웃과 세로 레이아웃 사이에서 전환하려면 다음 멤버를 사용하시면 됩니다.
+
+- `TaskbarEdge`: 작업 표시줄이 붙어 있는 가장자리(`Left`, `Top`, `Right`, `Bottom`)입니다. 첫 레이아웃을 계산하기 전까지는 `Unknown`입니다.
+- `IsTaskbarVertical`: 작업 표시줄이 왼쪽이나 오른쪽에 있으면 `true`입니다.
+- `TaskbarEdgeChanged`: 새 위치에 맞는 크기를 적용하기 직전에 UI 스레드에서 발생합니다. 연결한 뒤 처음 레이아웃을 계산할 때도 발생합니다.
+
+```csharp
+host.TaskbarEdgeChanged += (_, _) =>
+{
+    // Switch the content between its horizontal and vertical layouts.
+    content.ApplyTaskbarOrientation(host.IsTaskbarVertical);
+};
+```
+
+`ApplyTaskbarOrientation`은 앱의 콘텐츠에서 직접 구현하는 메서드를 뜻합니다. 샘플 프로젝트에서는 가로 레이아웃과 세로 레이아웃을 하나씩 두고 표시 여부를 바꾸는 방식으로 구현했습니다.
+
+작업 표시줄이 가로와 세로 사이에서 바뀔 때는 레이아웃 애니메이션을 생략합니다.
+
 ## 동작 방식
 
 Deskband11Lib는 앱 창을 작업 표시줄 안에 들어갈 크기로 맞추고 실제 작업 표시줄 레이아웃이 바뀔 때마다 위치를 다시 잡습니다. 내부적으로는 일반적인 Win32 창 부모 관계를 사용합니다.
@@ -185,7 +238,8 @@ Deskband11Lib는 앱 창을 작업 표시줄 안에 들어갈 크기로 맞추�
 - 앱에서 만든 일반 `Window`를 받습니다.
 - 창 스타일을 최상위 팝업 창에서 자식 창 스타일로 바꿉니다.
 - `SetParent`로 창을 작업 표시줄의 자식 창으로 붙입니다.
-- 작업 표시줄 버튼과 알림 영역 사이에서 사용할 수 있는 영역을 계산하며, 작업 표시줄 정렬(왼쪽 또는 가운데)을 함께 고려합니다.
+- 작업 표시줄 창과 그 창이 있는 모니터를 비교해서 작업 표시줄이 어느 가장자리에 있는지 판정합니다.
+- 작업 표시줄을 따라가는 방향으로 작업 표시줄 버튼과 알림 영역 사이에서 사용할 수 있는 영역을 계산하며, 작업 표시줄 정렬(왼쪽이나 위쪽, 또는 가운데)을 함께 고려합니다.
 - `SetWindowPos`와 `SetWindowRgn`으로 창 위치와 클리핑 영역을 조정합니다.
 
 현재 Windows 11에서는 작업 표시줄의 자식 HWND만 살펴봐서는 실제 버튼 폭을 안정적으로 알기 어렵고 작업 표시줄 콘텐츠 정렬이 왼쪽일 수도 있고 가운데일 수도 있습니다. Deskband11Lib는 이 문제를 UI Automation으로 해결합니다.
@@ -193,7 +247,7 @@ Deskband11Lib는 앱 창을 작업 표시줄 안에 들어갈 크기로 맞추�
 - **버튼 감지:** UI Automation으로 시작 버튼(`AutomationId = StartButton`), 있으면 날씨 위젯(`WidgetsButton`), 그리고 오른쪽으로 이어지는 작업 표시줄 앱 버튼 묶음을 정확히 찾아냅니다.
 - **정렬 감지:** 레지스트리의 `TaskbarAl` 값으로 작업 표시줄 정렬을 읽고, 실패하면 시작 버튼 위치로 추정합니다.
 - **공간 선택:** 가운데 정렬일 때는 시작 버튼 그룹 양쪽의 남는 공간 중 더 넓은 쪽에 콘텐츠를 배치하므로 시작 버튼, 앱 버튼, 날씨 위젯, 알림 영역 어느 것도 가리지 않습니다.
-- **보조 모니터:** 알림 영역 전용 HWND가 없으므로 UI Automation이 시계와 알림 묶음(`AutomationId = SystemTrayIcon` / `NotifyItemIcon`)까지 찾아 오른쪽 경계를 계산합니다.
+- **보조 모니터:** 알림 영역 전용 HWND가 없으므로 UI Automation이 시계와 알림 묶음(`AutomationId = SystemTrayIcon` / `NotifyItemIcon`)까지 찾아 남는 공간이 끝나는 위치를 계산합니다.
 
 ## 옵션
 
@@ -201,14 +255,14 @@ Deskband11Lib는 앱 창을 작업 표시줄 안에 들어갈 크기로 맞추�
 
 | 옵션                        | 기본값                         | 설명                                                                                                                          |
 | ------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `PreferredWidth`          | `360`                       | 콘텐츠가 사용할 너비입니다. effective pixel 단위입니다. `double.MaxValue`로 설정하면 stretch 모드로 동작하여 Fixed 너비 인스턴스 할당 후 남은 공간을 채웁니다.                                                                                      |
+| `PreferredWidth`          | `360`                       | 작업 표시줄을 따라가는 방향으로 콘텐츠가 사용할 길이입니다. effective pixel 단위이며, 아래쪽이나 위쪽 작업 표시줄에서는 너비, 왼쪽이나 오른쪽 작업 표시줄에서는 높이입니다. `double.MaxValue`로 설정하면 stretch 모드로 동작하여 Fixed 너비 인스턴스 할당 후 남은 공간을 채웁니다. [작업 표시줄 위치](#작업-표시줄-위치)를 참고하세요. |
 | `AllowFixedSlotResize`   | `true`                      | `true`이면 공간이 부족할 때 Fixed 슬롯이 너비 0까지 줄지 않고 `PreferredWidth` 비율에 맞춰 줄어듭니다. `false`로 설정하면 기존대로 우선순위 순서대로 먼저 할당받습니다. |
-| `PreferredHeight`         | `48`                        | 콘텐츠가 사용할 높이입니다. effective pixel 단위입니다.                                                                                      |
+| `PreferredHeight`         | `48`                        | 작업 표시줄을 가로지르는 방향으로 콘텐츠가 사용할 크기입니다. effective pixel 단위이며, 아래쪽이나 위쪽 작업 표시줄에서는 높이, 왼쪽이나 오른쪽 작업 표시줄에서는 너비입니다. 작업 표시줄 두께를 넘지 않으며, `double.MaxValue`로 설정하면 두께를 꽉 채웁니다. |
 | `AnimateLayoutChanges`    | `true`                      | 작업 표시줄 안에서 위치나 크기가 바뀔 때 애니메이션을 적용합니다.                                                                                       |
 | `HighRefreshRateMode`     | `false`                     | `AnimateLayoutChanges`와 함께 활성화하면 레이아웃 애니메이션 타이머 주기를 기본 60 FPS가 아닌 대상 모니터의 현재 주사율에 맞춥니다. |
 | `LayoutAnimationDuration` | `500`                       | 레이아웃 애니메이션 시간입니다. ms 단위입니다.                                                                                                 |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | 레이아웃 애니메이션에 사용할 easing delegate(`Func<double, double>`)입니다. 오버슛 없는 기본 easing은 `Deskband11Lib.Core.EasingFunctions`에서 제공합니다. |
-| `Placement`               | `Auto`                      | 배치 방식을 선택합니다.<br>• `Auto`: 가운데 정렬일 때 시작 버튼 그룹 양쪽 남는 공간 중 더 넓은 쪽에 배치합니다. 왼쪽이 더 넓으면 가장 왼쪽 끝(`LeftEdge`와 동일), 오른쪽이 더 넓으면 알림 영역 앞에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `LeftEdge`: 가운데 정렬일 때 날씨 위젯 바로 오른쪽, 가장 왼쪽 끝에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `BeforeNotificationArea`: 항상 알림 영역 앞에 둡니다.<br>• `BeforeStartButton`: 시작 버튼 앞에 둡니다. 가운데 정렬이 아니면 `BeforeNotificationArea`로 동작합니다. |
+| `Placement`               | `Auto`                      | 배치 방식을 선택합니다.<br>• `Auto`: 가운데 정렬일 때 시작 버튼 그룹 양쪽 남는 공간 중 더 넓은 쪽에 배치합니다. 왼쪽이 더 넓으면 가장 왼쪽 끝(`LeftEdge`와 동일), 오른쪽이 더 넓으면 알림 영역 앞에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `LeftEdge`: 가운데 정렬일 때 날씨 위젯 바로 오른쪽, 가장 왼쪽 끝에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `BeforeNotificationArea`: 항상 알림 영역 앞에 둡니다.<br>• `BeforeStartButton`: 시작 버튼 앞에 둡니다. 가운데 정렬이 아니면 `BeforeNotificationArea`로 동작합니다.<br>왼쪽이나 오른쪽 작업 표시줄에서는 같은 값을 위에서 아래 방향으로 해석합니다. `LeftEdge`는 가장 위쪽 끝이고, "앞"은 위쪽을 뜻합니다. |
 | `TrackTaskbarButtons`     | `true`                      | UI Automation으로 작업 표시줄 버튼 영역을 추적합니다.                                                                                        |
 | `TrackNotificationArea`   | `true`                      | 콘텐츠가 알림 영역을 침범하지 않도록 합니다.                                                                                                   |
 | `PreferredMonitorIdentity` | `0`                        | 어느 작업 표시줄에 호스팅할지 선택합니다. `0`이면 기본 작업 표시줄(`Shell_TrayWnd`)을 씁니다. `1`이면 첫 번째 보조 모니터의 작업 표시줄(`Shell_SecondaryTrayWnd`), `2`면 그 다음, 화면 왼쪽부터 오른쪽 순서로 매핑됩니다. 요청한 보조 모니터의 작업 표시줄이 없으면 기본 작업 표시줄로 폴백합니다. |
@@ -217,7 +271,7 @@ Deskband11Lib는 앱 창을 작업 표시줄 안에 들어갈 크기로 맞추�
 
 ## 작업 표시줄 정렬
 
-Deskband11Lib는 레지스트리의 `TaskbarAl` 값을 읽어 Windows 11 작업 표시줄이 왼쪽 정렬인지 가운데 정렬인지 감지하고 실패하면 시작 버튼 위치로 추정합니다. `TaskbarContentHost`에서 `GetTaskbarAlignment()`를 호출하면 `TaskbarAlignment`(`Left`, `Center`, `Unknown`) 값을 얻을 수 있습니다. 감지된 정렬은 `Placement = Auto`의 동작을 결정합니다.
+Deskband11Lib는 레지스트리의 `TaskbarAl` 값을 읽어 Windows 11 작업 표시줄이 왼쪽 정렬인지 가운데 정렬인지 감지하고 실패하면 시작 버튼 위치로 추정합니다. `TaskbarContentHost`에서 `GetTaskbarAlignment()`를 호출하면 `TaskbarAlignment`(`Left`, `Center`, `Unknown`) 값을 얻을 수 있습니다. 감지된 정렬은 `Placement = Auto`의 동작을 결정합니다. 왼쪽이나 오른쪽 작업 표시줄에서 `Left`는 아이콘이 위쪽으로 정렬된 상태를 뜻합니다.
 
 ## 내장 Easing 함수
 

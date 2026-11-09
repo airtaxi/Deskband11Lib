@@ -15,5 +15,5 @@
         <ex:TransparentTintBackdrop />
     </Window.SystemBackdrop>
 
-    <controls:SampleTaskbarContent />
+    <controls:SampleTaskbarContent x:Name="TaskbarContent" />
 </Window>

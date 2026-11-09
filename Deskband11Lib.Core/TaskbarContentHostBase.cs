@@ -62,7 +62,14 @@ public class TaskbarContentHostBase : IDisposable
 
     public event EventHandler? TaskbarWindowRecreationRequired;
 
+    // Raised on the UI thread right before bounds for a new taskbar position are applied, including the first layout after attaching.
+    public event EventHandler? TaskbarEdgeChanged;
+
     public bool IsAttached { get; private set; }
+
+    public TaskbarEdge TaskbarEdge { get; private set; }
+
+    public bool IsTaskbarVertical => TaskbarEdgeDetector.IsVertical(TaskbarEdge);
 
     public TaskbarAlignment GetTaskbarAlignment() => TaskbarAlignmentDetector.ReadRegistryAlignment();
 
@@ -161,6 +168,8 @@ public class TaskbarContentHostBase : IDisposable
         var scaleFactor = GetScaleFactor();
         var siblingSlots = _slotRegistry.CollectSlots(_taskbarWindowLocator.TaskbarWindow, _windowHandle);
         var snapshot = _taskbarLayoutCalculator.Calculate(_platformAdapter.RequestedWidth, _platformAdapter.RequestedHeight, scaleFactor, _ownSlot, siblingSlots);
+        UpdateTaskbarEdge(snapshot.Edge);
+        if (!IsAttached) return;
         if (!snapshot.IsValid)
         {
             CollapseWindowRegion();
@@ -203,6 +212,7 @@ public class TaskbarContentHostBase : IDisposable
         TaskbarWindowDisappeared = null;
         TaskbarDpiChanged = null;
         TaskbarWindowRecreationRequired = null;
+        TaskbarEdgeChanged = null;
 
         _slotRegistry.Dispose();
         _taskbarWindowMonitorService.Dispose();
@@ -243,6 +253,15 @@ public class TaskbarContentHostBase : IDisposable
         _lastResolvedPlacement = resolvedPlacement;
         _ownSlot = _ownSlot.Value with { ActualPlacement = resolvedPlacement };
         _slotRegistry.UpdateActualPlacement(_windowHandle, resolvedPlacement);
+    }
+
+    // Moving the taskbar to another edge keeps the same taskbar window, so the change is detected from the layout rather than from window recreation.
+    private void UpdateTaskbarEdge(TaskbarEdge edge)
+    {
+        if (edge == TaskbarEdge.Unknown || edge == TaskbarEdge) return;
+
+        TaskbarEdge = edge;
+        TaskbarEdgeChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void TryReparentToTaskbar()
@@ -328,6 +347,8 @@ public class TaskbarContentHostBase : IDisposable
         if (!_options.AnimateLayoutChanges) return false;
         if (!_hasAppliedLayoutSnapshot) return false;
         if (!_lastAppliedLayoutSnapshot.IsValid || !snapshot.IsValid) return false;
+        // Interpolating between a horizontal and a vertical layout produces meaningless intermediate shapes.
+        if (TaskbarEdgeDetector.IsVertical(_lastAppliedLayoutSnapshot.Edge) != TaskbarEdgeDetector.IsVertical(snapshot.Edge)) return false;
         if (!double.IsFinite(_options.LayoutAnimationDuration) || _options.LayoutAnimationDuration <= 0) return false;
         return AreClose(_lastAppliedLayoutSnapshot.ScaleFactor, snapshot.ScaleFactor);
     }
@@ -503,14 +524,14 @@ public class TaskbarContentHostBase : IDisposable
 
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_isDisposed, this);
 
-    private static TaskbarLayoutSnapshot InterpolateLayoutSnapshot(TaskbarLayoutSnapshot startSnapshot, TaskbarLayoutSnapshot targetSnapshot, double progress) => new(Interpolate(startSnapshot.X, targetSnapshot.X, progress), Interpolate(startSnapshot.Y, targetSnapshot.Y, progress), Interpolate(startSnapshot.Width, targetSnapshot.Width, progress), Interpolate(startSnapshot.Height, targetSnapshot.Height, progress), Interpolate(startSnapshot.AvailableWidth, targetSnapshot.AvailableWidth, progress), targetSnapshot.ScaleFactor, true, targetSnapshot.ResolvedPlacement);
+    private static TaskbarLayoutSnapshot InterpolateLayoutSnapshot(TaskbarLayoutSnapshot startSnapshot, TaskbarLayoutSnapshot targetSnapshot, double progress) => new(Interpolate(startSnapshot.X, targetSnapshot.X, progress), Interpolate(startSnapshot.Y, targetSnapshot.Y, progress), Interpolate(startSnapshot.Width, targetSnapshot.Width, progress), Interpolate(startSnapshot.Height, targetSnapshot.Height, progress), Interpolate(startSnapshot.AvailableWidth, targetSnapshot.AvailableWidth, progress), targetSnapshot.ScaleFactor, true, targetSnapshot.ResolvedPlacement, targetSnapshot.Edge);
 
     private static double Interpolate(double start, double target, double progress) => start + ((target - start) * progress);
 
     private static int RoundDevicePixel(double value) => (int)Math.Round(value);
 
     private static bool AreLayoutSnapshotsClose(TaskbarLayoutSnapshot firstSnapshot, TaskbarLayoutSnapshot secondSnapshot) =>
-        AreClose(firstSnapshot.X, secondSnapshot.X) && AreClose(firstSnapshot.Y, secondSnapshot.Y) && AreClose(firstSnapshot.Width, secondSnapshot.Width) && AreClose(firstSnapshot.Height, secondSnapshot.Height) && AreClose(firstSnapshot.AvailableWidth, secondSnapshot.AvailableWidth) && AreClose(firstSnapshot.ScaleFactor, secondSnapshot.ScaleFactor) && firstSnapshot.IsValid == secondSnapshot.IsValid;
+        AreClose(firstSnapshot.X, secondSnapshot.X) && AreClose(firstSnapshot.Y, secondSnapshot.Y) && AreClose(firstSnapshot.Width, secondSnapshot.Width) && AreClose(firstSnapshot.Height, secondSnapshot.Height) && AreClose(firstSnapshot.AvailableWidth, secondSnapshot.AvailableWidth) && AreClose(firstSnapshot.ScaleFactor, secondSnapshot.ScaleFactor) && firstSnapshot.IsValid == secondSnapshot.IsValid && firstSnapshot.Edge == secondSnapshot.Edge;
 
     private static bool AreClose(double first, double second) => Math.Abs(first - second) < 0.001;
 }

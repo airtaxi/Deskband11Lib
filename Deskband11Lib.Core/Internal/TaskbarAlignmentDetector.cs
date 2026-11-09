@@ -1,6 +1,4 @@
 ﻿using Microsoft.Win32;
-using Windows.Win32;
-using Windows.Win32.Foundation;
 
 namespace Deskband11Lib.Core.Internal;
 
@@ -10,12 +8,12 @@ internal static class TaskbarAlignmentDetector
     private const string TaskbarAlignmentValueName = "TaskbarAl";
     private const double LeftAlignmentThresholdRatio = 0.15;
 
-    public static TaskbarAlignment Detect(HWND taskbarWindow, ButtonSpan startButtonSpan)
+    public static TaskbarAlignment Detect(TaskbarAxisRectangle taskbarRectangle, AxisSpan startButtonSpan)
     {
         var registryAlignment = ReadRegistryAlignment();
         if (registryAlignment != TaskbarAlignment.Unknown) return registryAlignment;
 
-        return InferAlignmentFromPosition(taskbarWindow, startButtonSpan);
+        return InferAlignmentFromPosition(taskbarRectangle, startButtonSpan);
     }
 
     public static TaskbarAlignment ReadRegistryAlignment()
@@ -35,14 +33,10 @@ internal static class TaskbarAlignmentDetector
         return TaskbarAlignment.Unknown;
     }
 
-    private static TaskbarAlignment InferAlignmentFromPosition(HWND taskbarWindow, ButtonSpan startButtonSpan)
+    // On a vertical taskbar, Left stands for top-aligned icons because the position is measured along the taskbar.
+    private static TaskbarAlignment InferAlignmentFromPosition(TaskbarAxisRectangle taskbarRectangle, AxisSpan startButtonSpan)
     {
-        if (!startButtonSpan.IsValid || taskbarWindow.IsNull) return TaskbarAlignment.Unknown;
-        if (!PInvoke.GetWindowRect(taskbarWindow, out var taskbarRectangle)) return TaskbarAlignment.Unknown;
-
-        var taskbarWidth = taskbarRectangle.right - taskbarRectangle.left;
-        if (taskbarWidth <= 0) return TaskbarAlignment.Unknown;
-
-        return startButtonSpan.Left - taskbarRectangle.left < taskbarWidth * LeftAlignmentThresholdRatio ? TaskbarAlignment.Left : TaskbarAlignment.Center;
+        if (!startButtonSpan.IsValid || taskbarRectangle.MainLength <= 0) return TaskbarAlignment.Unknown;
+        return startButtonSpan.Start - taskbarRectangle.MainStart < taskbarRectangle.MainLength * LeftAlignmentThresholdRatio ? TaskbarAlignment.Left : TaskbarAlignment.Center;
     }
 }

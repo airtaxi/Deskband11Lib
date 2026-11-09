@@ -1,12 +1,4 @@
 namespace Deskband11Lib.Core.Internal;
 
-internal readonly record struct ButtonSpan(int Left, int Right)
-{
-    public static ButtonSpan Invalid => new(0, 0);
-
-    public bool IsValid => Right > Left;
-
-    public int Width => Math.Max(0, Right - Left);
-}
-
-internal readonly record struct TaskbarButtonGeometry(ButtonSpan StartButton, ButtonSpan WidgetsButton, ButtonSpan TaskbarButtonsGroup, ButtonSpan NotificationArea);
+// Every span is measured along the taskbar: horizontally on a bottom or top taskbar, vertically on a left or right taskbar.
+internal readonly record struct TaskbarButtonGeometry(AxisSpan StartButton, AxisSpan WidgetsButton, AxisSpan TaskbarButtonsGroup, AxisSpan NotificationArea);

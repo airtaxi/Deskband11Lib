@@ -27,6 +27,7 @@ Deskband11Lib comes in multiple NuGet packages, one for each supported UI framew
 - Show live information where users can see it at a glance without opening a full window.
 - Add compact controls for actions such as timers, media playback, account switching, build status, device monitoring, or quick launch workflows.
 - Automatically fit content into the available taskbar space without overlapping pinned apps or the notification area.
+- Work on every taskbar position, including the top, left, and right positions available from Windows 11 26H2. Content follows the taskbar when it moves.
 - Run multiple instances side by side in the same taskbar area with automatic slot coordination. Each instance gets its fair share of the available space.
 - Built-in easing functions (Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle) for smooth layout animations.
 - Optional high refresh rate mode that matches the layout animation timer to the target monitor's current refresh rate for smoother motion on high refresh rate displays.
@@ -143,7 +144,7 @@ Deskband11Lib supports running multiple instances in the same taskbar area simul
 
 Each registered instance is called a **slot**. Slots are ordered by `(ManualSlotPriority, SlotIndex)`: lower `ManualSlotPriority` values place the instance earlier (further from the notification area in left-aligned mode). Among slots with the same `ManualSlotPriority`, arrival order (`SlotIndex`) breaks the tie.
 
-Width allocation follows a Fixed-then-Stretch model:
+Width allocation follows a Fixed-then-Stretch model. Width here is the length along the taskbar, which is the height on a left or right taskbar (see [Taskbar Position](#taskbar-position)).
 
 - **Fixed slots**: instances with a finite `PreferredWidth` get their requested width, in priority order, until available space runs out. Lower-priority Fixed slots that do not fit receive whatever remains (which may be zero).
 - **Stretch slots**: instances with `PreferredWidth = double.MaxValue` split the remaining space equally after all Fixed slots are served.
@@ -177,6 +178,58 @@ var host = new TaskbarContentHost(window, rootElement, new TaskbarContentHostOpt
 
 When all instances in an area are Stretch, they share the space equally.
 
+## Taskbar Position
+
+Starting with Windows 11 26H2, the taskbar can sit on any edge of the screen. Deskband11Lib supports all four positions. A top taskbar works the same way as a bottom one. A left or right taskbar is vertical, so content is laid out from top to bottom.
+
+### Sizes Follow the Taskbar
+
+`PreferredWidth` and `PreferredHeight` keep their names on every taskbar, but they describe directions relative to the taskbar, not to the screen:
+
+| Option            | Direction                                    | Bottom or top taskbar | Left or right taskbar |
+| ----------------- | -------------------------------------------- | --------------------- | --------------------- |
+| `PreferredWidth`  | Along the taskbar                            | Width                 | Height                |
+| `PreferredHeight` | Across the taskbar, capped by its thickness  | Height                | Width                 |
+
+Everything built on `PreferredWidth` follows the same rule. Stretch mode (`double.MaxValue`), `AllowFixedSlotResize`, `ManualSlotPriority`, and multi-instance slot allocation all work along the taskbar, so they need no changes for a vertical taskbar.
+
+Your content element, on the other hand, receives its real on-screen size. On a left or right taskbar, the library sets `FrameworkElement.Width` to the thickness the content was given and `FrameworkElement.Height` to the allocated length. With the default options (`PreferredWidth = 360`, `PreferredHeight = 48`), content on a 48 epx wide vertical taskbar is 48 epx wide and up to 360 epx tall.
+
+A vertical taskbar becomes much wider when taskbar buttons are never combined and show labels. Content still keeps `PreferredHeight` across the taskbar. To fill the full thickness on every taskbar, set `PreferredHeight = double.MaxValue`; on a bottom or top taskbar, the height is still capped by the taskbar.
+
+Free space is usually shorter on a vertical taskbar, because the notification area stacks its icons vertically and takes up a large part of the taskbar. Design the vertical layout for a compact length.
+
+### Placement and Alignment
+
+`Placement` and `TaskbarAlignment` values keep their names as well, and are read along the taskbar:
+
+| Value                    | Bottom or top taskbar                | Left or right taskbar           |
+| ------------------------ | ------------------------------------ | ------------------------------- |
+| `TaskbarAlignment.Left`  | Icons aligned to the left            | Icons aligned to the top        |
+| `LeftEdge`               | Far left, after the Widgets button   | Top, below the Widgets button   |
+| `BeforeStartButton`      | Left of the Start button             | Above the Start button          |
+| `BeforeNotificationArea` | Left of the notification area        | Above the notification area     |
+
+### Reacting to Position Changes
+
+Moving the taskbar does not recreate the taskbar window, so the hosted window stays attached and the layout follows the taskbar on the next refresh. Use these members to switch your content between a horizontal and a vertical layout:
+
+- `TaskbarEdge`: the edge the taskbar sits on (`Left`, `Top`, `Right`, or `Bottom`). It is `Unknown` until the first layout.
+- `IsTaskbarVertical`: `true` when the taskbar is on the left or right edge.
+- `TaskbarEdgeChanged`: raised on the UI thread right before the bounds for a new position are applied, including the first layout after attaching.
+
+```csharp
+host.TaskbarEdgeChanged += (_, _) =>
+{
+    // Switch the content between its horizontal and vertical layouts.
+    content.ApplyTaskbarOrientation(host.IsTaskbarVertical);
+};
+```
+
+`ApplyTaskbarOrientation` stands for a method in your own content. The sample projects implement it by keeping one horizontal and one vertical layout and toggling their visibility.
+
+Layout animation is skipped when the taskbar switches between horizontal and vertical.
+
 ## How It Works
 
 Deskband11Lib gives your app a taskbar-sized surface and keeps that surface aligned with the real taskbar layout. Internally, it uses regular Win32 window parenting:
@@ -185,7 +238,8 @@ Deskband11Lib gives your app a taskbar-sized surface and keeps that surface alig
 - Creates or receives a normal framework `Window` from the application.
 - Changes the window style from popup-style top-level window to child window.
 - Calls `SetParent` to place the window under the taskbar.
-- Calculates the available rectangle between the taskbar buttons and the notification area, taking taskbar alignment (left or center) into account.
+- Detects which screen edge the taskbar sits on by comparing the taskbar window with its monitor.
+- Calculates the available space along the taskbar between the taskbar buttons and the notification area, taking taskbar alignment (left or top, or center) into account.
 - Moves and clips the hosted window to that rectangle with `SetWindowPos` and `SetWindowRgn`.
 
 On current Windows 11 builds, the taskbar child HWND hierarchy alone does not expose reliable button widths, and the taskbar content may be left-aligned or centered. Deskband11Lib solves this with UI Automation:
@@ -193,7 +247,7 @@ On current Windows 11 builds, the taskbar child HWND hierarchy alone does not ex
 - **Button detection.** UI Automation precisely targets the Start button (`AutomationId = StartButton`), the optional Widgets button, and the contiguous taskbar app button group.
 - **Alignment detection.** The library reads the `TaskbarAl` registry value and falls back to inferring alignment from the Start button position.
 - **Gap selection.** When centered, it picks the more spacious of the two free gaps around the Start button group, so content never overlaps the Start button, app buttons, Widgets button, or the notification area.
-- **Secondary monitors.** Where the notification area has no dedicated HWND, UI Automation also locates the clock and notification cluster (`AutomationId = SystemTrayIcon` / `NotifyItemIcon`) to compute the right boundary.
+- **Secondary monitors.** Where the notification area has no dedicated HWND, UI Automation also locates the clock and notification cluster (`AutomationId = SystemTrayIcon` / `NotifyItemIcon`) to find where the free space ends.
 
 ## Options
 
@@ -201,14 +255,14 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 
 | Option                    | Default                     | Description                                                                                                                                              |
 | ------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PreferredWidth`          | `360`                       | Desired content width in effective pixels. Set to `double.MaxValue` for stretch mode: the instance fills remaining space after Fixed-width instances are served.                                                                                                               |
+| `PreferredWidth`          | `360`                       | Desired content length along the taskbar in effective pixels: the width on a bottom or top taskbar, the height on a left or right taskbar. Set to `double.MaxValue` for stretch mode: the instance fills remaining space after Fixed-width instances are served. See [Taskbar Position](#taskbar-position). |
 | `AllowFixedSlotResize`   | `true`                      | When `true` and the available space is too small to serve every resizable Fixed slot at its requested `PreferredWidth`, those slots shrink proportionally to their `PreferredWidth` instead of being starved to zero. Set to `false` to keep priority-ordered first-served behavior. |
-| `PreferredHeight`         | `48`                        | Desired content height in effective pixels.                                                                                                              |
+| `PreferredHeight`         | `48`                        | Desired content size across the taskbar in effective pixels: the height on a bottom or top taskbar, the width on a left or right taskbar. Capped by the taskbar thickness; set to `double.MaxValue` to fill it. |
 | `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
 | `HighRefreshRateMode`     | `false`                     | When enabled along with `AnimateLayoutChanges`, matches the layout animation timer interval to the target monitor's current refresh rate instead of the default 60 FPS. |
 | `LayoutAnimationDuration` | `500`                       | Layout animation duration in milliseconds.                                                                                                               |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
-| `Placement`               | `Auto`                      | Selects placement.<br>• `Auto`: When centered, picks the more spacious free gap around the Start button group. Left gap wins → far-left edge (same as `LeftEdge`); right gap wins → before the notification area. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `LeftEdge`: When centered, places content at the far left edge, right after the Widgets button. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `BeforeNotificationArea`: Always places content next to the notification area.<br>• `BeforeStartButton`: Places content next to the Start button. Falls back to `BeforeNotificationArea` when not centered. |
+| `Placement`               | `Auto`                      | Selects placement.<br>• `Auto`: When centered, picks the more spacious free gap around the Start button group. Left gap wins → far-left edge (same as `LeftEdge`); right gap wins → before the notification area. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `LeftEdge`: When centered, places content at the far left edge, right after the Widgets button. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `BeforeNotificationArea`: Always places content next to the notification area.<br>• `BeforeStartButton`: Places content next to the Start button. Falls back to `BeforeNotificationArea` when not centered.<br>On a left or right taskbar, the same values are read from top to bottom: `LeftEdge` is the top end, and "before" means above. |
 | `TrackTaskbarButtons`     | `true`                      | Enables UI Automation based taskbar button measurement.                                                                                                  |
 | `TrackNotificationArea`   | `true`                      | Keeps content away from the notification area.                                                                                                           |
 | `PreferredMonitorIdentity` | `0`                       | Selects which taskbar to host on. `0` uses the primary taskbar (`Shell_TrayWnd`). `1` uses the first secondary monitor's taskbar (`Shell_SecondaryTrayWnd`), `2` the next, and so on, ordered left-to-right by screen position. Falls back to the primary taskbar when the requested secondary monitor's taskbar is not present. |
@@ -217,7 +271,7 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 
 ## Taskbar Alignment
 
-Deskband11Lib detects whether the Windows 11 taskbar is left-aligned or centered by reading the `TaskbarAl` registry value, falling back to inferring the alignment from the Start button position. Call `GetTaskbarAlignment()` on a `TaskbarContentHost` to get a `TaskbarAlignment` (`Left`, `Center`, or `Unknown`). The detected alignment drives `Placement = Auto`.
+Deskband11Lib detects whether the Windows 11 taskbar is left-aligned or centered by reading the `TaskbarAl` registry value, falling back to inferring the alignment from the Start button position. Call `GetTaskbarAlignment()` on a `TaskbarContentHost` to get a `TaskbarAlignment` (`Left`, `Center`, or `Unknown`). The detected alignment drives `Placement = Auto`. On a left or right taskbar, `Left` means the icons are aligned to the top.
 
 ## Built-in Easing Functions
 
