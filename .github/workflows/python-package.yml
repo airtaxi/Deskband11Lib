@@ -1,0 +1,205 @@
+name: Build and Publish Python Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the current package version to PyPI.
+        required: true
+        default: false
+        type: boolean
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/python-package.yml
+      - bindings/python/**
+      - Deskband11Lib.Core/**
+      - Deskband11Lib.Native/**
+  pull_request:
+    paths:
+      - .github/workflows/python-package.yml
+      - bindings/python/**
+      - Deskband11Lib.Core/**
+      - Deskband11Lib.Native/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deskband11lib-python-package-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolve publish mode
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
+      version: ${{ steps.version.outputs.current }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Pushes to master publish when the package version increases. The first release and any manual release use workflow_dispatch.
+      - name: Resolve publish mode
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PUBLISH_INPUT: ${{ inputs.publish }}
+          PREVIOUS_COMMIT: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          project_path=bindings/python/pyproject.toml
+          read_version() {
+            python3 -c 'import sys, tomllib; print(tomllib.loads(sys.stdin.read())["project"]["version"])'
+          }
+
+          current_version=$(read_version < "$project_path")
+          echo "current=$current_version" >> "$GITHUB_OUTPUT"
+
+          should_publish=false
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$PUBLISH_INPUT" = "true" ]; then
+              if [ "$REF" != "refs/heads/master" ]; then
+                echo "Publishing is only allowed from master." >&2
+                exit 1
+              fi
+              should_publish=true
+            fi
+          elif [ "$EVENT_NAME" = "push" ] && [ -n "$PREVIOUS_COMMIT" ] && ! [[ "$PREVIOUS_COMMIT" =~ ^0+$ ]]; then
+            if previous_project=$(git show "$PREVIOUS_COMMIT:$project_path" 2>/dev/null); then
+              previous_version=$(read_version <<< "$previous_project")
+              highest_version=$(printf '%s\n%s\n' "$previous_version" "$current_version" | sort -V | tail -n 1)
+              if [ "$current_version" != "$previous_version" ] && [ "$highest_version" = "$current_version" ]; then
+                should_publish=true
+              fi
+              echo "Previous version: $previous_version"
+            else
+              echo "The package is new in this push. Publish the first release with workflow_dispatch."
+            fi
+          fi
+
+          echo "publish=$should_publish" >> "$GITHUB_OUTPUT"
+          echo "Current version: $current_version. Publish: $should_publish"
+
+  build:
+    name: Build ${{ matrix.runtime-identifier }} wheel
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime-identifier: win-x64
+            runner: windows-latest
+            python-architecture: x64
+          - runtime-identifier: win-arm64
+            runner: windows-11-vs2026-arm
+            python-architecture: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          architecture: ${{ matrix.python-architecture }}
+
+      - name: Stage native library
+        working-directory: bindings/python
+        run: python scripts/stage_native.py ${{ matrix.runtime-identifier }}
+
+      - name: Build wheel
+        working-directory: bindings/python
+        run: |
+          python -m pip install --upgrade build
+          python -m build --wheel --outdir dist
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheel-${{ matrix.runtime-identifier }}
+          path: bindings/python/dist/*.whl
+          if-no-files-found: error
+
+  test:
+    name: Test on Python ${{ matrix.python-version }} ${{ matrix.python-architecture }}
+    needs: build
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime-identifier: win-x64
+            runner: windows-latest
+            python-architecture: x64
+            python-version: "3.10"
+          - runtime-identifier: win-x64
+            runner: windows-latest
+            python-architecture: x64
+            python-version: "3.14"
+          # Windows ARM64 builds of Python start at 3.11.
+          - runtime-identifier: win-arm64
+            runner: windows-11-vs2026-arm
+            python-architecture: arm64
+            python-version: "3.11"
+          - runtime-identifier: win-arm64
+            runner: windows-11-vs2026-arm
+            python-architecture: arm64
+            python-version: "3.14"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.python-architecture }}
+
+      - name: Download wheel
+        uses: actions/download-artifact@v8
+        with:
+          name: wheel-${{ matrix.runtime-identifier }}
+          path: dist
+
+      - name: Install wheel
+        shell: pwsh
+        run: python -m pip install pytest (Get-ChildItem dist -Filter *.whl).FullName
+
+      # Tests that attach windows to the taskbar need an interactive desktop session and are skipped here.
+      - name: Run tests
+        working-directory: bindings/python
+        run: python -m pytest -p no:cacheprovider
+
+  publish:
+    name: Publish to PyPI
+    needs: [resolve, build, test]
+    if: needs.resolve.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/deskband11lib/${{ needs.resolve.outputs.version }}/
+    permissions:
+      id-token: write
+    steps:
+      - name: Download wheels
+        uses: actions/download-artifact@v8
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
