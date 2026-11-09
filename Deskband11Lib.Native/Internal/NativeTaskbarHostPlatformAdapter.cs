@@ -1,5 +1,5 @@
 using Deskband11Lib.Core;
-using Deskband11Lib.Native.Internal.Win32;
+using Deskband11Lib.Native.Internal.Interop;
 
 namespace Deskband11Lib.Native.Internal;
 

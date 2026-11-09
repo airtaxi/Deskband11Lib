@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Deskband11Lib.Native.Internal.Win32;
+using Deskband11Lib.Native.Internal.Interop;
 
 namespace Deskband11Lib.Native.Internal;
 
