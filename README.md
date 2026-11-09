@@ -2,41 +2,52 @@
 
 [![NuGet WinUI](https://img.shields.io/nuget/v/Deskband11Lib.WinUI.svg)](https://www.nuget.org/packages/Deskband11Lib.WinUI)
 [![NuGet WPF](https://img.shields.io/nuget/v/Deskband11Lib.Wpf.svg)](https://www.nuget.org/packages/Deskband11Lib.Wpf)
+[![PyPI](https://img.shields.io/pypi/v/deskband11lib.svg)](https://pypi.org/project/deskband11lib/)
+[![npm](https://img.shields.io/npm/v/deskband11lib.svg)](https://www.npmjs.com/package/deskband11lib)
+[![crates.io](https://img.shields.io/crates/v/deskband11lib.svg)](https://crates.io/crates/deskband11lib)
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE)
 
 🌐 English | [한국어](https://github.com/airtaxi/Deskband11Lib/blob/master/README.ko.md)
 
-Deskband11Lib is a library for building always-visible taskbar companions on Windows 11. It lets your app place real UI content directly inside the taskbar, so compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools appear as part of the taskbar.
+Deskband11Lib is a library for building always-visible taskbar companions on Windows 11. It lets your app place real UI content directly inside the taskbar, so compact dashboards, quick controls, status indicators, media widgets, launchers, and productivity tools appear as part of the taskbar. It is available for C# apps built with WinUI 3 or WPF, and for apps written in Python, Node.js and Electron, or Rust and Tauri.
 
 ![Deskband11Lib screenshot](https://raw.githubusercontent.com/airtaxi/Deskband11Lib/master/.github/screenshot.png)
 
 ## Packages
 
-Deskband11Lib comes in multiple NuGet packages, one for each supported UI framework. A shared `Deskband11Lib.Core` package holds the taskbar hosting engine. Future frameworks such as Avalonia can be added as additional facade packages.
+Deskband11Lib comes in packages for several languages and UI frameworks, all built on the same taskbar hosting engine, `Deskband11Lib.Core`. The .NET packages reference the engine directly. The Python, Node.js, and Rust packages call it through `deskband11lib.dll`, a native library compiled from the engine, and include that library for x64 and ARM64.
 
-| Package               | Description                                                                                                                                                           |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Deskband11Lib.Core`  | Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting engine. Independent of any UI framework. |
-| `Deskband11Lib.WinUI` | WinUI 3 facade. Build taskbar widgets with the same WinUI controls, styling, and composition features used by your app.                                               |
-| `Deskband11Lib.Wpf`   | WPF facade. Bring WPF-based content into the Windows 11 taskbar with the same simple API.                                                                             |
+| Package | Registry | Description |
+| --- | --- | --- |
+| `Deskband11Lib.Core` | [NuGet](https://www.nuget.org/packages/Deskband11Lib.Core) | Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting engine. Independent of any UI framework, and installed automatically with the WinUI or WPF package. |
+| `Deskband11Lib.WinUI` | [NuGet](https://www.nuget.org/packages/Deskband11Lib.WinUI) | WinUI 3 facade. Build taskbar widgets with the same WinUI controls, styling, and composition features used by your app. |
+| `Deskband11Lib.Wpf` | [NuGet](https://www.nuget.org/packages/Deskband11Lib.Wpf) | WPF facade. Bring WPF-based content into the Windows 11 taskbar with the same simple API. |
+| `deskband11lib` | [PyPI](https://pypi.org/project/deskband11lib/) | Python package with a controller for PySide6 and PyQt6 widgets. Hosts a window from any other toolkit by its handle. See the [Python README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/python/README.md). |
+| `deskband11lib` | [npm](https://www.npmjs.com/package/deskband11lib) | Node.js package with a controller for Electron windows. See the [Node.js README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/node/README.md). |
+| `tauri-plugin-deskband11lib` | [crates.io](https://crates.io/crates/tauri-plugin-deskband11lib) | Tauri v2 plugin that creates webview windows, attaches them to the taskbar, and recreates them when needed. See the [Tauri plugin README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/rust/tauri-plugin-deskband11lib/README.md). |
+| `deskband11lib` | [crates.io](https://crates.io/crates/deskband11lib) | Rust crate that hosts any window by its handle. See the [Rust README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/rust/deskband11lib/README.md). |
+
+More .NET UI frameworks, such as Avalonia, can be added as facade packages on top of `Deskband11Lib.Core`.
 
 ## Highlights
 
-- Build taskbar-resident widgets using your framework's native controls and styling.
+- Build taskbar-resident widgets with your own UI stack: WinUI 3 or WPF controls in C#, Qt widgets in Python, or web content in Electron and Tauri.
 - Show live information where users can see it at a glance without opening a full window.
 - Add compact controls for actions such as timers, media playback, account switching, build status, device monitoring, or quick launch workflows.
 - Automatically fit content into the available taskbar space without overlapping pinned apps or the notification area.
 - Work on every taskbar position, including the top, left, and right positions available from Windows 11 26H2. Content follows the taskbar when it moves.
 - Run multiple instances side by side in the same taskbar area with automatic slot coordination. Each instance gets its fair share of the available space.
 - Built-in easing functions (Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle) for smooth layout animations.
-- Optional high refresh rate mode that matches the layout animation timer to the target monitor's current refresh rate for smoother motion on high refresh rate displays.
-- Recover cleanly when Explorer restarts by letting the application rebuild its hosted window.
+- High refresh rate mode, on by default, matches the layout animation timer to the target monitor's current refresh rate for smoother motion on high refresh rate displays.
+- Recover cleanly when Explorer restarts by letting the application rebuild its hosted window. The Qt, Electron, and Tauri controllers rebuild it for you.
 - WinUI facade supports Windows App SDK apps and NativeAOT publishing.
 
 ## Install
 
-Choose the package that matches your UI framework:
+Choose the package that matches your language and UI framework.
+
+### .NET
 
 ```powershell
 # WinUI 3
@@ -47,6 +58,31 @@ dotnet add package Deskband11Lib.Wpf
 ```
 
 The `Deskband11Lib.Core` package is pulled in automatically as a transitive dependency.
+
+### Python
+
+```powershell
+pip install deskband11lib
+
+# With PySide6
+pip install "deskband11lib[pyside6]"
+```
+
+### Node.js and Electron
+
+```powershell
+npm install deskband11lib
+```
+
+### Rust and Tauri
+
+```powershell
+# Tauri v2 apps, from the src-tauri folder
+cargo add tauri-plugin-deskband11lib --target "cfg(windows)"
+
+# Other Rust apps
+cargo add deskband11lib
+```
 
 ## Basic Usage
 
@@ -88,6 +124,87 @@ await host.AttachWhenLayoutReadyAsync();
 window.Show();
 ```
 
+### Python and Qt
+
+`QtTaskbarWidgetController` creates your widget through a factory, removes its frame, attaches it to the taskbar, and shows it once it is in place. It works with PySide6 and PyQt6.
+
+```python
+import sys
+
+from PySide6.QtWidgets import QApplication, QLabel
+
+from deskband11lib import TaskbarContentHostOptions
+from deskband11lib.qt import QtTaskbarWidgetController
+
+application = QApplication(sys.argv)
+controller = QtTaskbarWidgetController(lambda: QLabel("Hello"), TaskbarContentHostOptions(preferred_width=360, preferred_height=48))
+controller.start()
+sys.exit(application.exec())
+```
+
+Windows from other toolkits, such as Tk or wxPython, are hosted by passing their handle to `TaskbarContentHost` from the same package. See the [Python README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/python/README.md).
+
+### Electron
+
+`ElectronTaskbarWindowController` creates your `BrowserWindow` through a factory, attaches it to the taskbar, and creates it again whenever the taskbar requires it. Use it from the main process.
+
+```js
+const { app, BrowserWindow } = require('electron');
+const { ElectronTaskbarWindowController, createTaskbarWindowOptions } = require('deskband11lib/electron');
+
+app.whenReady().then(() => {
+    const controller = new ElectronTaskbarWindowController(() => {
+        const window = new BrowserWindow(createTaskbarWindowOptions({ transparent: true, backgroundColor: '#00000000' }));
+        window.loadFile('widget.html');
+        return window;
+    }, { preferredWidth: 360, preferredHeight: 48 });
+
+    controller.start();
+});
+```
+
+`createTaskbarWindowOptions()` adds the window settings a taskbar window needs. For packaging with asar and hosting a window by its handle, see the [Node.js README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/node/README.md).
+
+### Tauri
+
+Register the plugin, then start a `TaskbarWindowController` from the setup hook. `taskbar_window_builder()` returns a webview window builder with the settings a taskbar window needs.
+
+```rust
+use tauri::WebviewUrl;
+use tauri_plugin_deskband11lib::{TaskbarContentHostOptions, TaskbarWindowController, taskbar_window_builder};
+
+tauri::Builder::default()
+    .plugin(tauri_plugin_deskband11lib::init())
+    .setup(|app| {
+        TaskbarWindowController::new(app.handle(), |app| {
+            taskbar_window_builder(app, "widget", WebviewUrl::App("index.html".into()))
+                .transparent(true)
+                .build()
+        })
+        .options(TaskbarContentHostOptions { preferred_width: Some(360.0), preferred_height: Some(48.0), ..Default::default() })
+        .start()?;
+        Ok(())
+    })
+    .run(tauri::generate_context!())
+    .expect("The application failed to run.");
+```
+
+To include `deskband11lib.dll` in the installer and to receive taskbar events in the frontend, see the [Tauri plugin README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/rust/tauri-plugin-deskband11lib/README.md). Rust apps without Tauri can host any window by its handle with the [`deskband11lib` crate](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/rust/deskband11lib/README.md).
+
+### Names in Python, Node.js, and Rust
+
+The rest of this README uses the .NET names. The Python, Node.js, and Rust packages expose the same options and events in the naming style of their language:
+
+| .NET | Python | Node.js | Rust |
+| --- | --- | --- | --- |
+| `PreferredWidth = 360` | `preferred_width=360` | `preferredWidth: 360` | `preferred_width: Some(360.0)` |
+| `PreferredWidth = double.MaxValue` | `preferred_width=STRETCH` | `preferredWidth: STRETCH` | `preferred_width: Some(STRETCH)` |
+| `Placement = TaskbarContentPlacement.LeftEdge` | `placement=TaskbarContentPlacement.LEFT_EDGE` | `placement: TaskbarContentPlacement.LeftEdge` | `placement: Some(TaskbarContentPlacement::LeftEdge)` |
+| `LayoutRefreshInterval = TimeSpan.FromMilliseconds(250)` | `layout_refresh_interval=250` | `layoutRefreshInterval: 250` | `layout_refresh_interval: Some(Duration::from_millis(250))` |
+| `TaskbarWindowRecreationRequired` | `taskbar_window_recreation_required` | `'taskbarWindowRecreationRequired'` | `HostEvent::TaskbarWindowRecreationRequired` |
+
+Every package can pick one of the built-in easing functions for the layout animation. Only .NET also accepts a custom easing delegate.
+
 ### Window Recreation
 
 The hosted window can be torn down for a few different reasons: Explorer restarts, the monitor you pinned the widget to gets disconnected, or the system DPI changes. Whatever the cause, the fix is the same: recreate the window and let the new host attach. `TaskbarWindowRecreationRequired` covers all of them, so one handler is enough for most apps:
@@ -99,7 +216,7 @@ host.TaskbarWindowRecreationRequired += async (_, _) =>
 };
 ```
 
-If you need to tell the cases apart, the individual events below are raised alongside it as well.
+The Qt, Electron, and Tauri controllers already handle it by destroying the window and calling your window factory again. If you need to tell the cases apart, the individual events below are raised alongside it as well.
 
 ### Explorer Restart
 
@@ -251,7 +368,7 @@ On current Windows 11 builds, the taskbar child HWND hierarchy alone does not ex
 
 ## Options
 
-All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are shared across all facades.
+All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are shared across all facades. The Python, Node.js, and Rust packages take the same options under the names described in [Names in Python, Node.js, and Rust](#names-in-python-nodejs-and-rust).
 
 | Option                    | Default                     | Description                                                                                                                                              |
 | ------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -259,7 +376,7 @@ All options live in `Deskband11Lib.Core.TaskbarContentHostOptions` and are share
 | `AllowFixedSlotResize`   | `true`                      | When `true` and the available space is too small to serve every resizable Fixed slot at its requested `PreferredWidth`, those slots shrink proportionally to their `PreferredWidth` instead of being starved to zero. Set to `false` to keep priority-ordered first-served behavior. |
 | `PreferredHeight`         | `48`                        | Desired content size across the taskbar in effective pixels: the height on a bottom or top taskbar, the width on a left or right taskbar. Capped by the taskbar thickness; set to `double.MaxValue` to fill it. |
 | `AnimateLayoutChanges`    | `true`                      | Animates taskbar host position and size changes.                                                                                                         |
-| `HighRefreshRateMode`     | `false`                     | When enabled along with `AnimateLayoutChanges`, matches the layout animation timer interval to the target monitor's current refresh rate instead of the default 60 FPS. |
+| `HighRefreshRateMode`     | `true`                      | While `AnimateLayoutChanges` is enabled, matches the layout animation timer interval to the target monitor's current refresh rate. Set to `false` to keep the timer at 60 FPS. |
 | `LayoutAnimationDuration` | `500`                       | Layout animation duration in milliseconds.                                                                                                               |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | Easing delegate (`Func<double, double>`) for layout animation. Built-in non-overshooting functions are provided by `Deskband11Lib.Core.EasingFunctions`. |
 | `Placement`               | `Auto`                      | Selects placement.<br>• `Auto`: When centered, picks the more spacious free gap around the Start button group. Left gap wins → far-left edge (same as `LeftEdge`); right gap wins → before the notification area. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `LeftEdge`: When centered, places content at the far left edge, right after the Widgets button. Falls back to `BeforeNotificationArea` when left-aligned.<br>• `BeforeNotificationArea`: Always places content next to the notification area.<br>• `BeforeStartButton`: Places content next to the Start button. Falls back to `BeforeNotificationArea` when not centered.<br>On a left or right taskbar, the same values are read from top to bottom: `LeftEdge` is the top end, and "before" means above. |
@@ -292,15 +409,21 @@ You can also pass any `Func<double, double>` delegate for custom easing.
 
 The snippets above show the core API shape, but a real taskbar companion should follow the sample projects for window lifetime, startup ordering, Explorer restart recovery, and framework-specific hosting details. Start from the sample that matches your UI stack:
 
-- `Deskband11Lib.WinUI.Sample` for WinUI 3 and Windows App SDK apps.
-- `Deskband11Lib.Wpf.Sample` for WPF apps, including the transparent borderless host window setup.
+- [`Deskband11Lib.WinUI.Sample`](https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample) for WinUI 3 and Windows App SDK apps.
+- [`Deskband11Lib.Wpf.Sample`](https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample) for WPF apps, including the transparent borderless host window setup.
+- [`bindings/python/samples/pyside6_clock.py`](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/python/samples/pyside6_clock.py) for PySide6.
+- [`bindings/node/samples/electron-clock`](https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/node/samples/electron-clock) for Electron.
+- [`bindings/rust/samples/tauri-clock`](https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/rust/samples/tauri-clock) for Tauri.
+
+The Python, Electron, and Tauri samples are clocks that follow the taskbar theme and switch between horizontal and vertical layouts.
 
 ## Requirements
 
 - Windows 11.
-- The target framework must be compatible with your chosen UI framework.
-- WinUI 3 requires Windows App SDK.
-- WPF requires `UseWPF=true` in the project file.
+- .NET packages: .NET 10. The packages target `net10.0-windows10.0.26100.0`. WinUI 3 requires the Windows App SDK, and WPF requires `UseWPF=true` in the project file.
+- Python package: Python 3.10 or later, x64 or ARM64.
+- Node.js package: Node.js 22 or later, x64 or ARM64. In Electron, use the package from the main process.
+- Rust crates: Rust 1.90 or later, x64 or ARM64. The Tauri plugin requires Tauri 2.12 or later.
 
 ## Project Development
 
@@ -309,6 +432,8 @@ dotnet restore
 dotnet build Deskband11Lib.slnx -c Debug
 dotnet publish Deskband11Lib.WinUI.Sample\Deskband11Lib.WinUI.Sample.csproj -c Release -r win-x64
 ```
+
+The Python, Node.js, and Rust packages live in `bindings/` and load the native library built from `Deskband11Lib.Native`. Each package README describes how to build that library and run the tests.
 
 ## Acknowledgements
 

@@ -2,41 +2,52 @@
 
 [![NuGet WinUI](https://img.shields.io/nuget/v/Deskband11Lib.WinUI.svg)](https://www.nuget.org/packages/Deskband11Lib.WinUI)
 [![NuGet WPF](https://img.shields.io/nuget/v/Deskband11Lib.Wpf.svg)](https://www.nuget.org/packages/Deskband11Lib.Wpf)
+[![PyPI](https://img.shields.io/pypi/v/deskband11lib.svg)](https://pypi.org/project/deskband11lib/)
+[![npm](https://img.shields.io/npm/v/deskband11lib.svg)](https://www.npmjs.com/package/deskband11lib)
+[![crates.io](https://img.shields.io/crates/v/deskband11lib.svg)](https://crates.io/crates/deskband11lib)
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE)
 
 🌐 [English](https://github.com/airtaxi/Deskband11Lib/blob/master/README.md) | 한국어
 
-Deskband11Lib는 Windows 11 작업 표시줄 안에 앱 UI를 자연스럽게 올릴 수 있게 해주는 라이브러리입니다. 작은 대시보드, 빠른 제어 패널, 상태 표시기, 미디어 위젯, 런처처럼 항상 눈에 띄어야 하는 기능을 데스크톱의 일부처럼 만들 수 있습니다.
+Deskband11Lib는 Windows 11 작업 표시줄 안에 앱 UI를 자연스럽게 올릴 수 있게 해주는 라이브러리입니다. 작은 대시보드, 빠른 제어 패널, 상태 표시기, 미디어 위젯, 런처처럼 항상 눈에 띄어야 하는 기능을 데스크톱의 일부처럼 만들 수 있습니다. C#의 WinUI 3와 WPF는 물론, Python, Node.js와 Electron, Rust와 Tauri로 만든 앱에서도 사용할 수 있습니다.
 
 ![Deskband11Lib 스크린샷](https://raw.githubusercontent.com/airtaxi/Deskband11Lib/master/.github/screenshot.png)
 
 ## 패키지 구성
 
-Deskband11Lib는 UI 프레임워크별 NuGet 패키지로 제공됩니다. 작업 표시줄에 붙이는 핵심 로직은 `Deskband11Lib.Core`에 들어 있고 WinUI와 WPF 패키지는 각 프레임워크에서 쓰기 쉬운 API를 제공합니다. 이후 Avalonia 같은 프레임워크도 같은 방식으로 추가할 수 있습니다.
+Deskband11Lib는 여러 언어와 UI 프레임워크용 패키지로 제공되며, 모든 패키지가 같은 작업 표시줄 호스팅 엔진인 `Deskband11Lib.Core`를 사용합니다. .NET 패키지는 엔진을 직접 참조합니다. Python, Node.js, Rust 패키지는 엔진을 네이티브 라이브러리로 컴파일한 `deskband11lib.dll`을 통해 엔진을 호출하며, 이 라이브러리를 x64용과 ARM64용으로 함께 제공합니다.
 
-| 패키지                   | 설명                                                                                                   |
-| --------------------- | ---------------------------------------------------------------------------------------------------- |
-| `Deskband11Lib.Core`  | 작업 표시줄 창 찾기, 레이아웃 계산, UI Automation 측정, Explorer 재시작 감지, Win32 HWND 호스팅을 담당합니다. UI 프레임워크에 의존하지 않습니다. |
-| `Deskband11Lib.WinUI` | WinUI 3 앱용 패키지입니다. 앱에서 쓰던 WinUI 컨트롤, 스타일, Composition 기능으로 작업 표시줄 위젯을 만들 수 있습니다.                     |
-| `Deskband11Lib.Wpf`   | WPF 앱용 패키지입니다. WPF로 만든 콘텐츠를 같은 방식으로 Windows 11 작업 표시줄에 배치할 수 있습니다.                                   |
+| 패키지 | 레지스트리 | 설명 |
+| --- | --- | --- |
+| `Deskband11Lib.Core` | [NuGet](https://www.nuget.org/packages/Deskband11Lib.Core) | 작업 표시줄 창 찾기, 레이아웃 계산, UI Automation 측정, Explorer 재시작 감지, Win32 HWND 호스팅을 담당합니다. UI 프레임워크에 의존하지 않으며, WinUI나 WPF 패키지를 설치하면 함께 설치됩니다. |
+| `Deskband11Lib.WinUI` | [NuGet](https://www.nuget.org/packages/Deskband11Lib.WinUI) | WinUI 3 앱용 패키지입니다. 앱에서 쓰던 WinUI 컨트롤, 스타일, Composition 기능으로 작업 표시줄 위젯을 만들 수 있습니다. |
+| `Deskband11Lib.Wpf` | [NuGet](https://www.nuget.org/packages/Deskband11Lib.Wpf) | WPF 앱용 패키지입니다. WPF로 만든 콘텐츠를 같은 방식으로 Windows 11 작업 표시줄에 배치할 수 있습니다. |
+| `deskband11lib` | [PyPI](https://pypi.org/project/deskband11lib/) | Python 패키지입니다. PySide6와 PyQt6 위젯용 컨트롤러를 제공하며, 다른 툴킷의 창도 창 핸들로 호스팅할 수 있습니다. 자세한 내용은 [Python README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/python/README.md)를 참고하세요. |
+| `deskband11lib` | [npm](https://www.npmjs.com/package/deskband11lib) | Node.js 패키지입니다. Electron 창용 컨트롤러를 제공합니다. 자세한 내용은 [Node.js README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/node/README.md)를 참고하세요. |
+| `tauri-plugin-deskband11lib` | [crates.io](https://crates.io/crates/tauri-plugin-deskband11lib) | Tauri v2 플러그인입니다. 웹뷰 창을 만들어 작업 표시줄에 붙이고, 필요할 때 창을 다시 만듭니다. 자세한 내용은 [Tauri 플러그인 README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/rust/tauri-plugin-deskband11lib/README.md)를 참고하세요. |
+| `deskband11lib` | [crates.io](https://crates.io/crates/deskband11lib) | Rust 크레이트입니다. 창 핸들만 있으면 어떤 창이든 호스팅할 수 있습니다. 자세한 내용은 [Rust README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/rust/deskband11lib/README.md)를 참고하세요. |
+
+Avalonia 같은 다른 .NET UI 프레임워크도 `Deskband11Lib.Core` 위에 같은 방식으로 패키지를 추가할 수 있습니다.
 
 ## 주요 기능
 
-- 앱에서 쓰는 컨트롤과 스타일을 그대로 활용해 작업 표시줄 위젯을 만들 수 있습니다.
+- C#의 WinUI 3나 WPF 컨트롤, Python의 Qt 위젯, Electron과 Tauri의 웹 콘텐츠처럼 앱에서 쓰던 UI를 그대로 활용해 작업 표시줄 위젯을 만들 수 있습니다.
 - 별도 창을 열지 않아도 필요한 정보를 항상 보이는 위치에 띄울 수 있습니다.
 - 타이머, 미디어 재생, 계정 전환, 빌드 상태, 장치 모니터링, 빠른 실행 같은 기능을 작게 정리해 배치하기 좋습니다.
 - 고정 앱, 실행 중인 앱, 알림 영역과 겹치지 않도록 남는 작업 표시줄 공간에 맞춰 위치를 잡습니다.
 - Windows 11 26H2부터 쓸 수 있는 위쪽, 왼쪽, 오른쪽 위치를 포함해 작업 표시줄의 모든 위치에서 동작합니다. 작업 표시줄을 옮기면 콘텐츠도 함께 따라갑니다.
 - 같은 작업 표시줄 영역에 여러 인스턴스를 동시에 띄울 수 있습니다. 자동 슬롯 조정으로 각 인스턴스가 사용 가능한 공간을 겹치지 않고 나눕니다.
 - 레이아웃이 바뀔 때 자연스럽게 움직이도록 기본 easing 함수를 제공합니다. Linear, Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle 계열을 사용할 수 있습니다.
-- 고주사율 모드를 켜면 레이아웃 애니메이션 타이머를 대상 모니터의 현재 주사율에 맞춰 고주사율 디스플레이에서 더 매끄러운 움직임을 제공합니다.
-- Explorer가 재시작되면 앱이 작업 표시줄 창을 다시 붙일 수 있도록 이벤트를 제공합니다.
+- 기본으로 켜져 있는 고주사율 모드가 레이아웃 애니메이션 타이머를 대상 모니터의 현재 주사율에 맞추므로, 고주사율 디스플레이에서도 움직임이 매끄럽습니다.
+- Explorer가 재시작되면 앱이 작업 표시줄 창을 다시 붙일 수 있도록 이벤트를 제공합니다. Qt, Electron, Tauri용 컨트롤러는 창을 자동으로 다시 만듭니다.
 - WinUI 패키지는 Windows App SDK 앱과 NativeAOT 게시를 지원합니다.
 
 ## 설치
 
-사용 중인 UI 프레임워크에 맞는 패키지를 설치하시면 됩니다.
+사용 중인 언어와 UI 프레임워크에 맞는 패키지를 설치하시면 됩니다.
+
+### .NET
 
 ```powershell
 # WinUI 3
@@ -47,6 +58,31 @@ dotnet add package Deskband11Lib.Wpf
 ```
 
 `Deskband11Lib.Core`는 필요한 경우 자동으로 함께 설치됩니다.
+
+### Python
+
+```powershell
+pip install deskband11lib
+
+# PySide6도 함께 설치
+pip install "deskband11lib[pyside6]"
+```
+
+### Node.js와 Electron
+
+```powershell
+npm install deskband11lib
+```
+
+### Rust와 Tauri
+
+```powershell
+# Tauri v2 앱 (src-tauri 폴더에서 실행)
+cargo add tauri-plugin-deskband11lib --target "cfg(windows)"
+
+# Tauri를 쓰지 않는 Rust 앱
+cargo add deskband11lib
+```
 
 ## 기본 사용법
 
@@ -88,6 +124,87 @@ await host.AttachWhenLayoutReadyAsync();
 window.Show();
 ```
 
+### Python과 Qt
+
+`QtTaskbarWidgetController`는 팩토리로 위젯을 만들고 창 테두리를 없앤 뒤 작업 표시줄에 붙이며, 자리를 잡으면 위젯을 표시합니다. PySide6와 PyQt6에서 사용할 수 있습니다.
+
+```python
+import sys
+
+from PySide6.QtWidgets import QApplication, QLabel
+
+from deskband11lib import TaskbarContentHostOptions
+from deskband11lib.qt import QtTaskbarWidgetController
+
+application = QApplication(sys.argv)
+controller = QtTaskbarWidgetController(lambda: QLabel("Hello"), TaskbarContentHostOptions(preferred_width=360, preferred_height=48))
+controller.start()
+sys.exit(application.exec())
+```
+
+Tk나 wxPython 같은 다른 툴킷의 창은 같은 패키지의 `TaskbarContentHost`에 창 핸들을 넘겨 호스팅하면 됩니다. 자세한 내용은 [Python README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/python/README.md)를 참고하세요.
+
+### Electron
+
+`ElectronTaskbarWindowController`는 팩토리로 `BrowserWindow`를 만들어 작업 표시줄에 붙이고, 작업 표시줄이 요구할 때마다 창을 다시 만듭니다. 메인 프로세스에서 사용합니다.
+
+```js
+const { app, BrowserWindow } = require('electron');
+const { ElectronTaskbarWindowController, createTaskbarWindowOptions } = require('deskband11lib/electron');
+
+app.whenReady().then(() => {
+    const controller = new ElectronTaskbarWindowController(() => {
+        const window = new BrowserWindow(createTaskbarWindowOptions({ transparent: true, backgroundColor: '#00000000' }));
+        window.loadFile('widget.html');
+        return window;
+    }, { preferredWidth: 360, preferredHeight: 48 });
+
+    controller.start();
+});
+```
+
+`createTaskbarWindowOptions()`는 작업 표시줄 창에 필요한 창 설정을 채워 줍니다. asar로 패키징하는 방법과 창 핸들로 직접 호스팅하는 방법은 [Node.js README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/node/README.md)에서 확인할 수 있습니다.
+
+### Tauri
+
+플러그인을 등록한 뒤 setup 훅에서 `TaskbarWindowController`를 시작합니다. `taskbar_window_builder()`는 작업 표시줄 창에 필요한 설정이 들어간 웹뷰 창 빌더를 돌려줍니다.
+
+```rust
+use tauri::WebviewUrl;
+use tauri_plugin_deskband11lib::{TaskbarContentHostOptions, TaskbarWindowController, taskbar_window_builder};
+
+tauri::Builder::default()
+    .plugin(tauri_plugin_deskband11lib::init())
+    .setup(|app| {
+        TaskbarWindowController::new(app.handle(), |app| {
+            taskbar_window_builder(app, "widget", WebviewUrl::App("index.html".into()))
+                .transparent(true)
+                .build()
+        })
+        .options(TaskbarContentHostOptions { preferred_width: Some(360.0), preferred_height: Some(48.0), ..Default::default() })
+        .start()?;
+        Ok(())
+    })
+    .run(tauri::generate_context!())
+    .expect("The application failed to run.");
+```
+
+설치 파일에 `deskband11lib.dll`을 포함하는 방법과 프런트엔드에서 작업 표시줄 이벤트를 받는 방법은 [Tauri 플러그인 README](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/rust/tauri-plugin-deskband11lib/README.md)에서 확인할 수 있습니다. Tauri를 쓰지 않는 Rust 앱은 [`deskband11lib` 크레이트](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/rust/deskband11lib/README.md)에 창 핸들을 넘겨 어떤 창이든 호스팅할 수 있습니다.
+
+### Python, Node.js, Rust에서 쓰는 이름
+
+이 문서의 나머지 부분은 .NET 이름으로 설명합니다. Python, Node.js, Rust 패키지는 같은 옵션과 이벤트를 각 언어의 명명 규칙에 맞춘 이름으로 제공합니다.
+
+| .NET | Python | Node.js | Rust |
+| --- | --- | --- | --- |
+| `PreferredWidth = 360` | `preferred_width=360` | `preferredWidth: 360` | `preferred_width: Some(360.0)` |
+| `PreferredWidth = double.MaxValue` | `preferred_width=STRETCH` | `preferredWidth: STRETCH` | `preferred_width: Some(STRETCH)` |
+| `Placement = TaskbarContentPlacement.LeftEdge` | `placement=TaskbarContentPlacement.LEFT_EDGE` | `placement: TaskbarContentPlacement.LeftEdge` | `placement: Some(TaskbarContentPlacement::LeftEdge)` |
+| `LayoutRefreshInterval = TimeSpan.FromMilliseconds(250)` | `layout_refresh_interval=250` | `layoutRefreshInterval: 250` | `layout_refresh_interval: Some(Duration::from_millis(250))` |
+| `TaskbarWindowRecreationRequired` | `taskbar_window_recreation_required` | `'taskbarWindowRecreationRequired'` | `HostEvent::TaskbarWindowRecreationRequired` |
+
+레이아웃 애니메이션의 easing은 모든 패키지에서 기본 제공 함수 중 하나를 고를 수 있습니다. 직접 작성한 easing delegate는 .NET에서만 넘길 수 있습니다.
+
 ### 창 재생성
 
 작업 표시줄에 붙어 있던 창이 사라지는 경우는 몇 가지가 있습니다. Explorer가 재시작되거나, 위젯을 붙여 둔 모니터의 연결이 끊기거나, 시스템 DPI가 바뀌는 경우입니다. 어느 쪽이든 해결 방법은 같습니다. 창을 새로 만들어 다시 붙이면 됩니다. `TaskbarWindowRecreationRequired`는 이 세 경우를 모두 묶어서 발생하므로, 대부분의 앱은 핸들러 하나만 등록하면 됩니다.
@@ -99,7 +216,7 @@ host.TaskbarWindowRecreationRequired += async (_, _) =>
 };
 ```
 
-어떤 이유로 창이 사라졌는지 구분해서 처리해야 한다면 아래 개별 이벤트를 쓰면 됩니다. 개별 이벤트는 통합 이벤트와 함께 발생합니다.
+Qt, Electron, Tauri용 컨트롤러는 창을 없애고 창 팩토리를 다시 호출하는 방식으로 이 이벤트를 이미 처리합니다. 어떤 이유로 창이 사라졌는지 구분해서 처리해야 한다면 아래 개별 이벤트를 쓰면 됩니다. 개별 이벤트는 통합 이벤트와 함께 발생합니다.
 
 ### Explorer 재시작
 
@@ -251,7 +368,7 @@ Deskband11Lib는 앱 창을 작업 표시줄 안에 들어갈 크기로 맞추�
 
 ## 옵션
 
-모든 옵션은 `Deskband11Lib.Core.TaskbarContentHostOptions`에 정의되어 있고 WinUI와 WPF 패키지에서 공통으로 사용합니다.
+모든 옵션은 `Deskband11Lib.Core.TaskbarContentHostOptions`에 정의되어 있고 WinUI와 WPF 패키지에서 공통으로 사용합니다. Python, Node.js, Rust 패키지도 같은 옵션을 제공하며, 이름은 [Python, Node.js, Rust에서 쓰는 이름](#python-nodejs-rust에서-쓰는-이름)에서 설명한 규칙을 따릅니다.
 
 | 옵션                        | 기본값                         | 설명                                                                                                                          |
 | ------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -259,7 +376,7 @@ Deskband11Lib는 앱 창을 작업 표시줄 안에 들어갈 크기로 맞추�
 | `AllowFixedSlotResize`   | `true`                      | `true`이면 공간이 부족할 때 Fixed 슬롯이 너비 0까지 줄지 않고 `PreferredWidth` 비율에 맞춰 줄어듭니다. `false`로 설정하면 기존대로 우선순위 순서대로 먼저 할당받습니다. |
 | `PreferredHeight`         | `48`                        | 작업 표시줄을 가로지르는 방향으로 콘텐츠가 사용할 크기입니다. effective pixel 단위이며, 아래쪽이나 위쪽 작업 표시줄에서는 높이, 왼쪽이나 오른쪽 작업 표시줄에서는 너비입니다. 작업 표시줄 두께를 넘지 않으며, `double.MaxValue`로 설정하면 두께를 꽉 채웁니다. |
 | `AnimateLayoutChanges`    | `true`                      | 작업 표시줄 안에서 위치나 크기가 바뀔 때 애니메이션을 적용합니다.                                                                                       |
-| `HighRefreshRateMode`     | `false`                     | `AnimateLayoutChanges`와 함께 활성화하면 레이아웃 애니메이션 타이머 주기를 기본 60 FPS가 아닌 대상 모니터의 현재 주사율에 맞춥니다. |
+| `HighRefreshRateMode`     | `true`                      | `AnimateLayoutChanges`가 켜져 있는 동안 레이아웃 애니메이션 타이머 주기를 대상 모니터의 현재 주사율에 맞춥니다. `false`로 설정하면 타이머가 60 FPS로 동작합니다. |
 | `LayoutAnimationDuration` | `500`                       | 레이아웃 애니메이션 시간입니다. ms 단위입니다.                                                                                                 |
 | `LayoutAnimationEasing`   | `EasingFunctions.CircleOut` | 레이아웃 애니메이션에 사용할 easing delegate(`Func<double, double>`)입니다. 오버슛 없는 기본 easing은 `Deskband11Lib.Core.EasingFunctions`에서 제공합니다. |
 | `Placement`               | `Auto`                      | 배치 방식을 선택합니다.<br>• `Auto`: 가운데 정렬일 때 시작 버튼 그룹 양쪽 남는 공간 중 더 넓은 쪽에 배치합니다. 왼쪽이 더 넓으면 가장 왼쪽 끝(`LeftEdge`와 동일), 오른쪽이 더 넓으면 알림 영역 앞에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `LeftEdge`: 가운데 정렬일 때 날씨 위젯 바로 오른쪽, 가장 왼쪽 끝에 둡니다. 왼쪽 정렬일 때는 `BeforeNotificationArea`로 동작합니다.<br>• `BeforeNotificationArea`: 항상 알림 영역 앞에 둡니다.<br>• `BeforeStartButton`: 시작 버튼 앞에 둡니다. 가운데 정렬이 아니면 `BeforeNotificationArea`로 동작합니다.<br>왼쪽이나 오른쪽 작업 표시줄에서는 같은 값을 위에서 아래 방향으로 해석합니다. `LeftEdge`는 가장 위쪽 끝이고, "앞"은 위쪽을 뜻합니다. |
@@ -292,15 +409,21 @@ Deskband11Lib는 레지스트리의 `TaskbarAl` 값을 읽어 Windows 11 작업 
 
 위 코드는 핵심 API만 보여주는 최소 예제입니다. 실제 작업 표시줄 앱을 만들 때는 창 수명주기, 시작 순서, Explorer 재시작 복구, 프레임워크별 호스팅 처리가 중요하므로 샘플 프로젝트를 먼저 참고하시는 것을 권장합니다.
 
-- `Deskband11Lib.WinUI.Sample`: WinUI 3 및 Windows App SDK 앱용 샘플입니다.
-- `Deskband11Lib.Wpf.Sample`: WPF 앱용 샘플입니다. 테두리 없는 투명 호스트 창 설정도 포함되어 있습니다.
+- [`Deskband11Lib.WinUI.Sample`](https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample): WinUI 3 및 Windows App SDK 앱용 샘플입니다.
+- [`Deskband11Lib.Wpf.Sample`](https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample): WPF 앱용 샘플입니다. 테두리 없는 투명 호스트 창 설정도 포함되어 있습니다.
+- [`bindings/python/samples/pyside6_clock.py`](https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/python/samples/pyside6_clock.py): PySide6용 샘플입니다.
+- [`bindings/node/samples/electron-clock`](https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/node/samples/electron-clock): Electron용 샘플입니다.
+- [`bindings/rust/samples/tauri-clock`](https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/rust/samples/tauri-clock): Tauri용 샘플입니다.
+
+Python, Electron, Tauri 샘플은 작업 표시줄 테마를 따라가고 가로와 세로 레이아웃을 전환하는 시계입니다.
 
 ## 요구 사항
 
-- Windows 11.
-- 선택한 UI 프레임워크와 호환되는 대상 프레임워크.
-- WinUI 3는 Windows App SDK가 필요합니다.
-- WPF는 프로젝트 파일에 `UseWPF=true`가 필요합니다.
+- Windows 11이 필요합니다.
+- .NET 패키지는 .NET 10이 필요하며, 대상 프레임워크는 `net10.0-windows10.0.26100.0`입니다. WinUI 3 앱에는 Windows App SDK가, WPF 앱에는 프로젝트 파일의 `UseWPF=true` 설정이 필요합니다.
+- Python 패키지는 Python 3.10 이상과 x64 또는 ARM64 환경이 필요합니다.
+- Node.js 패키지는 Node.js 22 이상과 x64 또는 ARM64 환경이 필요합니다. Electron에서는 메인 프로세스에서 사용합니다.
+- Rust 크레이트는 Rust 1.90 이상과 x64 또는 ARM64 환경이 필요합니다. Tauri 플러그인은 Tauri 2.12 이상이 필요합니다.
 
 ## 프로젝트 개발
 
@@ -309,6 +432,8 @@ dotnet restore
 dotnet build Deskband11Lib.slnx -c Debug
 dotnet publish Deskband11Lib.WinUI.Sample\Deskband11Lib.WinUI.Sample.csproj -c Release -r win-x64
 ```
+
+Python, Node.js, Rust 패키지는 `bindings/` 폴더에 있으며, `Deskband11Lib.Native`에서 빌드한 네이티브 라이브러리를 불러옵니다. 네이티브 라이브러리를 빌드하고 테스트를 실행하는 방법은 각 패키지의 README에 정리되어 있습니다.
 
 ## 감사의 말
 

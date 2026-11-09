@@ -68,15 +68,18 @@
 
         <div class="hero-row">
           <div class="hero-copy">
-            <p class="lead" lang="en">Deskband11Lib parents your window to the taskbar and fits it into the free space between the app buttons and the notification area. Use it for timers, media controls, build status, or anything else that should stay in view without opening a window.</p>
-            <p class="lead" lang="ko">Deskband11Lib는 앱 창을 작업 표시줄의 자식 창으로 붙이고, 앱 버튼과 알림 영역 사이에 남는 공간에 맞춰 크기를 조정합니다. 타이머, 미디어 컨트롤, 빌드 상태처럼 별도 창을 열지 않고도 늘 보여야 하는 기능에 활용할 수 있습니다.</p>
+            <p class="lead" lang="en">Deskband11Lib parents your window to the taskbar and fits it into the free space between the app buttons and the notification area. Use it for timers, media controls, build status, or anything else that should stay in view without opening a window. Packages are available for .NET, Python, Node.js, and Rust.</p>
+            <p class="lead" lang="ko">Deskband11Lib는 앱 창을 작업 표시줄의 자식 창으로 붙이고, 앱 버튼과 알림 영역 사이에 남는 공간에 맞춰 크기를 조정합니다. 타이머, 미디어 컨트롤, 빌드 상태처럼 별도 창을 열지 않고도 늘 보여야 하는 기능에 활용할 수 있습니다. 패키지는 .NET, Python, Node.js, Rust용으로 제공됩니다.</p>
           </div>
 
           <div class="hero-act">
             <div class="install">
-              <div class="segmented" role="group" aria-label="UI framework" data-label-en="UI framework" data-label-ko="UI 프레임워크">
+              <div class="segmented" role="group" aria-label="Platform" data-label-en="Platform" data-label-ko="플랫폼">
                 <button type="button" data-set-framework="winui" aria-pressed="true">WinUI 3</button>
                 <button type="button" data-set-framework="wpf" aria-pressed="false">WPF</button>
+                <button type="button" data-set-framework="python" aria-pressed="false">Python</button>
+                <button type="button" data-set-framework="electron" aria-pressed="false">Electron</button>
+                <button type="button" data-set-framework="tauri" aria-pressed="false">Tauri</button>
               </div>
               <div class="command">
                 <code id="install-command">dotnet add package Deskband11Lib.WinUI</code>
@@ -165,16 +168,39 @@
         <div class="quick-start-grid">
           <div class="quick-start-text">
             <h2 id="quick-start-title"><span lang="en">Quick start</span><span lang="ko">시작하기</span></h2>
-            <p class="section-intro" lang="en">Create a window, pass it and its root element to <code>TaskbarContentHost</code>, then attach it once the taskbar layout is ready. WinUI 3 and WPF share the same API; only the <code>Window</code> and <code>FrameworkElement</code> types come from different namespaces.</p>
-            <p class="section-intro" lang="ko">창을 만든 다음 창과 루트 요소를 <code>TaskbarContentHost</code>에 넘기고, 작업 표시줄 레이아웃이 준비되면 창을 붙입니다. WinUI 3와 WPF는 같은 API를 사용하며, <code>Window</code>와 <code>FrameworkElement</code> 타입의 네임스페이스만 다릅니다.</p>
-            <p class="note" lang="en">The snippets show the shape of the API. For window lifetime, startup order, and framework-specific hosting, start from the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample">WinUI 3 sample</a> or the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample">WPF sample</a>, which also sets up a transparent borderless host window.</p>
-            <p class="note" lang="ko">위 코드는 API의 형태만 보여 줍니다. 창 수명 주기, 시작 순서, 프레임워크별 호스팅 처리는 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample">WinUI 3 샘플</a>이나 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample">WPF 샘플</a>에서 시작하시는 것을 권장합니다. WPF 샘플에는 테두리 없는 투명 호스트 창 설정도 들어 있습니다.</p>
+            <div class="quick-start-copy" data-framework-panel="winui wpf">
+              <p class="section-intro" lang="en">Create a window, pass it and its root element to <code>TaskbarContentHost</code>, then attach it once the taskbar layout is ready. WinUI 3 and WPF share the same API; only the <code>Window</code> and <code>FrameworkElement</code> types come from different namespaces.</p>
+              <p class="section-intro" lang="ko">창을 만든 다음 창과 루트 요소를 <code>TaskbarContentHost</code>에 넘기고, 작업 표시줄 레이아웃이 준비되면 창을 붙입니다. WinUI 3와 WPF는 같은 API를 사용하며, <code>Window</code>와 <code>FrameworkElement</code> 타입의 네임스페이스만 다릅니다.</p>
+              <p class="note" lang="en">The snippets show the shape of the API. For window lifetime, startup order, and framework-specific hosting, start from the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample">WinUI 3 sample</a> or the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample">WPF sample</a>, which also sets up a transparent borderless host window.</p>
+              <p class="note" lang="ko">위 코드는 API의 형태만 보여 줍니다. 창 수명 주기, 시작 순서, 프레임워크별 호스팅 처리는 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.WinUI.Sample">WinUI 3 샘플</a>이나 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/Deskband11Lib.Wpf.Sample">WPF 샘플</a>에서 시작하시는 것을 권장합니다. WPF 샘플에는 테두리 없는 투명 호스트 창 설정도 들어 있습니다.</p>
+            </div>
+            <div class="quick-start-copy" data-framework-panel="python" hidden>
+              <p class="section-intro" lang="en"><code>QtTaskbarWidgetController</code> creates your widget through a factory, removes its frame, attaches it to the taskbar, and shows it once it is in place. It works with PySide6 and PyQt6, and <code>TaskbarContentHost</code> hosts a window from any other toolkit by its handle.</p>
+              <p class="section-intro" lang="ko"><code>QtTaskbarWidgetController</code>는 팩토리로 위젯을 만들고 창 테두리를 없앤 뒤 작업 표시줄에 붙이며, 자리를 잡으면 위젯을 표시합니다. PySide6와 PyQt6에서 사용할 수 있고, 다른 툴킷의 창은 <code>TaskbarContentHost</code>에 창 핸들을 넘겨 호스팅할 수 있습니다.</p>
+              <p class="note" lang="en">For a complete widget that follows the taskbar theme and switches between horizontal and vertical layouts, start from the <a href="https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/python/samples/pyside6_clock.py">PySide6 clock sample</a>. Hosting windows from other toolkits, events, and options are covered in the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/python">package README</a>.</p>
+              <p class="note" lang="ko">작업 표시줄 테마를 따라가고 가로와 세로 레이아웃을 전환하는 완성된 위젯은 <a href="https://github.com/airtaxi/Deskband11Lib/blob/master/bindings/python/samples/pyside6_clock.py">PySide6 시계 샘플</a>에서 확인할 수 있습니다. 다른 툴킷의 창을 호스팅하는 방법과 이벤트, 옵션은 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/python">패키지 README</a>에 정리되어 있습니다.</p>
+            </div>
+            <div class="quick-start-copy" data-framework-panel="electron" hidden>
+              <p class="section-intro" lang="en"><code>ElectronTaskbarWindowController</code> creates your <code>BrowserWindow</code> through a factory, attaches it to the taskbar, and creates it again whenever the taskbar requires it. Use it from the main process; <code>createTaskbarWindowOptions()</code> adds the window settings a taskbar window needs.</p>
+              <p class="section-intro" lang="ko"><code>ElectronTaskbarWindowController</code>는 팩토리로 <code>BrowserWindow</code>를 만들어 작업 표시줄에 붙이고, 작업 표시줄이 요구할 때마다 창을 다시 만듭니다. 메인 프로세스에서 사용하며, <code>createTaskbarWindowOptions()</code>가 작업 표시줄 창에 필요한 창 설정을 채워 줍니다.</p>
+              <p class="note" lang="en">For a complete widget that follows the taskbar theme and switches between horizontal and vertical layouts, start from the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/node/samples/electron-clock">Electron clock sample</a>. Packaging with asar and hosting a window by its handle are covered in the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/node">package README</a>.</p>
+              <p class="note" lang="ko">작업 표시줄 테마를 따라가고 가로와 세로 레이아웃을 전환하는 완성된 위젯은 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/node/samples/electron-clock">Electron 시계 샘플</a>에서 확인할 수 있습니다. asar로 패키징하는 방법과 창 핸들로 직접 호스팅하는 방법은 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/node">패키지 README</a>에 정리되어 있습니다.</p>
+            </div>
+            <div class="quick-start-copy" data-framework-panel="tauri" hidden>
+              <p class="section-intro" lang="en">Register the plugin, then start a <code>TaskbarWindowController</code> from the setup hook. <code>taskbar_window_builder()</code> returns a webview window builder with the settings a taskbar window needs, and the controller creates the window again whenever the taskbar requires it.</p>
+              <p class="section-intro" lang="ko">플러그인을 등록한 뒤 setup 훅에서 <code>TaskbarWindowController</code>를 시작합니다. <code>taskbar_window_builder()</code>는 작업 표시줄 창에 필요한 설정이 들어간 웹뷰 창 빌더를 돌려주고, 컨트롤러는 작업 표시줄이 요구할 때마다 창을 다시 만듭니다.</p>
+              <p class="note" lang="en">For a complete widget that follows the taskbar theme and switches between horizontal and vertical layouts, start from the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/rust/samples/tauri-clock">Tauri clock sample</a>. Bundling <code>deskband11lib.dll</code> into the installer and listening to taskbar events in the frontend are covered in the <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/rust/tauri-plugin-deskband11lib">plugin README</a>. Rust apps without Tauri can use the <a href="https://crates.io/crates/deskband11lib"><code>deskband11lib</code> crate</a>.</p>
+              <p class="note" lang="ko">작업 표시줄 테마를 따라가고 가로와 세로 레이아웃을 전환하는 완성된 위젯은 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/rust/samples/tauri-clock">Tauri 시계 샘플</a>에서 확인할 수 있습니다. 설치 파일에 <code>deskband11lib.dll</code>을 포함하는 방법과 프런트엔드에서 작업 표시줄 이벤트를 받는 방법은 <a href="https://github.com/airtaxi/Deskband11Lib/tree/master/bindings/rust/tauri-plugin-deskband11lib">플러그인 README</a>에 정리되어 있습니다. Tauri를 쓰지 않는 Rust 앱은 <a href="https://crates.io/crates/deskband11lib"><code>deskband11lib</code> 크레이트</a>를 사용하면 됩니다.</p>
+            </div>
           </div>
 
           <div class="code-group">
-            <div class="segmented" role="group" aria-label="UI framework" data-label-en="UI framework" data-label-ko="UI 프레임워크">
+            <div class="segmented" role="group" aria-label="Platform" data-label-en="Platform" data-label-ko="플랫폼">
               <button type="button" data-set-framework="winui" aria-pressed="true">WinUI 3</button>
               <button type="button" data-set-framework="wpf" aria-pressed="false">WPF</button>
+              <button type="button" data-set-framework="python" aria-pressed="false">Python</button>
+              <button type="button" data-set-framework="electron" aria-pressed="false">Electron</button>
+              <button type="button" data-set-framework="tauri" aria-pressed="false">Tauri</button>
             </div>
 <pre class="code" data-framework-panel="winui" tabindex="0" role="region" aria-label="WinUI 3 sample"><code><span class="k">using</span> Deskband11Lib.Core;
 <span class="k">using</span> Deskband11Lib.WinUI;
@@ -200,14 +226,70 @@ window.Activate();</code></pre>
 
 <span class="k">await</span> host.AttachWhenLayoutReadyAsync();
 window.Show();</code></pre>
+<pre class="code" data-framework-panel="python" tabindex="0" role="region" aria-label="Python sample" hidden><code><span class="k">import</span> sys
+
+<span class="k">from</span> PySide6.QtWidgets <span class="k">import</span> <span class="t">QApplication</span>, <span class="t">QLabel</span>
+
+<span class="k">from</span> deskband11lib <span class="k">import</span> <span class="t">TaskbarContentHostOptions</span>
+<span class="k">from</span> deskband11lib.qt <span class="k">import</span> <span class="t">QtTaskbarWidgetController</span>
+
+application = <span class="t">QApplication</span>(sys.argv)
+controller = <span class="t">QtTaskbarWidgetController</span>(
+    <span class="k">lambda</span>: <span class="t">QLabel</span>("Hello"),
+    <span class="t">TaskbarContentHostOptions</span>(preferred_width=<span class="n">360</span>, preferred_height=<span class="n">48</span>),
+)
+controller.start()
+sys.exit(application.exec())</code></pre>
+<pre class="code" data-framework-panel="electron" tabindex="0" role="region" aria-label="Electron sample" hidden><code><span class="k">const</span> { app, <span class="t">BrowserWindow</span> } = require('electron');
+<span class="k">const</span> {
+    <span class="t">ElectronTaskbarWindowController</span>,
+    createTaskbarWindowOptions,
+} = require('deskband11lib/electron');
+
+app.whenReady().then(() =&gt; {
+    <span class="k">const</span> controller = <span class="k">new</span> <span class="t">ElectronTaskbarWindowController</span>(() =&gt; {
+        <span class="k">const</span> window = <span class="k">new</span> <span class="t">BrowserWindow</span>(createTaskbarWindowOptions({
+            transparent: <span class="k">true</span>,
+            backgroundColor: '#00000000',
+        }));
+        window.loadFile('widget.html');
+        <span class="k">return</span> window;
+    }, { preferredWidth: <span class="n">360</span>, preferredHeight: <span class="n">48</span> });
+
+    controller.start();
+});</code></pre>
+<pre class="code" data-framework-panel="tauri" tabindex="0" role="region" aria-label="Tauri sample" hidden><code><span class="k">use</span> tauri::<span class="t">WebviewUrl</span>;
+<span class="k">use</span> tauri_plugin_deskband11lib::{
+    <span class="t">TaskbarContentHostOptions</span>, <span class="t">TaskbarWindowController</span>, taskbar_window_builder,
+};
+
+tauri::<span class="t">Builder</span>::default()
+    .plugin(tauri_plugin_deskband11lib::init())
+    .setup(|app| {
+        <span class="t">TaskbarWindowController</span>::new(app.handle(), |app| {
+            <span class="k">let</span> url = <span class="t">WebviewUrl</span>::App("index.html".into());
+            taskbar_window_builder(app, "widget", url)
+                .transparent(<span class="k">true</span>)
+                .build()
+        })
+        .options(<span class="t">TaskbarContentHostOptions</span> {
+            preferred_width: <span class="t">Some</span>(<span class="n">360.0</span>),
+            preferred_height: <span class="t">Some</span>(<span class="n">48.0</span>),
+            ..<span class="t">Default</span>::default()
+        })
+        .start()?;
+        <span class="t">Ok</span>(())
+    })
+    .run(tauri::generate_context!())
+    .expect("The application failed to run.");</code></pre>
           </div>
         </div>
 
         <div class="recreate-grid">
           <div class="recreate-text">
             <h3><span lang="en">Recreate the window when the taskbar drops it</span><span lang="ko">창이 사라지면 다시 만들기</span></h3>
-            <p lang="en">An Explorer restart, a disconnected monitor, or a DPI change can destroy the hosted window or leave it misaligned. Handle <code>TaskbarWindowRecreationRequired</code>, build a new window, and attach a new host.</p>
-            <p lang="ko">Explorer가 재시작되거나, 모니터 연결이 끊기거나, DPI가 바뀌면 호스팅된 창이 사라지거나 위치가 어긋날 수 있습니다. <code>TaskbarWindowRecreationRequired</code> 이벤트에서 창을 새로 만들고 새 호스트를 붙이면 됩니다.</p>
+            <p lang="en">An Explorer restart, a disconnected monitor, or a DPI change can destroy the hosted window or leave it misaligned. Handle <code>TaskbarWindowRecreationRequired</code>, build a new window, and attach a new host. The Qt, Electron, and Tauri controllers do this for you.</p>
+            <p lang="ko">Explorer가 재시작되거나, 모니터 연결이 끊기거나, DPI가 바뀌면 호스팅된 창이 사라지거나 위치가 어긋날 수 있습니다. <code>TaskbarWindowRecreationRequired</code> 이벤트에서 창을 새로 만들고 새 호스트를 붙이면 됩니다. Qt, Electron, Tauri용 컨트롤러는 이 과정을 자동으로 처리합니다.</p>
           </div>
 
           <div class="recreate-body">
@@ -300,8 +382,8 @@ window.Show();</code></pre>
         <div class="section-head">
           <h2 id="options-title"><span lang="en">Options</span><span lang="ko">옵션</span></h2>
           <div class="section-head-text">
-            <p class="section-intro" lang="en">All options live in <code>Deskband11Lib.Core.TaskbarContentHostOptions</code> and work the same in every package.</p>
-            <p class="section-intro" lang="ko">모든 옵션은 <code>Deskband11Lib.Core.TaskbarContentHostOptions</code>에 정의되어 있으며, 어느 패키지에서든 똑같이 동작합니다.</p>
+            <p class="section-intro" lang="en">All options live in <code>Deskband11Lib.Core.TaskbarContentHostOptions</code> and work the same in every package. The Python, Node.js, and Rust packages follow the naming style of their language, such as <code>preferred_width</code> in Python and Rust and <code>preferredWidth</code> in Node.js.</p>
+            <p class="section-intro" lang="ko">모든 옵션은 <code>Deskband11Lib.Core.TaskbarContentHostOptions</code>에 정의되어 있으며, 어느 패키지에서든 똑같이 동작합니다. Python, Node.js, Rust 패키지는 각 언어의 명명 규칙을 따르므로, 예를 들어 <code>PreferredWidth</code>는 Python과 Rust에서 <code>preferred_width</code>, Node.js에서 <code>preferredWidth</code>입니다.</p>
           </div>
         </div>
 
@@ -358,12 +440,12 @@ window.Show();</code></pre>
               <tr>
                 <td><code>LayoutAnimationEasing</code></td>
                 <td><code>EasingFunctions.CircleOut</code></td>
-                <td><span lang="en">Any <code>Func&lt;double, double&gt;</code>. <code>EasingFunctions</code> provides <code>Linear</code> and the Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, and Circle families in In, Out, and InOut forms.</span><span lang="ko"><code>Func&lt;double, double&gt;</code> 형식이면 무엇이든 사용할 수 있습니다. <code>EasingFunctions</code>에는 <code>Linear</code>와 함께 Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle 계열의 In, Out, InOut 함수가 들어 있습니다.</span></td>
+                <td><span lang="en">Any <code>Func&lt;double, double&gt;</code>. <code>EasingFunctions</code> provides <code>Linear</code> and the Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, and Circle families in In, Out, and InOut forms. The Python, Node.js, and Rust packages take one of these built-in functions.</span><span lang="ko"><code>Func&lt;double, double&gt;</code> 형식이면 무엇이든 사용할 수 있습니다. <code>EasingFunctions</code>에는 <code>Linear</code>와 함께 Sine, Quadratic, Cubic, Quartic, Quintic, Exponential, Circle 계열의 In, Out, InOut 함수가 들어 있습니다. Python, Node.js, Rust 패키지에서는 이 기본 제공 함수 중 하나를 고릅니다.</span></td>
               </tr>
               <tr>
                 <td><code>HighRefreshRateMode</code></td>
-                <td><code>false</code></td>
-                <td><span lang="en">Matches the animation timer to the monitor’s current refresh rate instead of 60 FPS.</span><span lang="ko">애니메이션 타이머를 60 FPS 대신 모니터의 현재 주사율에 맞춥니다.</span></td>
+                <td><code>true</code></td>
+                <td><span lang="en">While <code>AnimateLayoutChanges</code> is on, matches the animation timer to the monitor’s current refresh rate. <code>false</code> keeps it at 60 FPS.</span><span lang="ko"><code>AnimateLayoutChanges</code>가 켜져 있는 동안 애니메이션 타이머를 모니터의 현재 주사율에 맞춥니다. <code>false</code>로 설정하면 60 FPS로 동작합니다.</span></td>
               </tr>
               <tr>
                 <td><code>TrackTaskbarButtons</code></td>
@@ -392,33 +474,77 @@ window.Show();</code></pre>
           <h2 id="packages-title"><span lang="en">Packages and requirements</span><span lang="ko">패키지와 요구 사항</span></h2>
           <div class="section-head-text">
             <ul class="requirements" lang="en">
-              <li>Windows 11.</li>
-              <li>.NET 10. The packages target <code>net10.0-windows10.0.26100.0</code>.</li>
-              <li>WinUI 3 apps need the Windows App SDK.</li>
+              <li>Windows 11. The Python, Node.js, and Rust packages include the native library for x64 and ARM64.</li>
+              <li>.NET 10 for the NuGet packages, which target <code>net10.0-windows10.0.26100.0</code>. WinUI 3 apps need the Windows App SDK.</li>
+              <li>Python 3.10 or later.</li>
+              <li>Node.js 22 or later. In Electron, use the package from the main process.</li>
+              <li>Rust 1.90 or later. The Tauri plugin needs Tauri 2.12 or later.</li>
             </ul>
             <ul class="requirements" lang="ko">
-              <li>Windows 11이 필요합니다.</li>
-              <li>.NET 10이 필요합니다. 패키지의 대상 프레임워크는 <code>net10.0-windows10.0.26100.0</code>입니다.</li>
-              <li>WinUI 3 앱에는 Windows App SDK가 필요합니다.</li>
+              <li>Windows 11이 필요합니다. Python, Node.js, Rust 패키지에는 x64용과 ARM64용 네이티브 라이브러리가 들어 있습니다.</li>
+              <li>NuGet 패키지는 .NET 10이 필요하며, 대상 프레임워크는 <code>net10.0-windows10.0.26100.0</code>입니다. WinUI 3 앱에는 Windows App SDK가 필요합니다.</li>
+              <li>Python 패키지는 Python 3.10 이상이 필요합니다.</li>
+              <li>Node.js 패키지는 Node.js 22 이상이 필요합니다. Electron에서는 메인 프로세스에서 사용합니다.</li>
+              <li>Rust 크레이트는 Rust 1.90 이상이 필요합니다. Tauri 플러그인은 Tauri 2.12 이상이 필요합니다.</li>
             </ul>
           </div>
         </div>
 
-        <ul class="package-list">
-          <li class="package">
-            <h3 class="package-name"><code>Deskband11Lib.WinUI</code></h3>
-            <p><span lang="en">WinUI 3 facade for Windows App SDK apps. Supports NativeAOT publishing.</span><span lang="ko">Windows App SDK 기반 WinUI 3 앱용 패키지입니다. NativeAOT 게시를 지원합니다.</span></p>
-            <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.WinUI">NuGet</a>
+        <ul class="package-groups">
+          <li class="package-group">
+            <h3>.NET</h3>
+            <ul class="package-list">
+              <li class="package">
+                <h4 class="package-name"><code>Deskband11Lib.WinUI</code></h4>
+                <p><span lang="en">WinUI 3 facade for Windows App SDK apps. Supports NativeAOT publishing.</span><span lang="ko">Windows App SDK 기반 WinUI 3 앱용 패키지입니다. NativeAOT 게시를 지원합니다.</span></p>
+                <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.WinUI">NuGet</a>
+              </li>
+              <li class="package">
+                <h4 class="package-name"><code>Deskband11Lib.Wpf</code></h4>
+                <p><span lang="en">WPF facade. Requires <code>UseWPF=true</code> in the project file.</span><span lang="ko">WPF 앱용 패키지입니다. 프로젝트 파일에 <code>UseWPF=true</code>가 필요합니다.</span></p>
+                <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.Wpf">NuGet</a>
+              </li>
+              <li class="package">
+                <h4 class="package-name"><code>Deskband11Lib.Core</code></h4>
+                <p><span lang="en">Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting. Installed automatically with either package above.</span><span lang="ko">작업 표시줄 창 탐색, 레이아웃 계산, UI Automation 측정, Explorer 재시작 감지, Win32 HWND 호스팅을 담당합니다. 위 패키지 중 하나를 설치하면 함께 설치됩니다.</span></p>
+                <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.Core">NuGet</a>
+              </li>
+            </ul>
           </li>
-          <li class="package">
-            <h3 class="package-name"><code>Deskband11Lib.Wpf</code></h3>
-            <p><span lang="en">WPF facade. Requires <code>UseWPF=true</code> in the project file.</span><span lang="ko">WPF 앱용 패키지입니다. 프로젝트 파일에 <code>UseWPF=true</code>가 필요합니다.</span></p>
-            <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.Wpf">NuGet</a>
+          <li class="package-group">
+            <h3>Python</h3>
+            <ul class="package-list">
+              <li class="package">
+                <h4 class="package-name"><code>deskband11lib</code></h4>
+                <p><span lang="en">Includes a controller for PySide6 and PyQt6 widgets, and hosts a window from any other toolkit, such as Tk, by its handle.</span><span lang="ko">PySide6와 PyQt6 위젯용 컨트롤러가 들어 있으며, Tk 같은 다른 툴킷의 창도 창 핸들로 호스팅할 수 있습니다.</span></p>
+                <a class="package-link" href="https://pypi.org/project/deskband11lib/">PyPI</a>
+              </li>
+            </ul>
           </li>
-          <li class="package">
-            <h3 class="package-name"><code>Deskband11Lib.Core</code></h3>
-            <p><span lang="en">Taskbar window discovery, layout calculation, UI Automation measurement, Explorer restart monitoring, and Win32 HWND hosting. Installed automatically with either package above.</span><span lang="ko">작업 표시줄 창 탐색, 레이아웃 계산, UI Automation 측정, Explorer 재시작 감지, Win32 HWND 호스팅을 담당합니다. 위 패키지 중 하나를 설치하면 함께 설치됩니다.</span></p>
-            <a class="package-link" href="https://www.nuget.org/packages/Deskband11Lib.Core">NuGet</a>
+          <li class="package-group">
+            <h3>Node.js</h3>
+            <ul class="package-list">
+              <li class="package">
+                <h4 class="package-name"><code>deskband11lib</code></h4>
+                <p><span lang="en">Includes a controller for Electron windows in the main process, and hosts any window by its handle.</span><span lang="ko">메인 프로세스에서 쓰는 Electron 창용 컨트롤러가 들어 있으며, 어떤 창이든 창 핸들로 호스팅할 수 있습니다.</span></p>
+                <a class="package-link" href="https://www.npmjs.com/package/deskband11lib">npm</a>
+              </li>
+            </ul>
+          </li>
+          <li class="package-group">
+            <h3>Rust</h3>
+            <ul class="package-list">
+              <li class="package">
+                <h4 class="package-name"><code>tauri-plugin-deskband11lib</code></h4>
+                <p><span lang="en">Tauri v2 plugin that creates webview windows, attaches them to the taskbar, and creates them again when the taskbar requires it.</span><span lang="ko">웹뷰 창을 만들어 작업 표시줄에 붙이고, 작업 표시줄이 요구할 때 창을 다시 만드는 Tauri v2 플러그인입니다.</span></p>
+                <a class="package-link" href="https://crates.io/crates/tauri-plugin-deskband11lib">crates.io</a>
+              </li>
+              <li class="package">
+                <h4 class="package-name"><code>deskband11lib</code></h4>
+                <p><span lang="en">Hosts any window by its handle, and copies the native library next to the executable at build time.</span><span lang="ko">어떤 창이든 창 핸들로 호스팅하며, 빌드할 때 네이티브 라이브러리를 실행 파일 옆에 복사합니다.</span></p>
+                <a class="package-link" href="https://crates.io/crates/deskband11lib">crates.io</a>
+              </li>
+            </ul>
           </li>
         </ul>
       </div>
@@ -442,6 +568,10 @@ window.Show();</code></pre>
           <li><a href="https://github.com/airtaxi/Deskband11Lib/issues"><span lang="en">Issues</span><span lang="ko">이슈</span></a></li>
           <li><a href="https://www.nuget.org/packages/Deskband11Lib.WinUI">NuGet: WinUI</a></li>
           <li><a href="https://www.nuget.org/packages/Deskband11Lib.Wpf">NuGet: WPF</a></li>
+          <li><a href="https://pypi.org/project/deskband11lib/">PyPI</a></li>
+          <li><a href="https://www.npmjs.com/package/deskband11lib">npm</a></li>
+          <li><a href="https://crates.io/crates/tauri-plugin-deskband11lib">crates.io: Tauri</a></li>
+          <li><a href="https://crates.io/crates/deskband11lib">crates.io: Rust</a></li>
         </ul>
       </div>
     </div>

@@ -18,7 +18,10 @@
 
     const installCommands = {
         winui: "dotnet add package Deskband11Lib.WinUI",
-        wpf: "dotnet add package Deskband11Lib.Wpf"
+        wpf: "dotnet add package Deskband11Lib.Wpf",
+        python: "pip install \"deskband11lib[pyside6]\"",
+        electron: "npm install deskband11lib",
+        tauri: "cargo add tauri-plugin-deskband11lib"
     };
 
     const getCurrentLanguage = () => (rootElement.dataset.lang === "ko" ? "ko" : "en");
@@ -44,7 +47,7 @@
 
     function applyFramework(framework) {
         for (const button of document.querySelectorAll("[data-set-framework]")) button.setAttribute("aria-pressed", String(button.dataset.setFramework === framework));
-        for (const panel of document.querySelectorAll("[data-framework-panel]")) panel.hidden = panel.dataset.frameworkPanel !== framework;
+        for (const panel of document.querySelectorAll("[data-framework-panel]")) panel.hidden = !panel.dataset.frameworkPanel.split(" ").includes(framework);
 
         const installCommandElement = document.getElementById("install-command");
         if (installCommandElement) installCommandElement.textContent = installCommands[framework];

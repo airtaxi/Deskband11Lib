@@ -699,6 +699,12 @@ input[type="checkbox"] {
   grid-column: 1 / span 5;
 }
 
+.quick-start-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
 .code-group {
   display: flex;
   flex-direction: column;
@@ -845,10 +851,27 @@ td.num {
   border-top: 1px solid var(--color-rule);
 }
 
-.package-list {
+.package-groups {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-xl) var(--gap-columns);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.package-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-ink);
+}
+
+.package-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -857,19 +880,20 @@ td.num {
 .package {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-ink);
+  gap: var(--space-xs);
 }
 
 .package-name {
-  max-width: none;
-  letter-spacing: 0;
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .package-name code {
   padding: 0;
   background: none;
+  font-size: 1em;
   font-weight: 600;
 }
 
@@ -879,8 +903,6 @@ td.num {
 
 .package-link {
   align-self: flex-start;
-  margin-top: auto;
-  padding-top: var(--space-xs);
   color: var(--color-accent);
   font-weight: 600;
 }
@@ -947,6 +969,10 @@ td.num {
   .taskbar-shot-annotation {
     padding-bottom: var(--space-md);
   }
+
+  .package-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 64rem) {
@@ -1004,8 +1030,7 @@ td.num {
   .demo-instances,
   .quick-start-grid,
   .recreate-grid,
-  .footer-meta,
-  .package-list {
+  .footer-meta {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1094,6 +1119,10 @@ td.num {
     flex-wrap: nowrap;
   }
 
+  .segmented button {
+    padding-inline: var(--space-sm);
+  }
+
   .demo {
     padding: var(--space-md);
   }
@@ -1104,6 +1133,10 @@ td.num {
 
   .hero-actions .button {
     flex: 1 1 auto;
+  }
+
+  .package-groups {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .code {
