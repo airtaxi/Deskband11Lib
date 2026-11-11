@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "deskband11lib"
-version = "1.5.0"
+version = "1.5.1"
 description = "Host Python UI windows inside the Windows 11 taskbar."
 readme = "README.md"
 license = "MIT"

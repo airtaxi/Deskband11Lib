@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-deskband11lib"
-version = "1.5.0"
+version = "1.5.1"
 edition = "2024"
 rust-version = "1.90"
 description = "Tauri plugin that hosts webview windows inside the Windows 11 taskbar."
@@ -17,7 +17,7 @@ include = ["src/**", "README.md"]
 default-target = "x86_64-pc-windows-msvc"
 
 [dependencies]
-deskband11lib = { version = "1.5.0", path = "../deskband11lib" }
+deskband11lib = { version = "1.5.1", path = "../deskband11lib" }
 log = "0.4.35"
 serde = { version = "1.0.229", features = ["derive"] }
 tauri = "2.12.5"
