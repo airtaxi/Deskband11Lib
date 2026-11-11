@@ -6,7 +6,8 @@ namespace Deskband11Lib.Core.Internal.GeneratedCom;
 internal enum GeneratedTreeScope
 {
     Children = 2,
-    Descendants = 4
+    Descendants = 4,
+    Subtree = 7
 }
 
 [StructLayout(LayoutKind.Sequential)]

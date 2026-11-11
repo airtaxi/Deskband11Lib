@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Deskband11Lib.Core.Internal.GeneratedCom;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Deskband11Lib.Core.Internal;
 
@@ -13,16 +15,23 @@ internal sealed partial class TaskbarButtonReader : IDisposable
     private const int RpcChangedMode = unchecked((int)0x80010106);
     private const int ButtonControlTypeIdentifier = 50000;
     private const int MaximumTaskbarButtonGap = 16;
+    private const int MaximumAbandonedRefreshCount = 4;
     private const string StartButtonAutomationIdentifier = "StartButton";
     private const string WidgetsButtonAutomationIdentifier = "WidgetsButton";
     private const string SystemTrayIconAutomationIdentifier = "SystemTrayIcon";
     private const string NotifyItemIconAutomationIdentifier = "NotifyItemIcon";
+
+    // By default UI Automation waits up to 20 seconds for a provider in another process, so a refresh that runs longer than this is not expected to return on its own.
+    private static readonly TimeSpan s_stalledRefreshTimeout = TimeSpan.FromSeconds(30);
 
     private readonly object _refreshLock = new();
     private TaskbarButtonGeometry _cachedGeometry;
     private bool _hasCachedGeometry;
     private bool _cachedIsVertical;
     private bool _isRefreshRunning;
+    private long _refreshStartTimestamp;
+    private long _currentRefreshIdentifier;
+    private int _abandonedRefreshCount;
     private bool _isDisposed;
 
     public bool TryGetTaskbarButtonGeometry(HWND taskbarWindow, RECT searchRectangle, bool isVertical, out TaskbarButtonGeometry geometry)
@@ -52,9 +61,9 @@ internal sealed partial class TaskbarButtonReader : IDisposable
 
     public Task RefreshAsync(HWND taskbarWindow, RECT searchRectangle, bool isVertical)
     {
-        if (!TryBeginRefresh()) return Task.CompletedTask;
+        if (!TryBeginRefresh(out var refreshIdentifier)) return Task.CompletedTask;
 
-        return Task.Run(() => RefreshCachedGeometry(taskbarWindow, searchRectangle, isVertical));
+        return Task.Run(() => RefreshCachedGeometry(taskbarWindow, searchRectangle, isVertical, refreshIdentifier));
     }
 
     public void Dispose()
@@ -69,23 +78,34 @@ internal sealed partial class TaskbarButtonReader : IDisposable
 
     private void QueueRefresh(HWND taskbarWindow, RECT searchRectangle, bool isVertical)
     {
-        if (!TryBeginRefresh()) return;
+        if (!TryBeginRefresh(out var refreshIdentifier)) return;
 
-        ThreadPool.QueueUserWorkItem(_ => RefreshCachedGeometry(taskbarWindow, searchRectangle, isVertical));
+        ThreadPool.QueueUserWorkItem(_ => RefreshCachedGeometry(taskbarWindow, searchRectangle, isVertical, refreshIdentifier));
     }
 
-    private bool TryBeginRefresh()
+    private bool TryBeginRefresh(out long refreshIdentifier)
     {
+        refreshIdentifier = 0;
+
         lock (_refreshLock)
         {
-            if (_isDisposed || _isRefreshRunning) return false;
+            if (_isDisposed) return false;
+            if (_isRefreshRunning)
+            {
+                // A refresh stays blocked inside UI Automation for as long as a window it reads does not answer, so a stalled refresh is given up on and replaced.
+                // The refreshes given up on are capped, so that blocked threads do not pile up while the cause persists.
+                if (Stopwatch.GetElapsedTime(_refreshStartTimestamp) < s_stalledRefreshTimeout || _abandonedRefreshCount >= MaximumAbandonedRefreshCount) return false;
+                _abandonedRefreshCount++;
+            }
 
             _isRefreshRunning = true;
+            _refreshStartTimestamp = Stopwatch.GetTimestamp();
+            refreshIdentifier = ++_currentRefreshIdentifier;
             return true;
         }
     }
 
-    private void RefreshCachedGeometry(HWND taskbarWindow, RECT searchRectangle, bool isVertical)
+    private void RefreshCachedGeometry(HWND taskbarWindow, RECT searchRectangle, bool isVertical, long refreshIdentifier)
     {
         try
         {
@@ -93,7 +113,8 @@ internal sealed partial class TaskbarButtonReader : IDisposable
             {
                 lock (_refreshLock)
                 {
-                    if (_isDisposed) return;
+                    // A refresh that was given up on returns late, with a measurement older than the one of the refresh that replaced it.
+                    if (_isDisposed || refreshIdentifier != _currentRefreshIdentifier) return;
 
                     _cachedGeometry = geometry;
                     _cachedIsVertical = isVertical;
@@ -106,7 +127,8 @@ internal sealed partial class TaskbarButtonReader : IDisposable
         {
             lock (_refreshLock)
             {
-                _isRefreshRunning = false;
+                if (refreshIdentifier == _currentRefreshIdentifier) _isRefreshRunning = false;
+                else _abandonedRefreshCount--;
             }
         }
     }
@@ -119,13 +141,7 @@ internal sealed partial class TaskbarButtonReader : IDisposable
 
         IGeneratedUIAutomation? automation = null;
         IGeneratedUIAutomationCondition? trueCondition = null;
-        IGeneratedUIAutomationElement? taskbarElement = null;
-        IGeneratedUIAutomationElementArray? taskButtonElements = null;
-        List<AxisSpan> taskbarAppButtonSpans = [];
-        var startButtonSpan = AxisSpan.Invalid;
-        var widgetsButtonSpan = AxisSpan.Invalid;
-        var notificationAreaStart = int.MaxValue;
-        var notificationAreaEnd = int.MinValue;
+        var spanCollector = new TaskbarElementSpanCollector(taskbarProcessIdentifier, searchRectangle, isVertical);
         var coInitializeResult = CoInitializeEx(0, CoInitializeMultithreaded);
         var shouldUninitializeCom = coInitializeResult is 0 or 1;
         if (coInitializeResult < 0 && coInitializeResult != RpcChangedMode) return false;
@@ -137,59 +153,63 @@ internal sealed partial class TaskbarButtonReader : IDisposable
             Marshal.ThrowExceptionForHR(CoCreateInstance(&classIdentifier, 0, ClassContextInProcServer, &interfaceIdentifier, out automation));
 
             trueCondition = automation.CreateTrueCondition();
-            taskbarElement = automation.ElementFromHandle(taskbarWindow);
-            taskButtonElements = taskbarElement.FindAll(GeneratedTreeScope.Descendants, trueCondition);
-            var count = taskButtonElements.GetLength();
+            foreach (var taskbarOwnedWindow in CollectTaskbarOwnedChildWindows(taskbarWindow, taskbarProcessIdentifier)) ReadWindowElements(automation, trueCondition, taskbarOwnedWindow, spanCollector);
 
-            for (var index = 0; index < count; index++)
-            {
-                var taskButtonElement = taskButtonElements.GetElement(index);
-                try
-                {
-                    var automationIdentifier = TryGetAutomationIdentifier(taskButtonElement);
-                    var isNotificationAreaElement = automationIdentifier == SystemTrayIconAutomationIdentifier || automationIdentifier == NotifyItemIconAutomationIdentifier;
-
-                    if (!isNotificationAreaElement && !IsVisibleTaskbarButton(taskButtonElement, taskbarProcessIdentifier)) continue;
-                    if (!TryGetBoundingRectangle(taskButtonElement, out var boundingRectangle)) continue;
-                    if (!IsInsideSearchRectangle(searchRectangle, boundingRectangle)) continue;
-
-                    var buttonSpan = TaskbarAxisRectangle.FromRectangle(boundingRectangle, isVertical).MainSpan;
-                    if (isNotificationAreaElement)
-                    {
-                        notificationAreaStart = Math.Min(notificationAreaStart, buttonSpan.Start);
-                        notificationAreaEnd = Math.Max(notificationAreaEnd, buttonSpan.End);
-                        continue;
-                    }
-
-                    if (automationIdentifier == StartButtonAutomationIdentifier)
-                    {
-                        startButtonSpan = buttonSpan;
-                        continue;
-                    }
-                    if (automationIdentifier == WidgetsButtonAutomationIdentifier)
-                    {
-                        widgetsButtonSpan = buttonSpan;
-                        continue;
-                    }
-
-                    taskbarAppButtonSpans.Add(buttonSpan);
-                }
-                finally { ReleaseComObject(taskButtonElement); }
-            }
-
-            var taskbarButtonsGroup = ResolveTaskbarButtonsGroup(startButtonSpan, taskbarAppButtonSpans);
-            var notificationAreaSpan = notificationAreaStart <= notificationAreaEnd ? new AxisSpan(notificationAreaStart, notificationAreaEnd) : AxisSpan.Invalid;
-            geometry = new TaskbarButtonGeometry(startButtonSpan, widgetsButtonSpan, taskbarButtonsGroup, notificationAreaSpan);
-            return startButtonSpan.IsValid || widgetsButtonSpan.IsValid || taskbarButtonsGroup.IsValid || notificationAreaSpan.IsValid;
+            geometry = spanCollector.CreateGeometry();
+            return geometry.StartButton.IsValid || geometry.WidgetsButton.IsValid || geometry.TaskbarButtonsGroup.IsValid || geometry.NotificationArea.IsValid;
         }
         catch (COMException) { return false; }
         finally
         {
-            ReleaseComObject(taskButtonElements);
-            ReleaseComObject(taskbarElement);
             ReleaseComObject(trueCondition);
             ReleaseComObject(automation);
             if (shouldUninitializeCom) CoUninitialize();
+        }
+    }
+
+    // Explorer keeps every element the layout measures in child windows of its own. The other child windows are content hosted by other processes,
+    // and reading those would make the measurement wait on the threads that own them, so only the windows of the taskbar process are read.
+    // Hidden windows are left out, because UI Automation does not expose them as part of the taskbar either.
+    // The windows are collected before any of them is read, because the order of the child windows can change while UI Automation runs.
+    private static List<HWND> CollectTaskbarOwnedChildWindows(HWND taskbarWindow, int taskbarProcessIdentifier)
+    {
+        List<HWND> taskbarOwnedWindows = [];
+        HashSet<HWND> visitedWindows = [];
+
+        for (var childWindow = PInvoke.GetWindow(taskbarWindow, GET_WINDOW_CMD.GW_CHILD); !childWindow.IsNull && visitedWindows.Add(childWindow); childWindow = PInvoke.GetWindow(childWindow, GET_WINDOW_CMD.GW_HWNDNEXT))
+        {
+            if (!PInvoke.IsWindowVisible(childWindow)) continue;
+            if (!TryGetWindowProcessIdentifier(childWindow, out var childProcessIdentifier) || childProcessIdentifier != taskbarProcessIdentifier) continue;
+            taskbarOwnedWindows.Add(childWindow);
+        }
+
+        return taskbarOwnedWindows;
+    }
+
+    private static void ReadWindowElements(IGeneratedUIAutomation automation, IGeneratedUIAutomationCondition trueCondition, HWND window, TaskbarElementSpanCollector spanCollector)
+    {
+        IGeneratedUIAutomationElement? windowElement = null;
+        IGeneratedUIAutomationElementArray? elements = null;
+
+        try
+        {
+            windowElement = automation.ElementFromHandle(window);
+            elements = windowElement.FindAll(GeneratedTreeScope.Subtree, trueCondition);
+            var count = elements.GetLength();
+
+            for (var index = 0; index < count; index++)
+            {
+                var element = elements.GetElement(index);
+                try { spanCollector.Add(element); }
+                finally { ReleaseComObject(element); }
+            }
+        }
+        // Explorer can destroy a window while it is being read. Such a window has nothing left to measure, so the remaining windows are still read.
+        catch (COMException) when (!PInvoke.IsWindow(window)) { }
+        finally
+        {
+            ReleaseComObject(elements);
+            ReleaseComObject(windowElement);
         }
     }
 
@@ -266,4 +286,41 @@ internal sealed partial class TaskbarButtonReader : IDisposable
 
     [LibraryImport("ole32.dll")]
     private static partial void CoUninitialize();
+
+    // Sorts the elements of one measurement into the spans that make up the taskbar button geometry.
+    private sealed class TaskbarElementSpanCollector(int taskbarProcessIdentifier, RECT searchRectangle, bool isVertical)
+    {
+        private readonly List<AxisSpan> _taskbarAppButtonSpans = [];
+        private AxisSpan _startButtonSpan = AxisSpan.Invalid;
+        private AxisSpan _widgetsButtonSpan = AxisSpan.Invalid;
+        private int _notificationAreaStart = int.MaxValue;
+        private int _notificationAreaEnd = int.MinValue;
+
+        public void Add(IGeneratedUIAutomationElement element)
+        {
+            var automationIdentifier = TryGetAutomationIdentifier(element);
+            var isNotificationAreaElement = automationIdentifier == SystemTrayIconAutomationIdentifier || automationIdentifier == NotifyItemIconAutomationIdentifier;
+
+            if (!isNotificationAreaElement && !IsVisibleTaskbarButton(element, taskbarProcessIdentifier)) return;
+            if (!TryGetBoundingRectangle(element, out var boundingRectangle)) return;
+            if (!IsInsideSearchRectangle(searchRectangle, boundingRectangle)) return;
+
+            var elementSpan = TaskbarAxisRectangle.FromRectangle(boundingRectangle, isVertical).MainSpan;
+            if (isNotificationAreaElement)
+            {
+                _notificationAreaStart = Math.Min(_notificationAreaStart, elementSpan.Start);
+                _notificationAreaEnd = Math.Max(_notificationAreaEnd, elementSpan.End);
+            }
+            else if (automationIdentifier == StartButtonAutomationIdentifier) _startButtonSpan = elementSpan;
+            else if (automationIdentifier == WidgetsButtonAutomationIdentifier) _widgetsButtonSpan = elementSpan;
+            else _taskbarAppButtonSpans.Add(elementSpan);
+        }
+
+        public TaskbarButtonGeometry CreateGeometry()
+        {
+            var taskbarButtonsGroup = ResolveTaskbarButtonsGroup(_startButtonSpan, _taskbarAppButtonSpans);
+            var notificationAreaSpan = _notificationAreaStart <= _notificationAreaEnd ? new AxisSpan(_notificationAreaStart, _notificationAreaEnd) : AxisSpan.Invalid;
+            return new TaskbarButtonGeometry(_startButtonSpan, _widgetsButtonSpan, taskbarButtonsGroup, notificationAreaSpan);
+        }
+    }
 }
