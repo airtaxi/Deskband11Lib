@@ -7,6 +7,7 @@
 [![crates.io](https://img.shields.io/crates/v/deskband11lib.svg)](https://crates.io/crates/deskband11lib)
 [![Pack and Publish](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml/badge.svg)](https://github.com/airtaxi/Deskband11Lib/actions/workflows/pack-and-publish.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/airtaxi/Deskband11Lib/blob/master/LICENSE)
+[![Funded by FOSS for All Microgrants 2026](https://fossforall.org/badges/microgrants-2026.svg)](https://forum.fossforall.org/t/foss-for-all-microgrants-2026/162)
 
 🌐 English | [한국어](https://github.com/airtaxi/Deskband11Lib/blob/master/README.ko.md)
 
